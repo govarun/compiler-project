@@ -1,6 +1,7 @@
 import re
 import ply.lex as lex
 from ply.lex import TOKEN
+from tabulate import tabulate
 
 keyword_tokens = {}
 
@@ -116,6 +117,7 @@ def t_ID(t):
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+    # t.lexer.lexpos = 0
     
 def t_COMMENT(t):
     r'/\*[^*]*\*+(?:[^/*][^*]*\*+)*/|//.*'
@@ -130,16 +132,29 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
+def find_column(code,token):
+    line_start = code.rfind('\n',0,token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
+
+
 def runmain(code):
     lexer = lex.lex()
     lexer.input(code)
     # Tokenize
+    formatted_output = []
+    heading = ["Token","Lexeme","Line#","Column#"]
+    formatted_output.append(heading)
+    # print("Token      Lexeme      Line#     Column#")
     while True:
         tok = lexer.token()
         if not tok:
             break      # No more input
-        print(tok)
-
+        col_number = find_column(code,tok)
+        # print(tok)
+        temp_row = [str(tok.type),str(tok.value),str(tok.lineno),str(col_number)]
+        # print(tok.type, tok.value, tok.lineno, col_number)
+        formatted_output.append(temp_row)
+    print(tabulate(formatted_output))
 
 # lexer = lex.lex()
 
