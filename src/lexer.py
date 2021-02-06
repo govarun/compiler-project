@@ -116,6 +116,13 @@ def t_ID(t):
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+    
+def t_COMMENT(t):
+    r'/\*[^*]*\*+(?:[^/*][^*]*\*+)*/|//.*'
+    for c in t.value:
+        if c == '\n':
+            t.lexer.lineno += 1
+    pass
 
 t_ignore  = ' \t'
 
