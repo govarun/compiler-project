@@ -123,6 +123,17 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
+def runmain(code):
+    lexer = lex.lex()
+    lexer.input(code)
+    # Tokenize
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break      # No more input
+        print(tok)
+
+
 # lexer = lex.lex()
 
 # # Test it out
