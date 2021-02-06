@@ -44,7 +44,7 @@ for s in keywords:
 
 t_PLUS              = r'\+'
 t_MINUS             = r'-'
-t_MULTIPLY             = r'\*'
+t_MULTIPLY          = r'\*'
 t_DIVIDE            = r'/'
 t_MOD               = r'%'
 t_OR                = r'\|'
@@ -65,8 +65,8 @@ t_NOTEQUAL          = r'!='
 
 # Assignment operators
 t_EQUALS            = r'='
-t_MULTIPLYEQUAL        = r'\*='
-t_DIVIDEEQUAL          = r'/='
+t_MULTIPLYEQUAL     = r'\*='
+t_DIVIDEEQUAL       = r'/='
 t_MODEQUAL          = r'%='
 t_PLUSEQUAL         = r'\+='
 t_MINUSEQUAL        = r'-='
