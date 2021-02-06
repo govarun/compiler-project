@@ -1,4 +1,4 @@
-import example
+import lexer
 import sys
 s = str(sys.argv)
 if(len(sys.argv) <= 1):
@@ -8,7 +8,7 @@ if(len(sys.argv) <= 1):
 file = open(s[13:-2]) # hardcoded since "main.py" is a fixed name
 code = file.read()
 # print(code)
-# lexer = example.lex()
+# lexer = lexer.lex()
 # lexer.inputcode)
 if __name__ == '__main__':
-	example.runmain(code)
+	lexer.runmain(code)
