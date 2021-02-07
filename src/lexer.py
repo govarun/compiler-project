@@ -11,7 +11,7 @@ keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
 'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID','VOLATILE', 'WHILE')
 
 
-tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'STRING_LITERAL',
+tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL',
 # operators
 'PLUS', 'MINUS', 'MULTIPLY', 'DIVIDE', 'MOD', # + - * / %
 'OR', 'AND', 'NOT', 'XOR', 'LSHIFT', 'RSHIFT',
@@ -68,10 +68,9 @@ t_LESSEQUAL         = r'<='
 t_GREATEREQUAL      = r'>='
 t_EQUAL             = r'=='
 t_NOTEQUAL          = r'!='
-
 t_ARROW             = r'->'
-
 t_CONDOP            = r'\?'
+
 
 # Assignment operators
 t_EQUALS            = r'='
@@ -103,6 +102,12 @@ t_ELLIPSIS          = r'\.\.\.'
 t_LCURLYBRACKET     = r'\{'
 t_RCURLYBRACKET     = r'\}'
 t_HASH              = r'\#'
+
+
+def t_FLOAT_CONST(t):
+    r'[+-]?([0-9]*[.])[0-9]+'
+    t.value = float(t.value)
+    return t
 
 def t_INT_CONST(t):
     r'[0-9]+'
