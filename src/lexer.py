@@ -3,6 +3,8 @@ import ply.lex as lex
 from ply.lex import TOKEN
 from tabulate import tabulate
 
+# some symbols to add
+
 keyword_tokens = {}
 
 keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
