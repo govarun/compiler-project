@@ -18,6 +18,12 @@ tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'STRING_LITERAL',
 'OR', 'AND', 'NOT', 'XOR', 'LSHIFT', 'RSHIFT',
 'LOR', 'LAND', 'LNOT',
 'LESS', 'LESSEQUAL', 'GREATER', 'GREATEREQUAL', 'EQUAL', 'NOTEQUAL',
+                     
+# Structure dereference (->)
+'ARROW',
+
+# Conditional operator (?)
+'CONDOP',                     
 
 # assignment statements
 'PLUSEQUAL', 'MINUSEQUAL',
@@ -63,6 +69,10 @@ t_LESSEQUAL         = r'<='
 t_GREATEREQUAL      = r'>='
 t_EQUAL             = r'=='
 t_NOTEQUAL          = r'!='
+
+t_ARROW             = r'->'
+
+t_CONDOP            = r'\?'
 
 # Assignment operators
 t_EQUALS            = r'='
