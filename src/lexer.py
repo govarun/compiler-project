@@ -4,7 +4,6 @@ from ply.lex import TOKEN
 from tabulate import tabulate
 
 keyword_tokens = {}
-
 keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
 'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
 'FLOAT', 'FOR', 'GOTO', 'IF', 'INT', 'LONG','REGISTER', 
@@ -105,7 +104,6 @@ t_LCURLYBRACKET     = r'\{'
 t_RCURLYBRACKET     = r'\}'
 t_HASH              = r'\#'
 
-
 def t_INT_CONST(t):
     r'[0-9]+'
     t.value = int(t.value)
@@ -127,7 +125,6 @@ def t_ID(t):
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
-    # t.lexer.lexpos = 0
     
 def t_COMMENT(t):
     r'/\*[^*]*\*+(?:[^/*][^*]*\*+)*/|//.*'
@@ -136,51 +133,44 @@ def t_COMMENT(t):
             t.lexer.lineno += 1
     pass
 
-t_ignore  = ' \t'
+t_ignore  = ' \t\v\f'
 
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
 
 def find_column(code,token):
     line_start = code.rfind('\n',0,token.lexpos) + 1
+    # print(token.lexpos)
     return (token.lexpos - line_start) + 1
+
+def t_error(t):
+    col_number = find_column(code_string,t)
+    formatted_error = "Illegal character \'{character}\' at lineno {lineno} at position {colno}".format(character = t.value[0],lineno = t.lineno,colno = str(col_number))
+    # print("Illegal character '%s' at line " % t.value[0])
+    print(formatted_error)
+    t.lexer.skip(1)
 
 
 def runmain(code):
+    global code_string
+    code_string = code
     lexer = lex.lex()
     lexer.input(code)
     # Tokenize
+
     formatted_output = []
+    # print("Token      Lexeme      Line#     Column#")
     heading = ["Token","Lexeme","Line#","Column#"]
     formatted_output.append(heading)
-    # print("Token      Lexeme      Line#     Column#")
+    
     while True:
         tok = lexer.token()
         if not tok:
             break      # No more input
         col_number = find_column(code,tok)
-        # print(tok)
         temp_row = [str(tok.type),str(tok.value),str(tok.lineno),str(col_number)]
         # print(tok.type, tok.value, tok.lineno, col_number)
         formatted_output.append(temp_row)
+    
     print(tabulate(formatted_output))
 
-# lexer = lex.lex()
-
-# # Test it out
-# data = '''
-# char x = 'xyx'
-# '''
-
-# # Give the lexer some input
-# lexer.input(data)
-
-# # Tokenize
-# while True:
-#     tok = lexer.token()
-#     if not tok: 
-#         break      # No more input
-#     print(tok)
 
 
