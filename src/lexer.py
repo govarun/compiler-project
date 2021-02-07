@@ -105,8 +105,8 @@ t_HASH              = r'\#'
 
 
 def t_FLOAT_CONST(t):
-    r'[+-]?([0-9]*[.])[0-9]+'
-    t.value = float(t.value)
+    r'[0-9]*([.][0-9]+)?([eE][+-]?[0-9]+) | ([0-9]*[.])[0-9]+'
+    t.value = t.value
     return t
 
 def t_INT_CONST(t):
