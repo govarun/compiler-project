@@ -1,0 +1,17 @@
+boolean values needs to be handled
+to decide whether bool data type should be handled or not
+to decide whether octal and hexa values should be handled or not
+ternary operator and pointer operator needs to be handled
+
+Alternate ways of curly bracket : 
+    ("{"|"<%")		{ count(); return('{'); }
+    ("}"|"%>")		{ count(); return('}'); }
+
+Alternate ways of sqaure bracket : 
+    ("["|"<:")		{ count(); return('['); }
+    ("]"|":>")		{ count(); return(']'); }
+
+Additional ignore characters like \v , \f are present in original lex : 
+    [ \t\v\n\f]		{ count(); }
+    .			{ /* ignore bad characters */ }
+

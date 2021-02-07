@@ -3,9 +3,6 @@ import ply.lex as lex
 from ply.lex import TOKEN
 from tabulate import tabulate
 
-# some symbols to add : pointer operator, ternary operator
-# alternate curly, square brackets, adding ignore characters (\v , \f)
-
 keyword_tokens = {}
 
 keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
