@@ -15,3 +15,5 @@ Additional ignore characters like \v , \f are present in original lex :
     [ \t\v\n\f]		{ count(); }
     .			{ /* ignore bad characters */ }
 
+check test cases struct_pointers, arrays_pointers and error_variable_names
+
