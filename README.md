@@ -4,23 +4,28 @@
 - For instructions on how to run and installing the dependencies run: python src/main.py --help 
 - Requires Python 3.x
 
-Usage: python3 main.py [--help | file names seperated by space]
-Options-
+### Usage: 
+python3 main.py [--help | file names seperated by space]
+Options:
 --help : 	 Small tutorial on how to use the compiler
 
-Dependencies:
+### Dependencies:
 This compiler makes use of the following python3 packages:
 1. ply
 2. tabulate
 
-To install these dependencies, simply run "pip install -r requirements.txt"(without quotes) from the root of the repo
+### Instructions:
+- To install the dependencies, simply run "pip install -r requirements.txt"(without quotes) from the root of the repo
+- After this, to run the lexer on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName_1.c> <CProgram_FileName_2.c <CProgram_FileName_3.c>"
+- The code will lex all the C files that are provided in the above command. These can be one or more in number. 
 
-## Group Members:
-- Jayesh Shaw
-- Lavish Gupta
-- Prakhar Neema
-- Sarthak Kapoor
-- Varun Goyal
 
-## Milestones:
+### Group Members:
+- Jayesh Shaw | 180330
+- Lavish Gupta | 180380
+- Prakhar Neema | 180526
+- Sarthak Kapoor | 180675
+- Varun Goyal | 180850
+
+### Milestones:
 - Milestone 1: Lexer
