@@ -10,5 +10,9 @@ long long main() //long long got incorrectly tokenized
     float p = 0..5 , q = 50,05 , r = 50.05.0 , s = 0x.5 ;
     float t = 0.0x5 , u = 0ab ;
     float v = 0x=5 ;
+
+    // valid floats
+    float aa = 0x5 ;
+    float ab = 0x0.3p10 ;
     return ;
 }
