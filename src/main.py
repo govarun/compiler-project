@@ -6,9 +6,10 @@ if(len(sys.argv) <= 1):
 	exit()
 # print(sys.argv[1])
 
-file = open(sys.argv[1])
-code = file.read()
-# print(code)
-
-if __name__ == '__main__':
-	lexer.runmain(code)
+for i in range(len(sys.argv)-1):
+	file = open(sys.argv[i+1])
+	code = file.read()
+	# print(code)
+	print(sys.argv[i+1])
+	if __name__ == '__main__':
+		lexer.runmain(code)
