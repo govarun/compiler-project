@@ -6,13 +6,13 @@ long long main()
     float n = .00501 , o = 010.010 ;
     float p = --0.05 ;
 
-    // invalid floats
+    
     float p = 0..5 , q = 50,05 , r = 50.05.0 , s = 0x.5 ;
     float t = 0.0x5 , u = 0ab ;
     float v = 0x=5 ;
 
-    // valid floats
+    
     float aa = 0x5 ;
-    float ab = 0x0.3p10 ;
+
     return 0;
 }
