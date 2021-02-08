@@ -11,7 +11,7 @@ keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
 'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID','VOLATILE', 'WHILE')
 
 
-tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL',
+tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTAL_CONST', 'HEX_CONST', 'BIN_CONST',
 # operators
 'PLUS', 'MINUS', 'MULTIPLY', 'DIVIDE', 'MOD', # + - * / %
 'OR', 'AND', 'NOT', 'XOR', 'LSHIFT', 'RSHIFT',
@@ -108,10 +108,33 @@ def t_FLOAT_CONST(t):
     r'[0-9]*([.][0-9]+)?([eE][+-]?[0-9]+) | ([0-9]*[.])[0-9]+'
     t.value = t.value
     return t
+  
+def t_HEX_CONST(t):
+    r'0[xX][0-9a-fA-F]+'
+    # t.value = int(t.value,16)
+    return t
+
+def t_BIN_CONST(t):
+    r'0b[01]+'
+    return t
+
+def t_OCTAL_CONST(t):
+    r'0[0-7]+'
+    # t.value = int(t.value,8)
+    return t
+
+# def t_INV_OCTAL(t):
+#     r'0[0-9]+'
+#     col_number = find_column(code_string, t)
+#     formatted_error = "Invalid octal number \'{character}\' at lineno {lineno} at position {colno}".format(character=t.value, lineno=t.lineno, colno=str(col_number))
+#     # print("Illegal character '%s' at line " % t.value[0])
+#     print(formatted_error)
+#     t.lexer.skip(1)
 
 def t_INT_CONST(t):
-    r'[0-9]+'
-    t.value = int(t.value)
+    r'0|[1-9][0-9]*'
+    # t.value = int(t.value)
+    # print(t.type)
     return t
 
 def t_CHAR_CONST(t):
