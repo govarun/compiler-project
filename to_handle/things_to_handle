@@ -1,7 +1,8 @@
 boolean values needs to be handled
 to decide whether bool data type should be handled or not
-to decide whether octal and hexa values should be handled or not
-ternary operator and pointer operator needs to be handled
+to decide whether unsigned values should be handled
+---to decide whether octal and hexa values should be handled or not---
+---ternary operator and pointer operator needs to be handled---
 
 Alternate ways of curly bracket : 
     ("{"|"<%")		{ count(); return('{'); }
@@ -11,9 +12,9 @@ Alternate ways of sqaure bracket :
     ("["|"<:")		{ count(); return('['); }
     ("]"|":>")		{ count(); return(']'); }
 
-Additional ignore characters like \v , \f are present in original lex : 
+---Additional ignore characters like \v , \f are present in original lex : 
     [ \t\v\n\f]		{ count(); }
-    .			{ /* ignore bad characters */ }
+    .			{ /* ignore bad characters */ }---
 
 check test cases struct_pointers, arrays_pointers and error_variable_names
 
