@@ -7,5 +7,5 @@ int main(){
     {
         int e = (a > intt) ? a : b ; 
     }
-    return ;
+    return 0;
 }

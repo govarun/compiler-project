@@ -1,4 +1,4 @@
-long long main() //long long got incorrectly tokenized
+long long main() 
 {
     float a = 10, b = 10.0 , c = 10.01 , d = 01.01 ;
     float e = 00.01 , f = 0.0 , g = -0.5 , h = -0.05 ;
@@ -14,5 +14,5 @@ long long main() //long long got incorrectly tokenized
     // valid floats
     float aa = 0x5 ;
     float ab = 0x0.3p10 ;
-    return ;
+    return 0;
 }
