@@ -5,7 +5,7 @@ int main(){
     int e = b.a ;
     if(true) // true and false needs to be added
     {
-        int e = (a > intt) ? a : b ; /* ternary operator not recognized*/
+        int e = (a > intt) ? a : b ; 
     }
     return ;
 }
