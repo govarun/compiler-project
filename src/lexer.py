@@ -103,6 +103,9 @@ t_LCURLYBRACKET     = r'\{'
 t_RCURLYBRACKET     = r'\}'
 t_HASH              = r'\#'
 
+integer_suffix_opt = r'(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?'
+decimal_constant = '(0'+integer_suffix_opt+')|([1-9][0-9]*'+integer_suffix_opt+')'
+
 
 def t_FLOAT_CONST(t):
     r'[0-9]*([.][0-9]+)?([eE][+-]?[0-9]+) | ([0-9]*[.])[0-9]+'
@@ -131,8 +134,9 @@ def t_OCTAL_CONST(t):
 #     print(formatted_error)
 #     t.lexer.skip(1)
 
+@TOKEN(decimal_constant)
 def t_INT_CONST(t):
-    r'0|[1-9][0-9]*'
+    # r'0|[1-9][0-9]*'
     # t.value = int(t.value)
     # print(t.type)
     return t
