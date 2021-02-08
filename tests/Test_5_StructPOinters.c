@@ -15,12 +15,12 @@ int main()
     p.x = 5 ;
     p.y = 10 ;
     point *q=&p ;
-    (q->x) = 10 ; // wrong tokenization in this line
+    (q->x) = 10 ;
 
     struct node d , e , *f;
     (d.next)=(&e) ;
     struct* head=(&d) ;
 
-    return ;
+    return 0;
 
 }

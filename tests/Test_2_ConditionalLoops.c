@@ -1,5 +1,5 @@
 char a = 'c' ;
-char b = c ; // should throw error in later stages
+char b = c ; 
 const int n = 100 ;
 static double d = 50 ;
 unsigned int m = 500 ;

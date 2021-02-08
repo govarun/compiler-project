@@ -20,7 +20,7 @@ int main()
     point *q = &p, *r = &p[0] , *s = &p[1] ;
     int *x = &(arr + 2) ; 
     *x = 5 ;
-    int **z = &(x) ; //check handling of double pointers
+    int **z = &(x) ; 
     *(*z) = 10 ;
-    return ;
+    return 0;
 }
