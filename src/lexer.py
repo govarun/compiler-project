@@ -157,7 +157,7 @@ def t_error(t):
 def runmain(code):
     global code_string
     code_string = code
-    lexer = lex.lex()
+    lexer = lex.lex(debug=False)
     lexer.input(code)
     # Tokenize
 
