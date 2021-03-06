@@ -1,4 +1,4 @@
-import lexer
+import parser
 import sys
 s = str(sys.argv)
 if(len(sys.argv) <= 1):
@@ -21,4 +21,4 @@ for i in range(len(sys.argv)-1):
 	# print(code)
 	print(sys.argv[i+1])
 	if __name__ == '__main__':
-		lexer.runmain(code)
+		parser.runmain(code)
