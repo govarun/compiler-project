@@ -386,6 +386,7 @@ def p_function_definition(p):
 
 # Error rule for syntax errors
 def p_error(p):
+    # print(p)
     print("Syntax error in input!")
 
 
@@ -403,11 +404,8 @@ def p_error(p):
 #   print(result)
 def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
-  for line in code.splitlines():
-    print(line)
-    if not line: continue
-    result = parser.parse(line,debug = False)
-    print(result)
+  result = parser.parse(code,debug = True)
+  print(result)
   # while True:
   #   # try:
   #   #   s = input('calc > ')
