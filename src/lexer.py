@@ -44,7 +44,6 @@ tokens = ['ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTA
 'LCURLYBRACKET', 'RCURLYBRACKET',
 ] + list(keywords.values())
 
-literals = [';', '(']
 
 # for s in keywords:
 #     low_s = s.lower()
