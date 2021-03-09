@@ -2,6 +2,7 @@
 
 import ply.yacc as yacc
 import sys
+import pydot
 # ignore for p[0] thing - ( ) { } ; 
 
 # Get the token map from the lexer.  This is required.
@@ -115,22 +116,31 @@ def build_AST(p):
           open('graph1.dot','a').write("\n" + str(p_count) + " -> " + str(p[child][1]))
     return (calling_rule_name,p_count)
 
-def p_translation_unit(p):
-    '''translation_unit : external_declaration
-                        | translation_unit external_declaration
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
-    
 
 def p_primary_expression(p):
   '''primary_expression : ID
                 | INT_CONST
                 | FLOAT_CONST
                 | CHAR_CONST
+                | OCTAL_CONST
+                | HEX_CONST
+                | BIN_CONST
                 | STRING_LITERAL
                 | LPAREN expression RPAREN
   '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
+
+def p_postfix_expression(p):
+  '''postfix_expression : primary_expression
+	| postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET
+	| postfix_expression LPAREN RPAREN
+  | postfix_expression LPAREN argument_expression_list RPAREN
+  | postfix_expression PERIOD ID
+	| postfix_expression ARROW ID
+	| postfix_expression INCREMENT
+	| postfix_expression DECREMENT
+  '''  
   #p[0] = Node()
   p[0] = build_AST(p)
 
@@ -145,20 +155,6 @@ def p_argument_expression_list(p):
   # else:
   #   p[1].append(p[3])
   #   p[0] = p[1]
-
-
-def p_postfix_expression(p):
-  '''postfix_expression : primary_expression
-	| postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET
-	| postfix_expression LPAREN RPAREN
-  | postfix_expression PERIOD ID
-	| postfix_expression LPAREN argument_expression_list RPAREN
-	| postfix_expression ARROW ID
-	| postfix_expression INCREMENT
-	| postfix_expression DECREMENT
-  '''  
-  #p[0] = Node()
-  p[0] = build_AST(p)
 
 def p_unary_expression(p):
   '''unary_expression : postfix_expression
@@ -306,6 +302,7 @@ def p_expression(p):
 
 def p_constant_expression(p):
   '''constant_expression : conditional_expression'''
+  p[0] = build_AST(p)
 
 def p_declaration(p):
   '''declaration : declaration_specifiers SEMICOLON
@@ -331,6 +328,7 @@ def p_init_declarator_list(p):
   '''
   #p[0] = Node()
   p[0] = build_AST(p)
+
 def p_init_declarator(p):
   '''init_declarator : declarator
 	| declarator EQUALS initializer
@@ -349,19 +347,45 @@ def p_storage_class_specifier(p):
   p[0] = build_AST(p)
 
 def p_type_specifier(p):
-    '''type_specifier : VOID
-                     | CHAR
-                     | SHORT
-                     | INT
-                     | LONG
-                     | FLOAT
-                     | DOUBLE
-                     | SIGNED
-                     | UNSIGNED
-                     | type_name
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+  '''type_specifier : VOID
+                    | CHAR
+                    | SHORT
+                    | INT
+                    | LONG
+                    | FLOAT
+                    | DOUBLE
+                    | SIGNED
+                    | UNSIGNED
+                    | struct_or_union_specifier
+                    | enum_specifier
+                    | type_name
+  '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
+
+def p_struct_or_union_specifier(p):
+  '''struct_or_union_specifier : struct_or_union ID LCURLYBRACKET struct_declaration_list RCURLYBRACKET
+  | struct_or_union LCURLYBRACKET struct_declaration_list RCURLYBRACKET
+  | struct_or_union ID
+  '''
+  p[0] = build_AST(p)
+
+def p_struct_or_union(p):
+  '''struct_or_union : STRUCT
+	| UNION
+  '''
+  p[0] = build_AST(p)
+
+def p_struct_declaration_list(p):
+  '''struct_declaration_list : struct_declaration
+	| struct_declaration_list struct_declaration
+  '''
+  p[0] = build_AST(p)
+
+def p_struct_declaration(p):
+  '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
+  '''
+  p[0] = build_AST(p)
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -370,6 +394,38 @@ def p_specifier_qualifier_list(p):
   | type_qualifier
   '''
   #p[0] = Node()
+  p[0] = build_AST(p)
+
+def p_struct_declarator_list(p):
+  '''struct_declarator_list : struct_declarator
+	| struct_declarator_list COMMA struct_declarator
+  '''
+  p[0] = build_AST(p)
+
+def p_struct_declarator(p):  
+  '''struct_declarator : declarator
+	| COLON constant_expression
+	| declarator COLON constant_expression
+  '''
+  p[0] = build_AST(p)
+
+def p_enum_specifier(p):
+  '''enum_specifier : ENUM LCURLYBRACKET enumerator_list RCURLYBRACKET
+	| ENUM ID LCURLYBRACKET enumerator_list RCURLYBRACKET
+	| ENUM ID
+  '''
+  p[0] = build_AST(p)
+
+def p_enumerator_list(p):
+  '''enumerator_list : enumerator
+	| enumerator_list COMMA enumerator
+  '''
+  p[0] = build_AST(p)
+
+def p_enumerator(p):
+  '''enumerator : ID
+	| ID EQUALS constant_expression
+	'''
   p[0] = build_AST(p)
 
 def p_type_qualifier(p):
@@ -387,39 +443,39 @@ def p_declarator(p):
   p[0] = build_AST(p)
 
 def p_direct_declarator(p):
-    '''direct_declarator : ID
-                         | LPAREN declarator RPAREN
-                         | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
-                         | direct_declarator LSQUAREBRACKET RSQUAREBRACKET
-                         | direct_declarator LPAREN parameter_type_list RPAREN
-                         | direct_declarator LPAREN identifier_list RPAREN
-                         | direct_declarator LPAREN RPAREN
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+  '''direct_declarator : ID
+                        | LPAREN declarator RPAREN
+                        | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
+                        | direct_declarator LSQUAREBRACKET RSQUAREBRACKET
+                        | direct_declarator LPAREN parameter_type_list RPAREN
+                        | direct_declarator LPAREN identifier_list RPAREN
+                        | direct_declarator LPAREN RPAREN
+  '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
+
+def p_pointer(p):
+  '''pointer : MULTIPLY 
+              | MULTIPLY type_qualifier_list
+              | MULTIPLY pointer
+              | MULTIPLY type_qualifier_list pointer
+  '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
 
 def p_type_qualifier_list(p):
-    '''type_qualifier_list : type_qualifier
-                          | type_qualifier_list type_qualifier
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
-def p_pointer(p):
-    '''pointer : MULTIPLY 
-               | MULTIPLY type_qualifier_list
-               | MULTIPLY type_qualifier_list pointer
-               | MULTIPLY pointer
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
-
+  '''type_qualifier_list : type_qualifier
+                        | type_qualifier_list type_qualifier
+  '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
 
 def p_parameter_type_list(p):
-    '''parameter_type_list : parameter_list
-                           | parameter_list COMMA ELLIPSIS
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+  '''parameter_type_list : parameter_list
+                          | parameter_list COMMA ELLIPSIS
+  '''
+  #p[0] = Node()
+  p[0] = build_AST(p)
 
 def p_parameter_list(p):
     '''parameter_list : parameter_declaration
@@ -514,13 +570,6 @@ def p_compound_statement(p):
     #p[0] = Node()
     p[0] = build_AST(p)                        
 
-def p_expression_statement(p):
-    '''expression_statement : SEMICOLON
-                            | expression SEMICOLON
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
-
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
@@ -531,6 +580,13 @@ def p_declaration_list(p):
 def p_statement_list(p):
     '''statement_list : statement
                       | statement_list statement
+    '''
+    #p[0] = Node()
+    p[0] = build_AST(p)
+
+def p_expression_statement(p):
+    '''expression_statement : SEMICOLON
+                            | expression SEMICOLON
     '''
     #p[0] = Node()
     p[0] = build_AST(p)
@@ -562,6 +618,13 @@ def p_jump_statement(p):
     #p[0] = Node()
     p[0] = build_AST(p)
 
+def p_translation_unit(p):
+    '''translation_unit : external_declaration
+                        | translation_unit external_declaration
+    '''
+    #p[0] = Node()
+    p[0] = build_AST(p)
+
 def p_external_declaration(p):
     '''external_declaration : function_definition
                             | declaration
@@ -585,10 +648,16 @@ def p_error(p):
     # p.lineno(1)
 
 def runmain(code):
-  open('graph1.dot','a').write("digraph ethane {")
+  open('graph1.dot','w').write("digraph ethane {")
   parser = yacc.yacc(start = 'translation_unit')
   result = parser.parse(code,debug = False)
   open('graph1.dot','a').write("\n}")
+
+  graphs = pydot.graph_from_dot_file('graph1.dot')
+  # print(len(graphs))
+  graph = graphs[0]
+  graph.write_png('pydot_graph.png')
+
   # print(result)
   # while True:
   #   # try:
