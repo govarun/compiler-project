@@ -1,0 +1,21 @@
+digraph ethane {
+1[label="direct_declarator"]
+2[label="main"]
+1 -> 2
+3[label="assignment_expression"]
+4[label="x"]
+3 -> 4
+5[label="-="]
+3 -> 5
+6[label="4"]
+3 -> 6
+7[label="expression_statement"]
+7 -> 3
+8[label="compound_statement"]
+8 -> 7
+9[label="function_definition"]
+10[label="int"]
+9 -> 10
+9 -> 1
+9 -> 8
+}
