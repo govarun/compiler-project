@@ -1,73 +1,36 @@
 digraph ethane {
-1[label="direct_declarator"]
-2[label="solve"]
+1[label="struct_declaration"]
+2[label="int"]
 1 -> 2
-3[label="init_declarator"]
-4[label="a"]
-3 -> 4
-5[label="="]
-3 -> 5
-6[label="5"]
-3 -> 6
-7[label="declaration"]
-8[label="int"]
+3[label="x"]
+1 -> 3
+4[label="specifier_qualifier_list"]
+5[label="long"]
+4 -> 5
+6[label="int"]
+4 -> 6
+7[label="struct_declaration"]
+7 -> 4
+8[label="y"]
 7 -> 8
-7 -> 3
-9[label="jump_statement"]
-10[label="return"]
-9 -> 10
-11[label="jump_statement"]
-12[label="return"]
-11 -> 12
-13[label="5"]
-11 -> 13
-14[label="statement_list"]
-14 -> 9
-14 -> 11
-15[label="compound_statement"]
-15 -> 7
-15 -> 14
-16[label="function_definition"]
-17[label="void"]
-16 -> 17
-16 -> 1
-16 -> 15
-18[label="direct_declarator"]
-19[label="main"]
-18 -> 19
-20[label="init_declarator"]
-21[label="b"]
-20 -> 21
-22[label="="]
-20 -> 22
-23[label="6"]
-20 -> 23
-24[label="declaration"]
-25[label="int"]
-24 -> 25
-24 -> 20
-26[label="jump_statement"]
-27[label="return"]
-26 -> 27
-28[label="0"]
-26 -> 28
-29[label="postfix_expression"]
-30[label="solve"]
-29 -> 30
-31[label="expression_statement"]
-31 -> 29
-32[label="statement_list"]
-32 -> 26
-32 -> 31
-33[label="compound_statement"]
-33 -> 24
-33 -> 32
-34[label="function_definition"]
-35[label="int"]
-34 -> 35
-34 -> 18
-34 -> 33
-36[label="translation_unit"]
-36 -> 16
-36 -> 34
+9[label="struct_declaration_list"]
+9 -> 1
+9 -> 7
+10[label="struct_or_union_specifier"]
+11[label="struct"]
+10 -> 11
+12[label="point"]
+10 -> 12
+10 -> 9
+13[label="declaration_specifiers"]
+14[label="typedef"]
+13 -> 14
+13 -> 10
+15[label="declaration"]
+15 -> 13
+16[label="point"]
+15 -> 16
+17[label="direct_declarator"]
+18[label="main"]
+17 -> 18
 }
