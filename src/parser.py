@@ -8,18 +8,18 @@ import pydot
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
 
-precedence = (
-        ('left', 'LOR'),
-        ('left', 'LAND'),
-        ('left', 'OR'),
-        ('left', 'XOR'),
-        ('left', 'AND'),
-        ('left', 'EQUAL', 'NOTEQUAL'),
-        ('left', 'GREATER', 'GREATEREQUAL', 'LESS', 'LESSEQUAL'),
-        ('left', 'RSHIFT', 'LSHIFT'),
-        ('left', 'PLUS', 'MINUS'),
-        ('left', 'MULTIPLY', 'DIVIDE', 'MOD')
-    )
+# precedence = (
+#         ('left', 'LOR'),
+#         ('left', 'LAND'),
+#         ('left', 'OR'),
+#         ('left', 'XOR'),
+#         ('left', 'AND'),
+#         ('left', 'EQUAL', 'NOTEQUAL'),
+#         ('left', 'GREATER', 'GREATEREQUAL', 'LESS', 'LESSEQUAL'),
+#         ('left', 'RSHIFT', 'LSHIFT'),
+#         ('left', 'PLUS', 'MINUS'),
+#         ('left', 'MULTIPLY', 'DIVIDE', 'MOD')
+#     )
 
 # class Node:
 #   def __init__(self):
@@ -27,7 +27,7 @@ precedence = (
 #     self.val = []
 #     # add more later
 
-def ignore(s):
+def ignore_1(s):
   if(s == "}"):
     return True
   elif(s == "{"):
@@ -106,10 +106,10 @@ def build_AST(p):
       global child_num 
       global child_val
       if(type(p[child]) is tuple):
-        if(ignore(p[child][0]) is False):
+        if(ignore_1(p[child][0]) is False):
           open('graph1.dot','a').write("\n" + str(p_count) + " -> " + str(p[child][1]))
       else:
-        if(ignore(p[child]) is False):
+        if(ignore_1(p[child]) is False):
           cur_num += 1
           open('graph1.dot','a').write("\n" + str(cur_num) + "[label=\"" + str(p[child]).replace('"',"") + "\"]")
           p[child] = (p[child],cur_num)
@@ -119,9 +119,9 @@ def build_AST(p):
 
 def p_primary_expression(p):
   '''primary_expression : ID
-                | INT_CONST
-                | FLOAT_CONST
                 | CHAR_CONST
+                | INT_CONST
+                | FLOAT_CONST 
                 | OCTAL_CONST
                 | HEX_CONST
                 | BIN_CONST
@@ -346,6 +346,8 @@ def p_storage_class_specifier(p):
   #p[0] = Node()
   p[0] = build_AST(p)
 
+
+
 def p_type_specifier(p):
   '''type_specifier : VOID
                     | CHAR
@@ -358,7 +360,7 @@ def p_type_specifier(p):
                     | UNSIGNED
                     | struct_or_union_specifier
                     | enum_specifier
-                    | type_name
+                    | TYPE_NAME
   '''
   #p[0] = Node()
   p[0] = build_AST(p)

@@ -4,14 +4,15 @@ from ply.lex import TOKEN
 from tabulate import tabulate
 
 keyword_tokens = {}
-keywords = ('AUTO', 'BREAK', 'CASE', 'CHAR', 'CONST','CONTINUE',
-'DEFAULT', 'DO', 'DOUBLE', 'ELSE', 'ENUM', 'EXTERN',
-'FLOAT', 'FOR', 'GOTO', 'IF', 'INT', 'LONG','REGISTER', 
-'RETURN', 'SHORT', 'SIGNED', 'SIZEOF', 'STATIC', 'STRUCT',
-'SWITCH', 'TYPEDEF', 'UNION', 'UNSIGNED', 'VOID','VOLATILE', 'WHILE')
+keywords = {'auto':'AUTO', 'break':'BREAK', 'case':'CASE', 'char':'CHAR', 'const':'CONST','continue':'CONTINUE',
+'default':'DEFAULT', 'do':'DO', 'double':'DOUBLE', 'else':'ELSE', 'enum':'ENUM', 'extern':'EXTERN',
+'float':'FLOAT', 'for':'FOR', 'goto':'GOTO', 'if':'IF', 'int':'INT', 'long':'LONG','register':'REGISTER', 
+'return':'RETURN', 'short':'SHORT', 'signed':'SIGNED', 'sizeof':'SIZEOF', 'static':'STATIC', 'struct':'STRUCT',
+'switch':'SWITCH', 'typedef':'TYPEDEF', 'union':'UNION', 'unsigned':'UNSIGNED', 'void':'VOID', 'volatile':'VOLATILE', 
+'while':'WHILE', 'type_name':'TYPE_NAME'}
 
 
-tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTAL_CONST', 'HEX_CONST', 'BIN_CONST',
+tokens = ['ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTAL_CONST', 'HEX_CONST', 'BIN_CONST',
 # operators
 'PLUS', 'MINUS', 'MULTIPLY', 'DIVIDE', 'MOD', # + - * / %
 'OR', 'AND', 'NOT', 'XOR', 'LSHIFT', 'RSHIFT',
@@ -35,18 +36,19 @@ tokens = keywords + ('ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITE
 
 # comma etc.
 
-'COMMA', 'SEMICOLON', 'COLON', 'PERIOD', 'HASH', 'ELLIPSIS', # , ; : . ...#
+'COMMA', 'SEMICOLON', 'COLON', 'PERIOD', 'ELLIPSIS', # , ; : . ...#
 
 # various brackets 
 'LPAREN', 'RPAREN',
 'LSQUAREBRACKET', 'RSQUAREBRACKET',
 'LCURLYBRACKET', 'RCURLYBRACKET',
-)
+] + list(keywords.values())
 
+literals = [';', '(']
 
-for s in keywords:
-    low_s = s.lower()
-    keyword_tokens[low_s] = s
+# for s in keywords:
+#     low_s = s.lower()
+#     keyword_tokens[low_s] = s
 
 t_PLUS              = r'\+'
 t_MINUS             = r'-'
@@ -101,7 +103,7 @@ t_COLON             = r':'
 t_ELLIPSIS          = r'\.\.\.'
 t_LCURLYBRACKET     = r'\{'
 t_RCURLYBRACKET     = r'\}'
-t_HASH              = r'\#'
+
 
 integer_suffix_opt = r'(([uU]ll)|([uU]LL)|(ll[uU]?)|(LL[uU]?)|([uU][lL])|([lL][uU]?)|[uU])?'
 decimal_constant = '(0'+integer_suffix_opt+')|([1-9][0-9]*'+integer_suffix_opt+')'
@@ -151,8 +153,9 @@ def t_STRING_LITERAL(t):
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = keyword_tokens.get(t.value,'ID')    # Check for reserved words
+    t.type = keywords.get(t.value,'ID')    # Check for reserved words
     return t
+
 
 def t_newline(t):
     r'\n+'
