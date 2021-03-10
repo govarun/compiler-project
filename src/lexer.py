@@ -109,7 +109,7 @@ decimal_constant = '(0'+integer_suffix_opt+')|([1-9][0-9]*'+integer_suffix_opt+'
 
 
 def t_FLOAT_CONST(t):
-    r'[0-9]*([.][0-9]+)?([eE][+-]?[0-9]+) | ([0-9]*[.])[0-9]+'
+    r'[0-9]*([.][0-9]+)?([eE][+-]?[0-9]+) | ([0-9]*[.])[0-9]+ | ([0-9]+[.])'
     t.value = t.value
     return t
   

@@ -1,59 +1,75 @@
 digraph ethane {
-1[label="direct_declarator"]
-2[label="main"]
+1[label="struct_declaration"]
+2[label="int"]
 1 -> 2
-3[label="unary_expression"]
-4[label="--"]
-3 -> 4
-5[label="x"]
-3 -> 5
-6[label="expression_statement"]
-6 -> 3
-7[label="selection_statement"]
-8[label="if"]
+3[label="x"]
+1 -> 3
+4[label="specifier_qualifier_list"]
+5[label="long"]
+4 -> 5
+6[label="int"]
+4 -> 6
+7[label="struct_declarator_list"]
+8[label="y"]
 7 -> 8
-9[label="1"]
+9[label=","]
 7 -> 9
-7 -> 6
-10[label="unary_expression"]
-11[label="--"]
-10 -> 11
-12[label="y"]
-10 -> 12
-13[label="expression_statement"]
-13 -> 10
-14[label="unary_expression"]
-15[label="--"]
-14 -> 15
-16[label="z"]
-14 -> 16
-17[label="expression_statement"]
-17 -> 14
-18[label="selection_statement"]
-19[label="if"]
-18 -> 19
-20[label="2"]
-18 -> 20
-18 -> 13
-21[label="else"]
-18 -> 21
-18 -> 17
-22[label="statement_list"]
-22 -> 7
-22 -> 18
-23[label="jump_statement"]
-24[label="return"]
-23 -> 24
-25[label="0"]
-23 -> 25
-26[label="statement_list"]
-26 -> 22
-26 -> 23
-27[label="compound_statement"]
-27 -> 26
-28[label="function_definition"]
-29[label="int"]
+10[label="z"]
+7 -> 10
+11[label="struct_declaration"]
+11 -> 4
+11 -> 7
+12[label="struct_declaration_list"]
+12 -> 1
+12 -> 11
+13[label="struct_or_union_specifier"]
+14[label="struct"]
+13 -> 14
+15[label="point"]
+13 -> 15
+13 -> 12
+16[label="declaration"]
+16 -> 13
+17[label="direct_declarator"]
+18[label="main"]
+17 -> 18
+19[label="struct_or_union_specifier"]
+20[label="struct"]
+19 -> 20
+21[label="point"]
+19 -> 21
+22[label="declaration"]
+22 -> 19
+23[label="a"]
+22 -> 23
+24[label="init_declarator"]
+25[label="c"]
+24 -> 25
+26[label="="]
+24 -> 26
+27[label="1."]
+24 -> 27
+28[label="declaration"]
+29[label="float"]
 28 -> 29
-28 -> 1
-28 -> 27
+28 -> 24
+30[label="declaration_list"]
+30 -> 22
+30 -> 28
+31[label="jump_statement"]
+32[label="return"]
+31 -> 32
+33[label="1"]
+31 -> 33
+34[label="compound_statement"]
+34 -> 30
+34 -> 31
+35[label="function_definition"]
+36[label="int"]
+35 -> 36
+35 -> 17
+35 -> 34
+37[label="translation_unit"]
+37 -> 16
+37 -> 35
 }
