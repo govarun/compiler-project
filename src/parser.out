@@ -14816,7 +14816,6 @@ state 336
     (196) selection_statement -> IF LPAREN expression RPAREN statement .
     (197) selection_statement -> IF LPAREN expression RPAREN statement . ELSE statement
 
-  ! shift/reduce conflict for ELSE resolved as shift
     RCURLYBRACKET   reduce using rule 196 (selection_statement -> IF LPAREN expression RPAREN statement .)
     ID              reduce using rule 196 (selection_statement -> IF LPAREN expression RPAREN statement .)
     CASE            reduce using rule 196 (selection_statement -> IF LPAREN expression RPAREN statement .)
@@ -15573,7 +15572,3 @@ state 351
     LPAREN          reduce using rule 202 (iteration_statement -> FOR LPAREN expression_statement expression_statement expression RPAREN statement .)
     ELSE            reduce using rule 202 (iteration_statement -> FOR LPAREN expression_statement expression_statement expression RPAREN statement .)
 
-WARNING: 
-WARNING: Conflicts:
-WARNING: 
-WARNING: shift/reduce conflict for ELSE in state 336 resolved as shift

@@ -7,7 +7,10 @@ import pydot
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
-
+precedence = (
+     ('nonassoc', 'IFX'),
+     ('nonassoc', 'ELSE')
+ )
 # precedence = (
 #         ('left', 'LOR'),
 #         ('left', 'LAND'),
@@ -594,7 +597,7 @@ def p_expression_statement(p):
     p[0] = build_AST(p)
 
 def p_selection_statement(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement
+    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX
                            | IF LPAREN expression RPAREN statement ELSE statement
                            | SWITCH LPAREN expression RPAREN statement
     '''
