@@ -650,7 +650,7 @@ def p_error(p):
     # p.lineno(1)
 
 def runmain(code):
-  open('graph1.dot','w').write("digraph ethane {")
+  open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
   result = parser.parse(code,debug = False)
   open('graph1.dot','a').write("\n}")

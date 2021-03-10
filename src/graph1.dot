@@ -1,4 +1,4 @@
-digraph ethane {
+digraph G {
 1[label="direct_declarator"]
 2[label="main"]
 1 -> 2

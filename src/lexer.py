@@ -183,28 +183,28 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex(debug=False)
-# def runmain(code):
-#     global code_string
-#     code_string = code
-#     lexer = lex.lex(debug=False)
-#     lexer.input(code)
-#     # Tokenize
+def runmain(code):
+    global code_string
+    code_string = code
+    lexer = lex.lex(debug=False)
+    lexer.input(code)
+    # Tokenize
 
-#     formatted_output = []
-#     # print("Token      Lexeme      Line#     Column#")
-#     heading = ["Token","Lexeme","Line#","Column#"]
-#     formatted_output.append(heading)
+    formatted_output = []
+    # print("Token      Lexeme      Line#     Column#")
+    heading = ["Token","Lexeme","Line#","Column#"]
+    formatted_output.append(heading)
     
-#     while True:
-#         tok = lexer.token()
-#         if not tok:
-#             break      # No more input
-#         col_number = find_column(code,tok)
-#         temp_row = [str(tok.type),str(tok.value),str(tok.lineno),str(col_number)]
-#         # print(tok.type, tok.value, tok.lineno, col_number)
-#         formatted_output.append(temp_row)
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break      # No more input
+        col_number = find_column(code,tok)
+        temp_row = [str(tok.type),str(tok.value),str(tok.lineno),str(col_number)]
+        # print(tok.type, tok.value, tok.lineno, col_number)
+        formatted_output.append(temp_row)
     
-#     print(tabulate(formatted_output))
+    print(tabulate(formatted_output))
 
 
 

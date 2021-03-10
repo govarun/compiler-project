@@ -1,2 +1,6 @@
 src/__pycache__
 *.pyc
+src/graph1.dot
+src/parser.out
+src/parsetab.py
+src/pydot_graph.png
