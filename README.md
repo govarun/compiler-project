@@ -20,6 +20,7 @@ This compiler makes use of the following python3 packages:
 - After this, to run the lexer on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName_1.c> <CProgram_FileName_2.c>"
 - Milestone 1 goal: The code will first lex all the C files that are provided in the above command. These can be one or more in number. 
 - Milestone 2 goal: The code will parse the input code file, look and report the errors, if any. It will also construct and save the parse tree named as "pydot_graph.png". This is done by first creating dot file "graph1.dot" and then using GraphViz via pydot to output the graph as an image. 
+- Location of output: "pydot_graph.png" and "graph1.dot" are created in the same directory from where you are running the program in the terminal. 
 
 
 ### Group Members:
