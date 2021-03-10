@@ -5,9 +5,10 @@
 - Requires Python 3.x
 
 ### Usage: 
-python3 main.py [--help | file names seperated by space] <br>
-Options:<br>
+Usage: python3 main.py ([--help] | file name [--lexer])
+Options-
 --help : 	 Small tutorial on how to use the compiler
+--lexer : 	 Use only lexer (no parsing)
 
 ### Dependencies:
 This compiler makes use of the following python3 packages:
@@ -17,7 +18,8 @@ This compiler makes use of the following python3 packages:
 
 ### Instructions:
 - To install the dependencies, simply run "pip install -r requirements.txt"(without quotes) from the root of the repo
-- After this, to run the lexer on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName_1.c> <CProgram_FileName_2.c>"
+- After this, to run the parser on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName.c>"
+- To run only the lexer on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName.c> --lexer"
 - Milestone 1 goal: The code will first lex all the C files that are provided in the above command. These can be one or more in number. 
 - Milestone 2 goal: The code will parse the input code file, look and report the errors, if any. It will also construct and save the parse tree named as "pydot_graph.png". This is done by first creating dot file "graph1.dot" and then using GraphViz via pydot to output the graph as an image. 
 - Location of output: "pydot_graph.png" and "graph1.dot" are created in the same directory from where you are running the program in the terminal. 
