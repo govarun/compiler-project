@@ -13,11 +13,13 @@ Options:<br>
 This compiler makes use of the following python3 packages:
 - ply
 - tabulate
+- pydot
 
 ### Instructions:
 - To install the dependencies, simply run "pip install -r requirements.txt"(without quotes) from the root of the repo
 - After this, to run the lexer on any file, run the following command from the root of the repo: "python src/main.py <CProgram_FileName_1.c> <CProgram_FileName_2.c>"
-- The code will lex all the C files that are provided in the above command. These can be one or more in number. 
+- Milestone 1 goal: The code will first lex all the C files that are provided in the above command. These can be one or more in number. 
+- Milestone 2 goal: The code will parse the input code file, look and report the errors, if any. It will also construct and save the parse tree named as "pydot_graph.png". This is done by first creating dot file "graph1.dot" and then using GraphViz via pydot to output the graph as an image. 
 
 
 ### Group Members:
@@ -29,3 +31,4 @@ This compiler makes use of the following python3 packages:
 
 ### Milestones:
 - Milestone 1: Lexer
+- Milestone 2: Parser
