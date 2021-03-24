@@ -176,8 +176,8 @@ def find_column(code,token):
     return (token.lexpos - line_start) + 1
 
 def t_error(t):
-    col_number = find_column(code_string,t)
-    formatted_error = "Illegal character \'{character}\' at lineno {lineno} at position {colno}".format(character = t.value[0],lineno = t.lineno,colno = str(col_number))
+    # col_number = find_column(code_string,t)/
+    formatted_error = "Illegal character \'{character}\' at lineno {lineno}".format(character = t.value[0],lineno = t.lineno)
     # print("Illegal character '%s' at line " % t.value[0])
     print(formatted_error)
     t.lexer.skip(1)
