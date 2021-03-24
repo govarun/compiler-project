@@ -11,12 +11,17 @@ precedence = (
      ('nonassoc', 'ELSE')
  )
 
+symbol_table = []
+symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
+symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
+symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
+
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
     self.name = name
     self.val = val
     self.type = type
-    self.lineno = lineno
+    self.lineno = lno
     if children:
       self.children = children
     else:
@@ -393,8 +398,11 @@ def p_assignment_expression(p):
     p[0] = p[1]
   else:
     #check children
-    tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],tempNode,p[3]])
+    tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
+    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lineno, children = [p[1],tempNode,p[3]])
+    if(p[1].val not in symbol_table[0].keys()):
+      print (p[1].lineno, 'COMPILATION ERROR: unary_expression ' + p[1].val + ' not declared')
+      sys.exit()
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
