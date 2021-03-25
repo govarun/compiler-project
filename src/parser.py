@@ -33,6 +33,37 @@ class Node:
     
     # add more later
 
+def find_if_ID_is_declared(id,lineno):
+  curscp = currentScope
+  while(parent[curscp] != curscp):
+    if(id in symbol_table[curscp].keys()):
+      return 1
+    curscp = parent[curscp]
+  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  return 0
+
+def get_higher_data_type(type_1 , type_2):
+  to_num = {}
+  to_num['char'] = 0
+  to_num['short'] = 1
+  to_num['int'] = 2
+  to_num['long'] = 3 
+  to_num['float'] = 4
+  to_num['double'] = 5
+  to_str = {}
+  to_str[0] = 'char'
+  to_str[1] = 'short' 
+  to_str[2] = 'int'
+  to_str[3] = 'long'
+  to_str[4] = 'float'
+  to_str[5] = 'double'
+
+  num_type_1 = to_num[type_1]
+  num_type_2 = to_num[type_2]
+  return to_str[max(num_type_1 , num_type_2)]
+
+
+
 def ignore_1(s):
   if(s == "}"):
     return True
@@ -276,10 +307,27 @@ def p_multipicative_expression(p):
   else:
     # val empty 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
+
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     if(p[2] == '%'):
-      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      if higher_data_type >= 4 :
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
+
+      return_data_type = higher_data_type
+      if return_data_type >= 4 | return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
+
     else:
-      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      return_data_type = higher_data_type
+      if return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
 ###############
 
@@ -293,8 +341,13 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -310,8 +363,12 @@ def p_shift_expression(p):
     p[0] = p[1]
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    type_dict = {'short' , 'int' , 'long'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -327,8 +384,12 @@ def p_relational_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
 
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
@@ -741,7 +802,15 @@ def p_initializer_list(p):
   | initializer_list COMMA initializer
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  if(len(p) == 2):
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1))
+  else:
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
+    if(p[1].name != 'InitializerList'):
+      p[0].children.append(p[1])
+    else
+      p[0].children = p[1].children
+    p[0].children.append(p[3])
 
 def p_statement(p):
     '''statement : labeled_statement
@@ -751,14 +820,18 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
-    # symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
-def p_labeled_statement(p):
-    '''labeled_statement : ID COLON statement 
-                         | CASE constant_expression COLON statement
-                         | DEFAULT COLON statement
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = p[1]
+def p_labeled_statement_1(p):
+    '''labeled_statement : ID COLON statement '''
+    p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [p[1], p[3]], lno = p.lineno(1) )
+
+def p_labeled_statement_2(p):
+    '''labeled_statement : CASE constant_expression COLON statement'''
+    p[0] = Node(name = 'CaseStatement', val = '', type = '', children = [p[2], p[4]], lno = p.lineno(1))
+
+def p_labeled_statement_3(p):
+    '''labeled_statement : DEFAULT COLON statement'''
+    p[0] = Node(name = 'DefaultStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
 
 def p_compound_statement(p):
     '''compound_statement : openbrace closebrace
@@ -767,45 +840,79 @@ def p_compound_statement(p):
                           | openbrace declaration_list statement_list closebrace
     '''  
     #p[0] = Node()
-    p[0] = build_AST(p)                        
+    if(len(p) == 3):
+      p[0] = p[2]
+    else if(len(p) == 4):
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [p[2], p[3]], lno = p.lineno(1))                        
 
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'DeclarationList', val = '', type = '', children = [], lno = p.lineno(1))
+      if(p[1].name != 'DeclarationList'):
+        p[0].children.append(p[1])
+      else:
+        p[0].children = p[1].children
+      p[0].children.append(p[2])
 
 def p_statement_list(p):
     '''statement_list : statement
                       | statement_list statement
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
+      if(p[1].name != 'StatmentList'):
+        p[0].children.append(p[1])
+      else:
+        p[0].children = p[1].children
+      p[0].children.append(p[2])
 
 def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    
 
-def p_selection_statement(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX
-                           | IF LPAREN expression RPAREN statement ELSE statement
-                           | SWITCH LPAREN expression RPAREN statement
-    '''
+def p_selection_statement_1(p):
+    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX'''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = Node(name = 'IfStatment', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+  
+def p_selection_statement_2(p):
+    '''selection_statement : IF LPAREN expression RPAREN statement ELSE statement'''
+    p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [p[3], p[5], p[7]], lno = p.lineno(1))
 
-def p_iteration_statement(p):
-    '''iteration_statement : WHILE LPAREN expression RPAREN
-                           | DO statement WHILE LPAREN expression RPAREN SEMICOLON
-                           | FOR LPAREN expression_statement expression_statement RPAREN statement
-                           | FOR LPAREN expression_statement expression_statement expression RPAREN statement                                                 
-    '''
+def p_selection_statement_3(p):
+    '''selection_statement : SWITCH LPAREN expression RPAREN statement'''
+    p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+
+def p_iteration_statement_1(p):
+    '''iteration_statement : WHILE LPAREN expression RPAREN'''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
+  
+def p_iteration_statement_2(p):
+    '''iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMICOLON'''
+    p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [p[2], p[5]], lno = p.lineno(1))
+  
+def p_iteration_statement_3(p):
+    '''iteration_statement : FOR LPAREN expression_statement expression_statement RPAREN statement'''
+    p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [p[3], p[4], p[6]], lno = p.lineno(1))
+
+def p_iteration_statement_4(p):
+    '''iteration_statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement'''
+    p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [p[3], p[4], p[5], p[7]], lno = p.lineno(1)) 
 
 def p_jump_statement(p):
     '''jump_statement : GOTO ID SEMICOLON
@@ -867,6 +974,7 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
+  
   parent[nextScope] = currentScope
   currentScope = nextScope
   nextScope = nextScope + 1
