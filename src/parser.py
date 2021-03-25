@@ -15,6 +15,9 @@ symbol_table = []
 symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
 symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
+currentScope = 0
+nextScope = 1
+parent = []
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
@@ -390,7 +393,7 @@ def p_conditional_expression(p):
 
 def p_assignment_expression(p):
   '''assignment_expression : conditional_expression 
-  | unary_expression assignment_operator assignment_expression
+                           | unary_expression assignment_operator assignment_expression
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
@@ -529,8 +532,8 @@ def p_type_specifier_2(p):
   p[0] = p[1]
 
 def p_struct_or_union_specifier(p):
-  '''struct_or_union_specifier : struct_or_union ID LCURLYBRACKET struct_declaration_list RCURLYBRACKET
-  | struct_or_union LCURLYBRACKET struct_declaration_list RCURLYBRACKET
+  '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
+  | struct_or_union openbrace struct_declaration_list closebrace
   | struct_or_union ID
   '''
   # p[0] = build_AST(p)
@@ -576,8 +579,8 @@ def p_struct_declarator(p):
   p[0] = build_AST(p)
 
 def p_enum_specifier(p):
-  '''enum_specifier : ENUM LCURLYBRACKET enumerator_list RCURLYBRACKET
-	| ENUM ID LCURLYBRACKET enumerator_list RCURLYBRACKET
+  '''enum_specifier : ENUM openbrace enumerator_list closebrace
+	| ENUM ID openbrace enumerator_list closebrace
 	| ENUM ID
   '''
   p[0] = build_AST(p)
@@ -698,8 +701,8 @@ def p_direct_abstract_declarator(p):
 
 def p_initializer(p):
     '''initializer : assignment_expression
-                   | LCURLYBRACKET initializer_list RCURLYBRACKET
-                   | LCURLYBRACKET initializer_list COMMA RCURLYBRACKET                                   
+                   | openbrace initializer_list closebrace
+                   | openbrace initializer_list COMMA closebrace                                   
     '''
     #p[0] = Node()
     p[0] = build_AST(p)
@@ -718,10 +721,7 @@ def p_statement(p):
                  | selection_statement
                  | iteration_statement
                  | jump_statement
-    '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
-
+    '''symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
 def p_labeled_statement(p):
     '''labeled_statement : ID COLON statement 
                          | CASE constant_expression COLON statement
@@ -731,10 +731,10 @@ def p_labeled_statement(p):
     p[0] = build_AST(p)
 
 def p_compound_statement(p):
-    '''compound_statement : LCURLYBRACKET RCURLYBRACKET
-                          | LCURLYBRACKET statement_list RCURLYBRACKET
-                          | LCURLYBRACKET declaration_list RCURLYBRACKET
-                          | LCURLYBRACKET declaration_list statement_list RCURLYBRACKET
+    '''compound_statement : openbrace closebrace
+                          | openbrace statement_list closebrace
+                          | openbrace declaration_list closebrace
+                          | openbrace declaration_list statement_list closebrace
     '''  
     #p[0] = Node()
     p[0] = build_AST(p)                        
@@ -832,6 +832,21 @@ def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator compound_statement'''
   # no need to keep type in AST
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [p[2],p[3]])
+
+def p_openbrace(p):
+  '''openbrace : LCURLYBRACKET'''
+  global currentScope
+  global nextScope
+  parent[nextScope] = currentScope
+  currentScope = nextScope
+  nextScope = nextScope + 1
+  p[0] = p[1]
+
+def p_closebrace(p):
+  '''closebrace : RCURLYBRACKET'''
+  global currentScope
+  currentScope = parent[currentScope]
+  p[0] = p[1]
 
 # Error rule for syntax errors
 def p_error(p):
