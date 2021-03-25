@@ -33,6 +33,37 @@ class Node:
     
     # add more later
 
+def find_if_ID_is_declared(id,lineno):
+  curscp = currentScope
+  while(parent[curscp] != curscp):
+    if(id in symbol_table[curscp].keys()):
+      return 1
+    curscp = parent[curscp]
+  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  return 0
+
+def get_higher_data_type(type_1 , type_2):
+  to_num = {}
+  to_num['char'] = 0
+  to_num['short'] = 1
+  to_num['int'] = 2
+  to_num['long'] = 3 
+  to_num['float'] = 4
+  to_num['double'] = 5
+  to_str = {}
+  to_str[0] = 'char'
+  to_str[1] = 'short' 
+  to_str[2] = 'int'
+  to_str[3] = 'long'
+  to_str[4] = 'float'
+  to_str[5] = 'double'
+
+  num_type_1 = to_num[type_1]
+  num_type_2 = to_num[type_2]
+  return to_str[max(num_type_1 , num_type_2)]
+
+
+
 def ignore_1(s):
   if(s == "}"):
     return True
@@ -276,10 +307,27 @@ def p_multipicative_expression(p):
   else:
     # val empty 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
+
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     if(p[2] == '%'):
-      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      if higher_data_type >= 4 :
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
+
+      return_data_type = higher_data_type
+      if return_data_type >= 4 | return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
+
     else:
-      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      return_data_type = higher_data_type
+      if return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
 ###############
 
@@ -293,8 +341,13 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -310,8 +363,12 @@ def p_shift_expression(p):
     p[0] = p[1]
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    type_dict = {'short' , 'int' , 'long'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -327,8 +384,12 @@ def p_relational_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
 
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
@@ -910,6 +971,7 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
+  
   parent[nextScope] = currentScope
   currentScope = nextScope
   nextScope = nextScope + 1
