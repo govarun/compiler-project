@@ -356,7 +356,7 @@ def p_multipicative_expression(p):
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
     type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict | p[3].type not in type_dict:
+    if(p[1].type not in type_dict | p[3].type not in type_dict):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
@@ -852,7 +852,7 @@ def p_initializer_list(p):
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
     if(p[1].name != 'InitializerList'):
       p[0].children.append(p[1])
-    else
+    else:
       p[0].children = p[1].children
     p[0].children.append(p[3])
 
@@ -886,7 +886,7 @@ def p_compound_statement(p):
     #p[0] = Node()
     if(len(p) == 3):
       p[0] = p[2]
-    else if(len(p) == 4):
+    elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [p[2], p[3]], lno = p.lineno(1))                        
 
 def p_declaration_list(p):
