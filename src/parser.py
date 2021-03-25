@@ -17,7 +17,7 @@ symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 currentScope = 0
 nextScope = 1
-parent = []
+parent = {}
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
@@ -712,7 +712,15 @@ def p_initializer_list(p):
   | initializer_list COMMA initializer
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  if(len(p) == 2):
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1))
+  else:
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
+    if(p[1].name != 'InitializerList'):
+      p[0].children.append(p[1])
+    else
+      p[0].children = p[1].children
+    p[0].children.append(p[3])
 
 def p_statement(p):
     '''statement : labeled_statement
@@ -721,14 +729,19 @@ def p_statement(p):
                  | selection_statement
                  | iteration_statement
                  | jump_statement
-    '''symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
-def p_labeled_statement(p):
-    '''labeled_statement : ID COLON statement 
-                         | CASE constant_expression COLON statement
-                         | DEFAULT COLON statement
     '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = p[1]
+def p_labeled_statement_1(p):
+    '''labeled_statement : ID COLON statement '''
+    p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [p[1], p[3]], lno = p.lineno(1) )
+
+def p_labeled_statement_2(p):
+    '''labeled_statement : CASE constant_expression COLON statement'''
+    p[0] = Node(name = 'CaseStatement', val = '', type = '', children = [p[2], p[4]], lno = p.lineno(1))
+
+def p_labeled_statement_3(p):
+    '''labeled_statement : DEFAULT COLON statement'''
+    p[0] = Node(name = 'DefaultStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
 
 def p_compound_statement(p):
     '''compound_statement : openbrace closebrace
@@ -737,45 +750,79 @@ def p_compound_statement(p):
                           | openbrace declaration_list statement_list closebrace
     '''  
     #p[0] = Node()
-    p[0] = build_AST(p)                        
+    if(len(p) == 3):
+      p[0] = p[2]
+    else if(len(p) == 4):
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [p[2], p[3]], lno = p.lineno(1))                        
 
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'DeclarationList', val = '', type = '', children = [], lno = p.lineno(1))
+      if(p[1].name != 'DeclarationList'):
+        p[0].children.append(p[1])
+      else:
+        p[0].children = p[1].children
+      p[0].children.append(p[2])
 
 def p_statement_list(p):
     '''statement_list : statement
                       | statement_list statement
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
+      if(p[1].name != 'StatmentList'):
+        p[0].children.append(p[1])
+      else:
+        p[0].children = p[1].children
+      p[0].children.append(p[2])
 
 def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    
 
-def p_selection_statement(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX
-                           | IF LPAREN expression RPAREN statement ELSE statement
-                           | SWITCH LPAREN expression RPAREN statement
-    '''
+def p_selection_statement_1(p):
+    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX'''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = Node(name = 'IfStatment', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+  
+def p_selection_statement_2(p):
+    '''selection_statement : IF LPAREN expression RPAREN statement ELSE statement'''
+    p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [p[3], p[5], p[7]], lno = p.lineno(1))
 
-def p_iteration_statement(p):
-    '''iteration_statement : WHILE LPAREN expression RPAREN
-                           | DO statement WHILE LPAREN expression RPAREN SEMICOLON
-                           | FOR LPAREN expression_statement expression_statement RPAREN statement
-                           | FOR LPAREN expression_statement expression_statement expression RPAREN statement                                                 
-    '''
+def p_selection_statement_3(p):
+    '''selection_statement : SWITCH LPAREN expression RPAREN statement'''
+    p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+
+def p_iteration_statement_1(p):
+    '''iteration_statement : WHILE LPAREN expression RPAREN'''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
+  
+def p_iteration_statement_2(p):
+    '''iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMICOLON'''
+    p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [p[2], p[5]], lno = p.lineno(1))
+  
+def p_iteration_statement_3(p):
+    '''iteration_statement : FOR LPAREN expression_statement expression_statement RPAREN statement'''
+    p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [p[3], p[4], p[6]], lno = p.lineno(1))
+
+def p_iteration_statement_4(p):
+    '''iteration_statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement'''
+    p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [p[3], p[4], p[5], p[7]], lno = p.lineno(1))
 
 def p_jump_statement(p):
     '''jump_statement : GOTO ID SEMICOLON
