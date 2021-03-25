@@ -341,7 +341,7 @@ def p_equality_expresssion(p):
     p[0] = p[1]
   else:
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
 
 def p_and_expression(p):
   '''and_expression : equality_expression
@@ -354,6 +354,11 @@ def p_and_expression(p):
   else:
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    valid = ['int'] #TODO: check this if more AND should be taken
+    if p[1].type not in valid or p[3].type not in valid:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[2].type, 'for the AND operator')
+    else:
+      p[0].type = 'int'
 
 def p_exclusive_or_expression(p):
   '''exclusive_or_expression : and_expression
