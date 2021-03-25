@@ -20,11 +20,12 @@ nextScope = 1
 parent = []
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
     self.name = name
     self.val = val
     self.type = type
     self.lineno = lno
+    self.scope = scope
     if children:
       self.children = children
     else:
@@ -403,9 +404,7 @@ def p_assignment_expression(p):
     #check children
     tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lineno, children = [p[1],tempNode,p[3]])
-    if(p[1].val not in symbol_table[0].keys()):
-      print (p[1].lineno, 'COMPILATION ERROR: unary_expression ' + p[1].val + ' not declared')
-      sys.exit()
+    find_if_ID_is_declared(p[1].val, p[1].lineno)
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
