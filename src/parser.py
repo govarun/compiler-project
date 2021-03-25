@@ -17,8 +17,8 @@ symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 currentScope = 0
 nextScope = 1
-parent = []
-
+parent = {}
+parent[0] = 0
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
     self.name = name
@@ -63,6 +63,7 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 
+
 def ignore_1(s):
   if(s == "}"):
     return True
@@ -75,6 +76,17 @@ def ignore_1(s):
   elif(s == ";"):
     return True
   return False
+
+def find_if_ID_is_declared(id,lineno):
+  curscp = currentScope
+  while(parent[curscp] != curscp):
+    if(id in symbol_table[curscp].keys()):
+      return 1
+    curscp = parent[curscp]
+  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  return 0
+
+
 
 cur_num = 0
 
@@ -107,9 +119,13 @@ def build_AST(p):
 
 #ToDo : think how to deal with octal, hex and bin const
 #if reduces to ID, check if it is present in symbol table
+def p_primary_expression_0(p):
+  '''primary_expression : ID'''
+  p[0] = Node(name = 'primaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+  find_if_ID_is_declared(p[1],p.lineno(1))
+
 def p_primary_expression_1(p):
-  '''primary_expression : ID 
-                | OCTAL_CONST
+  '''primary_expression : OCTAL_CONST
                 | HEX_CONST
                 | BIN_CONST
                 | LPAREN expression RPAREN
@@ -150,14 +166,24 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  curscp = currentScope
+  if(p[3].type != 'int'):
+    print("Error: Expression inside '[ ]' is not of type int")
+
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  
+  find_if_ID_is_declared(p[1].val,p[1].lno)
+
+
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  find_if_ID_is_declared(p[1].val,p[1].lno)
+  
+
+
 
 def p_postfix_expression_5(p):
   '''postfix_expression : postfix_expression PERIOD ID
@@ -281,10 +307,15 @@ def p_multipicative_expression(p):
   else:
     # val empty 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
+
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     if(p[2] == '%'):
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       if higher_data_type >= 4 :
-        print(p1.lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
 
       return_data_type = higher_data_type
       if return_data_type >= 4 | return_data_type == 0 :
@@ -310,8 +341,13 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -327,8 +363,12 @@ def p_shift_expression(p):
     p[0] = p[1]
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    type_dict = {'short' , 'int' , 'long'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+    p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
 
 ##############
 
@@ -344,8 +384,12 @@ def p_relational_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
+    if p[1].type not in type_dict | p[3].type not in type_dict:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
 
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
@@ -465,8 +509,8 @@ def p_assignment_operator(p):
 	'''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  p[0] = p[1]
-  # p[0] = Node(name = '',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[2],p[3]])
+  # p[0] = p[1]
+  p[0] = Node(name = '',val = p[1],type = '', lno = p[1].lno, children = [p[1]])
 
 def p_expression(p):
   '''expression : assignment_expression
@@ -765,6 +809,7 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
+
 def p_labeled_statement(p):
     '''labeled_statement : ID COLON statement 
                          | CASE constant_expression COLON statement
@@ -880,7 +925,7 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
-  parent.append(currentScope)
+  
   parent[nextScope] = currentScope
   currentScope = nextScope
   nextScope = nextScope + 1
