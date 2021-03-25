@@ -17,14 +17,15 @@ symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 currentScope = 0
 nextScope = 1
-parent = []
-
+parent = {}
+parent[0] = 0
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
     self.name = name
     self.val = val
     self.type = type
     self.lineno = lno
+    self.scope = scope
     if children:
       self.children = children
     else:
@@ -44,6 +45,17 @@ def ignore_1(s):
   elif(s == ";"):
     return True
   return False
+
+def find_if_ID_is_declared(id,lineno):
+  curscp = currentScope
+  while(parent[curscp] != curscp):
+    if(id in symbol_table[curscp].keys()):
+      return 1
+    curscp = parent[curscp]
+  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  return 0
+
+
 
 cur_num = 0
 
@@ -76,9 +88,13 @@ def build_AST(p):
 
 #ToDo : think how to deal with octal, hex and bin const
 #if reduces to ID, check if it is present in symbol table
+def p_primary_expression_0(p):
+  '''primary_expression : ID'''
+  p[0] = Node(name = 'primaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+  find_if_ID_is_declared(p[1],p.lineno(1))
+
 def p_primary_expression_1(p):
-  '''primary_expression : ID 
-                | OCTAL_CONST
+  '''primary_expression : OCTAL_CONST
                 | HEX_CONST
                 | BIN_CONST
                 | LPAREN expression RPAREN
@@ -119,14 +135,24 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  curscp = currentScope
+  if(p[3].type != 'int'):
+    print("Error: Expression inside '[ ]' is not of type int")
+
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  
+  find_if_ID_is_declared(p[1].val,p[1].lno)
+
+
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  find_if_ID_is_declared(p[1].val,p[1].lno)
+  
+
+
 
 def p_postfix_expression_5(p):
   '''postfix_expression : postfix_expression PERIOD ID
@@ -422,8 +448,8 @@ def p_assignment_operator(p):
 	'''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  p[0] = p[1]
-  # p[0] = Node(name = '',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[2],p[3]])
+  # p[0] = p[1]
+  p[0] = Node(name = '',val = p[1],type = '', lno = p[1].lno, children = [p[1]])
 
 def p_expression(p):
   '''expression : assignment_expression
@@ -721,7 +747,8 @@ def p_statement(p):
                  | selection_statement
                  | iteration_statement
                  | jump_statement
-    '''symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
+    '''
+    # symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
 def p_labeled_statement(p):
     '''labeled_statement : ID COLON statement 
                          | CASE constant_expression COLON statement
