@@ -20,17 +20,48 @@ nextScope = 1
 parent = []
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = ''):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
     self.name = name
     self.val = val
     self.type = type
     self.lineno = lno
+    self.scope = scope
     if children:
       self.children = children
     else:
       self.children = []
     
     # add more later
+
+def find_if_ID_is_declared(id,lineno):
+  curscp = currentScope
+  while(parent[curscp] != curscp):
+    if(id in symbol_table[curscp].keys()):
+      return 1
+    curscp = parent[curscp]
+  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  return 0
+
+def get_higher_data_type(type_1 , type_2):
+  to_num = {}
+  to_num['char'] = 0
+  to_num['short'] = 1
+  to_num['int'] = 2
+  to_num['long'] = 3 
+  to_num['float'] = 4
+  to_num['double'] = 5
+  to_str = {}
+  to_str[0] = 'char'
+  to_str[1] = 'short' 
+  to_str[2] = 'int'
+  to_str[3] = 'long'
+  to_str[4] = 'float'
+  to_str[5] = 'double'
+
+  num_type_1 = to_num[type_1]
+  num_type_2 = to_num[type_2]
+  return to_str[max(num_type_1 , num_type_2)]
+
 
 def ignore_1(s):
   if(s == "}"):
@@ -251,9 +282,21 @@ def p_multipicative_expression(p):
     # val empty 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     if(p[2] == '%'):
-      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      if higher_data_type >= 4 :
+        print(p1.lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
+
+      return_data_type = higher_data_type
+      if return_data_type >= 4 | return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
+
     else:
-      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      return_data_type = higher_data_type
+      if return_data_type == 0 :
+        return_data_type = 2
+      p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
 ###############
 
@@ -721,7 +764,7 @@ def p_statement(p):
                  | selection_statement
                  | iteration_statement
                  | jump_statement
-    '''symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
+    '''
 def p_labeled_statement(p):
     '''labeled_statement : ID COLON statement 
                          | CASE constant_expression COLON statement
@@ -837,6 +880,7 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
+  parent.append(currentScope)
   parent[nextScope] = currentScope
   currentScope = nextScope
   nextScope = nextScope + 1
