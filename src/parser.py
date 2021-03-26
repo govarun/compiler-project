@@ -79,6 +79,7 @@ def ignore_1(s):
 
 def find_if_ID_is_declared(id,lineno):
   curscp = currentScope
+  print("here" + str(curscp))
   while(parent[curscp] != curscp):
     if(id in symbol_table[curscp].keys()):
       return 1
@@ -589,7 +590,8 @@ def p_declaration(p):
   if(len(p) == 3):
     p[0] = p[1]
   else:
-    a = 1
+    # a = 1
+    p[0] = Node(name = '',val = p[1],type = '', lno = p.lineno(1), children = [])
     #fill later
 
 def p_declaration_specifiers(p):
@@ -600,7 +602,10 @@ def p_declaration_specifiers(p):
 	| type_qualifier
 	| type_qualifier declaration_specifiers
   '''
-  a = 1
+  if(len(p) == 2):
+    p[0] = p[1]
+  elif(len(p) == 3):
+    p[0] = Node(name = '',val = p[1],type = '', lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -632,7 +637,7 @@ def p_init_declarator(p):
     p[0] = p[1]
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[3]])
+    p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]])
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -643,8 +648,8 @@ def p_storage_class_specifier(p):
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  p[0] = p[1]
-  # p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],tempNode,p[3]])
+  # p[0] = p[1]
+  p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1], lno = p.lineno(1), children = [])
 
 
 def p_type_specifier_1(p):
@@ -779,7 +784,7 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
+  p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
 
   #p[0] = build_AST(p)
 
