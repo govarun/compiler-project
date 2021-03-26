@@ -181,7 +181,7 @@ def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   find_if_ID_is_declared(p[1].val,p[1].lno)
-  
+  #check if function argument_list_expression matches with the actual one
 
 
 
@@ -192,12 +192,18 @@ def p_postfix_expression_5(p):
   # ID as child of p[0].
   tempNode = Node(name = '',val = p[3],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'PeriodOrArrowExpression',val = tempNode.val,lno = tempNode.lno,type = tempNode.type,children = [p[1],tempNode])
+  # structure things , do later
+
+
 
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
 	| postfix_expression DECREMENT'''
   tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
+  if(p[1].type not in ['int','float','char']):
+    print("Error at line number " + p[1].lno + "unary operation type mismatch")
+
 
 
 #################
@@ -234,12 +240,12 @@ def p_unary_expression_1(p):
     #also check if child should be added or not
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
-
+    if(p[2].type not in ['int','float','char']):
+      print("Error at line :" + p[2].lno + "type mismatch for unary operator")
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
   # p[1] can be &,*,+,-,~,!
-  # p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
   if(p[1] == '&'):
     # no '&' child added, will deal in traversal
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
@@ -294,11 +300,52 @@ def p_cast_expression(p):
 #No type should be passed in below cases since multiplication, division, add, sub work
 # for all types that are present in C.
 
+# def p_multipicative_expression(p):
+#   '''multiplicative_expression : cast_expression
+# 	| multiplicative_expression MULTIPLY cast_expression
+# 	| multiplicative_expression DIVIDE cast_expression
+# 	| multiplicative_expression MOD cast_expression
+#   '''
+#   #p[0] = Node()
+#   # p[0] = build_AST(p)
+#   if(len(p) == 2):
+#     p[0] = p[1]
+#   else:
+#     # val empty 
+#     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
+#     if(p[2] == '%'):
+#       p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+#     else:
+#       p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+
+# def get_higher_data_type(a,b):
+#   return 1
+def get_higher_data_type(type_1 , type_2):
+  to_num = {}
+  to_num['char'] = 0
+  to_num['short'] = 1
+  to_num['int'] = 2
+  to_num['long'] = 3 
+  to_num['float'] = 4
+  to_num['double'] = 5
+  to_str = {}
+  to_str[0] = 'char'
+  to_str[1] = 'short' 
+  to_str[2] = 'int'
+  to_str[3] = 'long'
+  to_str[4] = 'float'
+  to_str[5] = 'double'
+
+  num_type_1 = to_num[type_1]
+  num_type_2 = to_num[type_2]
+  return to_str[max(num_type_1 , num_type_2)]
+
+
 def p_multipicative_expression(p):
   '''multiplicative_expression : cast_expression
-	| multiplicative_expression MULTIPLY cast_expression
-	| multiplicative_expression DIVIDE cast_expression
-	| multiplicative_expression MOD cast_expression
+    | multiplicative_expression MULTIPLY cast_expression
+    | multiplicative_expression DIVIDE cast_expression
+    | multiplicative_expression MOD cast_expression
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
@@ -309,7 +356,7 @@ def p_multipicative_expression(p):
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
     type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict | p[3].type not in type_dict:
+    if(p[1].type not in type_dict | p[3].type not in type_dict):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
@@ -808,7 +855,7 @@ def p_initializer_list(p):
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
     if(p[1].name != 'InitializerList'):
       p[0].children.append(p[1])
-    else
+    else:
       p[0].children = p[1].children
     p[0].children.append(p[3])
 
@@ -842,7 +889,7 @@ def p_compound_statement(p):
     #p[0] = Node()
     if(len(p) == 3):
       p[0] = p[2]
-    else if(len(p) == 4):
+    elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [p[2], p[3]], lno = p.lineno(1))                        
 
 def p_declaration_list(p):
