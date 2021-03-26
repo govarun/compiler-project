@@ -15,7 +15,7 @@ symbol_table = []
 symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
 symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
-symbol_table.append({'parent':'','scope':'s1'})
+# symbol_table.append({'parent':'','scope':'s1'})
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -764,7 +764,7 @@ def p_declarator(p):
 
   #p[0] = build_AST(p)
 
-def p_direct_declarator(p):
+def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
@@ -774,9 +774,19 @@ def p_direct_declarator(p):
                         | direct_declarator LPAREN RPAREN
   '''
   
-  p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
+  # 
+  if(len(p) == 2):
+    p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
+    p[0].val = p[1]
+  elif(len(p) == 3):
+    p[0] = p[2]
   #TODO: Handle Children
   #p[0] = build_AST(p)
+
+def p_direct_declarator_1(p):
+  '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
+                        |
+
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
