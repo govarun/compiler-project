@@ -760,7 +760,11 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  if(len(p) == 2):
+    p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  else:
+    p[0] = Node(name = 'Declarator', val = '', type = p[2].type, lno = p[2].lno, children = [])
+
 
   #p[0] = build_AST(p)
 
