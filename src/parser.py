@@ -12,10 +12,7 @@ precedence = (
  )
 
 symbol_table = []
-symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
-symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
-symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
-# symbol_table.append({'parent':'','scope':'s1'})
+symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -165,9 +162,8 @@ def p_postfix_expression_2(p):
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   curscp = currentScope
-  if(p[3].type != 'int'):
-    print("Error: Expression inside '[ ]' is not of type int")
-
+  if(p[3].type not in ['char', 'short', 'int', 'long']):
+    print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
@@ -199,8 +195,7 @@ def p_postfix_expression_6(p):
 	| postfix_expression DECREMENT'''
   tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
-  if(p[1].type not in ['int','float','char']):
-    print("Error at line number " + p[1].lno + "unary operation type mismatch")
+  #Can't think of a case where this is invalid
 
 
 
@@ -238,8 +233,7 @@ def p_unary_expression_1(p):
     #also check if child should be added or not
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
-    if(p[2].type not in ['int','float','char']):
-      print("Error at line :" + p[2].lno + "type mismatch for unary operator")
+    #Can't think of a case where this is invalid
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
@@ -569,6 +563,15 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = '', lno = p.lineno(1), children = [])
     #fill later
+    for child in p[2].children:
+      if(child.name == 'InitDeclarator'):
+        symbol_table[currentScope][child.children[0].val] = {}
+        symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
+        symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
+      else:
+        symbol_table[currentScope][child.val] = {}
+        symbol_table[currentScope][child.val]['type'] = p[1].type
+
 
 def p_declaration_specifiers(p):
   '''declaration_specifiers : storage_class_specifier
@@ -595,7 +598,7 @@ def p_init_declarator_list(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   if(len(p) == 2):
-    p[0] = p[1]
+    p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
   else:
     #check once
     p[0] = p[1]
@@ -761,6 +764,10 @@ def p_declarator(p):
   | direct_declarator
   '''
   p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  if(len(p) == 2):
+    p[0].val = p[1].val
+  else:
+    p[0].val = p[2].val
 
   #p[0] = build_AST(p)
 
@@ -768,10 +775,8 @@ def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
-                        | direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator LPAREN parameter_type_list RPAREN
                         | direct_declarator LPAREN identifier_list RPAREN
-                        | direct_declarator LPAREN RPAREN
   '''
   
   # 
@@ -780,13 +785,15 @@ def p_direct_declarator_1(p):
     p[0].val = p[1]
   elif(len(p) == 3):
     p[0] = p[2]
+  else:
+    p[0] = p[1]
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
-def p_direct_declarator_1(p):
+def p_direct_declarator_2(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
-                        |
-
+                        | direct_declarator LPAREN RPAREN'''
+  p[0] = p[1]
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -1100,6 +1107,7 @@ def p_openbrace(p):
   
   parent[nextScope] = currentScope
   currentScope = nextScope
+  symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
 
@@ -1121,11 +1129,19 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   result = parser.parse(code)
   open('graph1.dot','a').write("\n}")
+  visualize_symbol_table()
 
   graphs = pydot.graph_from_dot_file('graph1.dot')
   # print(len(graphs))
   graph = graphs[0]
   graph.write_png('pydot_graph.png')
+
+def visualize_symbol_table():
+  for i in range (1,nextScope):
+    if(len(symbol_table[i]) > 0):
+      print('\nIn Scope ' + str(i))
+      for key in symbol_table[i].keys():
+        print(key, symbol_table[i][key])
 
   # print(result)
   # while True:
