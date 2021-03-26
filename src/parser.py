@@ -24,7 +24,7 @@ class Node:
     self.name = name
     self.val = val
     self.type = type
-    self.lineno = lno
+    self.lno = lno
     self.scope = scope
     if children:
       self.children = children
@@ -32,7 +32,7 @@ class Node:
       self.children = []
     
     # add more later
-
+ts_unit = Node('START',val = '',type ='' ,children = [])
 def find_if_ID_is_declared(id,lineno):
   curscp = currentScope
   while(parent[curscp] != curscp):
@@ -1104,7 +1104,8 @@ def p_function_definition_1(p):
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator compound_statement'''
   # no need to keep type in AST
-  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [p[2],p[3]])
+  print(p[1])
+  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [p[2],p[3]])
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
