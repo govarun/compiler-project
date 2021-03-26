@@ -12,10 +12,7 @@ precedence = (
  )
 
 symbol_table = []
-symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
-symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
-symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
-symbol_table.append({'parent':'','scope':'s1'})
+symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -569,6 +566,15 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = '', lno = p.lineno(1), children = [])
     #fill later
+    for child in p[2].children:
+      if(child.name == 'InitDeclarator'):
+        symbol_table[currentScope][child.children[0].val] = {}
+        symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
+        symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
+      else:
+        symbol_table[currentScope][child.val] = {}
+        symbol_table[currentScope][child.val]['type'] = p[1].type
+
 
 def p_declaration_specifiers(p):
   '''declaration_specifiers : storage_class_specifier
@@ -595,7 +601,7 @@ def p_init_declarator_list(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   if(len(p) == 2):
-    p[0] = p[1]
+    p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
   else:
     #check once
     p[0] = p[1]
@@ -761,6 +767,10 @@ def p_declarator(p):
   | direct_declarator
   '''
   p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  if(len(p) == 2):
+    p[0].val = p[1].val
+  else:
+    p[0].val = p[2].val
 
   #p[0] = build_AST(p)
 
@@ -775,6 +785,8 @@ def p_direct_declarator(p):
   '''
   
   p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
+  if(len(p) == 2):
+    p[0].val = p[1]
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
@@ -1090,6 +1102,7 @@ def p_openbrace(p):
   
   parent[nextScope] = currentScope
   currentScope = nextScope
+  symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
 
@@ -1111,11 +1124,19 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   result = parser.parse(code)
   open('graph1.dot','a').write("\n}")
+  visualize_symbol_table()
 
   graphs = pydot.graph_from_dot_file('graph1.dot')
   # print(len(graphs))
   graph = graphs[0]
   graph.write_png('pydot_graph.png')
+
+def visualize_symbol_table():
+  for i in range (1,nextScope):
+    if(len(symbol_table[i]) > 0):
+      print('\nIn Scope ' + str(i))
+      for key in symbol_table[i].keys():
+        print(key, symbol_table[i][key])
 
   # print(result)
   # while True:
