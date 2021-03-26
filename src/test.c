@@ -1,4 +1,7 @@
+#include <stdio.h>
 int main(){
-    int x = 2;
-    y = 2;
+    char a, b;
+    a = 127, b = 126;
+    char c = a * b;
+    printf("%d %d Hello", a*b, c);
 }

@@ -78,6 +78,9 @@ def find_if_ID_is_declared(id,lineno):
     if(id in symbol_table[curscp].keys()):
       return 1
     curscp = parent[curscp]
+  if (curscp == 0):
+    if(id in symbol_table[curscp].keys()):
+      return 1
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
   return 0
 
@@ -116,7 +119,7 @@ def build_AST(p):
 #if reduces to ID, check if it is present in symbol table
 def p_primary_expression_0(p):
   '''primary_expression : ID'''
-  p[0] = Node(name = 'primaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+  p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
   find_if_ID_is_declared(p[1],p.lineno(1))
 
 def p_primary_expression_1(p):
@@ -130,7 +133,7 @@ def p_primary_expression_1(p):
     p[0] = p[2]
     # p[0].name = 'primaryExpression'
   else:
-    p[0] = Node(name = 'primaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
     
 
 def p_primary_expression_2(p):
@@ -168,7 +171,7 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
   # find_if_ID_is_declared(p[1].val,p[1].lno)
 
 
@@ -313,27 +316,6 @@ def p_cast_expression(p):
 #     else:
 #       p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
 
-# def get_higher_data_type(a,b):
-#   return 1
-def get_higher_data_type(type_1 , type_2):
-  to_num = {}
-  to_num['char'] = 0
-  to_num['short'] = 1
-  to_num['int'] = 2
-  to_num['long'] = 3 
-  to_num['float'] = 4
-  to_num['double'] = 5
-  to_str = {}
-  to_str[0] = 'char'
-  to_str[1] = 'short' 
-  to_str[2] = 'int'
-  to_str[3] = 'long'
-  to_str[4] = 'float'
-  to_str[5] = 'double'
-
-  num_type_1 = to_num[type_1]
-  num_type_2 = to_num[type_2]
-  return to_str[max(num_type_1 , num_type_2)]
 
 
 def p_multipicative_expression(p):
@@ -350,8 +332,8 @@ def p_multipicative_expression(p):
     # val empty 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
-    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if(p[1].type not in type_dict or p[3].type not in type_dict):
+    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+    if(p[1].type not in type_list or p[3].type not in type_list):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
@@ -383,8 +365,8 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict or p[3].type not in type_dict:
+    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+    if p[1].type not in type_list or p[3].type not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
@@ -405,8 +387,8 @@ def p_shift_expression(p):
     p[0] = p[1]
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
-    type_dict = {'short' , 'int' , 'long'}
-    if p[1].type not in type_dict or p[3].type not in type_dict:
+    type_list = ['short' , 'int' , 'long']
+    if p[1].type not in type_list or p[3].type not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
@@ -426,8 +408,8 @@ def p_relational_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict or p[3].type not in type_dict:
+    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+    if p[1].type not in type_list or p[3].type not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
@@ -457,11 +439,11 @@ def p_and_expression(p):
   else:
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
-    valid = ['int'] #TODO: check this if more AND should be taken
+    valid = ['int', 'char'] #TODO: check this if more AND should be taken
     if p[1].type not in valid or p[3].type not in valid:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[2].type, 'for the AND operator')
     else:
-      p[0].type = 'int'
+      p[0].type = 'int' # should not be char, even if the and was done for two chars
 
 def p_exclusive_or_expression(p):
   '''exclusive_or_expression : and_expression
@@ -555,7 +537,7 @@ def p_assignment_operator(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   # p[0] = p[1]
-  p[0] = Node(name = '',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
+  p[0] = Node(name = 'AssignmentOperator',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
 
 def p_expression(p):
   '''expression : assignment_expression
@@ -585,7 +567,7 @@ def p_declaration(p):
     p[0] = p[1]
   else:
     # a = 1
-    p[0] = Node(name = '',val = p[1],type = '', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Declaration',val = p[1],type = '', lno = p.lineno(1), children = [])
     #fill later
 
 def p_declaration_specifiers(p):
@@ -599,7 +581,7 @@ def p_declaration_specifiers(p):
   if(len(p) == 2):
     p[0] = p[1]
   elif(len(p) == 3):
-    p[0] = Node(name = '',val = p[1],type = '', lno = p[1].lno, children = [])
+    p[0] = Node(name = 'DeclarationSpecifiers',val = p[1],type = '', lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -631,7 +613,7 @@ def p_init_declarator(p):
     p[0] = p[1]
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]])
+    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]])
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -643,7 +625,7 @@ def p_storage_class_specifier(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   # p[0] = p[1]
-  p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1], lno = p.lineno(1), children = [])
+  p[0] = Node(name = 'StorageClassSpecifier',val = '',type = p[1], lno = p.lineno(1), children = [])
 
 
 def p_type_specifier_1(p):
@@ -660,7 +642,7 @@ def p_type_specifier_1(p):
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
+  p[0] = Node(name = 'TypeSpecifier1',val = '',type = p[1], lno = p.lineno(1), children = [])
 
 def p_type_specifier_2(p):
   '''type_specifier : struct_or_union_specifier
@@ -675,7 +657,7 @@ def p_struct_or_union_specifier(p):
   '''
   # p[0] = build_AST(p)
   # TODO : check the semicolon thing after closebrace in gramamar
-  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno , children = [])
+  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
 
 def p_struct_or_union(p):
   '''struct_or_union : STRUCT
@@ -689,7 +671,7 @@ def p_struct_declaration_list(p):
 	| struct_declaration_list struct_declaration
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0] = Node(name = 'StructDeclarationList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
@@ -700,7 +682,7 @@ def p_struct_declaration(p):
   '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = '', val = '', type = 'struct_declaration', lno = p[1].lno, children = [])
+  p[0] = Node(name = 'StructDeclaration', val = '', type = 'struct_declaration', lno = p[1].lno, children = [])
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -710,7 +692,7 @@ def p_specifier_qualifier_list(p):
   '''
   #p[0] = Node()
   #p[0] = build_AST(p)
-  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0] = Node(name = 'SpecifierQualifierList', val = '', type = p[1].type, lno = p[1].lno, children = [])
 
 
 def p_struct_declarator_list(p):
@@ -718,7 +700,7 @@ def p_struct_declarator_list(p):
 	| struct_declarator_list COMMA struct_declarator
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0] = Node(name = 'StructDeclaratorList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
@@ -743,18 +725,18 @@ def p_enum_specifier(p):
   '''
   #p[0] = build_AST(p)
   if(len(p) == 5):
-    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[3].lno, children = [])
+    p[0] = Node(name = 'EnumSpecifier', val = '', type = 'Enum_Specifier', lno = p[3].lno, children = [])
   elif(len(p) == 6):
-    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[4].lno, children = [])
+    p[0] = Node(name = 'EnumSpecifier', val = '', type = 'Enum_Specifier', lno = p[4].lno, children = [])
   else:
-    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[2].lno, children = [])
+    p[0] = Node(name = 'EnumSpecifier', val = '', type = 'Enum_Specifier', lno = p[2].lno, children = [])
 
 def p_enumerator_list(p):
   '''enumerator_list : enumerator
 	| enumerator_list COMMA enumerator
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = 'Enumerator_List', val= '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0] = Node(name = 'EnumeratorList', val= '', type = p[1].type, lno = p[1].lno, children = [])
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
@@ -771,7 +753,7 @@ def p_type_qualifier(p):
     '''type_qualifier : CONST
                       | VOLATILE
     '''
-    p[0] = Node(name = 'Type_Qualifier', val = '', type = '', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'TypeQualifier', val = '', type = '', lno = p.lineno(1), children = [])
     #p[0] = build_AST(p)
 
 def p_declarator(p):
@@ -792,7 +774,7 @@ def p_direct_declarator(p):
                         | direct_declarator LPAREN RPAREN
   '''
   
-  p[0] = Node(name = 'Direct_Declarator', val = '', type = '', lno = p.lineno(1), children = [])
+  p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
@@ -805,7 +787,7 @@ def p_pointer(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   if(len(p) == 2):
-    p[0] = Node(name = '',val = '',type = '*', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Multiply',val = '',type = '*', lno = p.lineno(1), children = [])
   elif(len(p) == 3):
     p[0] = Node(name = '',val = '',type = '* ' + p[1].type, lno = p.lineno(1), children = [])
   else:
@@ -818,7 +800,7 @@ def p_type_qualifier_list(p):
   #p[0] = Node()
   if(len(p) == 2):
     p[0] = p[1]
-    p[0].name = 'type_qualifier_list'
+    p[0].name = 'TypeQualifierList'
     p[0].children = p[1]
   else:
     p[0] = p[1]
@@ -840,7 +822,7 @@ def p_parameter_list(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
-      p[0].name = 'parameter_list'
+      p[0].name = 'ParameterList'
       p[0].children = p[1]
     else:
       p[0] = p[1]
@@ -855,7 +837,7 @@ def p_parameter_declaration(p):
     if(len(p) == 2):
       p[0] = p[1]
     else:
-      p[0] = Node(name = 'parameter_declaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
+      p[0] = Node(name = 'ParameterDeclaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 
 def p_identifier_list(p):
@@ -865,7 +847,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'identifier_list',val = '',type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = '',type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -879,7 +861,7 @@ def p_type_name(p):
     if(len(p) == 2):
       p[0] = p[1]
     else:
-      p[0] = Node(name = 'type_name',val = '',type = p[1].type, lno = p[1].lno, children = [])
+      p[0] = Node(name = 'TypeName',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 def p_abstract_declarator(p):
     '''abstract_declarator : pointer 
@@ -890,7 +872,7 @@ def p_abstract_declarator(p):
     if(len(p) == 2):
       p[0] = p[1]
     elif(len(p) == 3):
-      p[0] = Node(name = '',val = p[2].val,type = p[1].type + ' *', lno = p[1].lno, children = [])
+      p[0] = Node(name = 'AbstractDeclarator',val = p[2].val,type = p[1].type + ' *', lno = p[1].lno, children = [])
 
 def p_direct_abstract_declarator_1(p):
     '''direct_abstract_declarator : LPAREN abstract_declarator RPAREN
@@ -903,11 +885,11 @@ def p_direct_abstract_declarator_1(p):
     '''
     #p[0] = Node()
     if(len(p) == 3):
-      p[0] = Node(name = '',val = '',type = '', lno = p.lineno(1), children = [])
+      p[0] = Node(name = 'DirectAbstractDeclarator1',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
       p[0] = p[2]
     else:
-      p[0] = Node(name = '',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
+      p[0] = Node(name = 'DirectAbstractDeclarator1',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
 
 def p_direct_abstract_declarator_2(p):
   '''direct_abstract_declarator : direct_abstract_declarator LPAREN RPAREN'''
