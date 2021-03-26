@@ -584,7 +584,7 @@ def p_declaration_specifiers(p):
   if(len(p) == 2):
     p[0] = p[1]
   elif(len(p) == 3):
-    p[0] = Node(name = 'DeclarationSpecifiers',val = p[1],type = '', lno = p[1].lno, children = [])
+    p[0] = Node(name = 'DeclarationSpecifiers',val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -1007,7 +1007,7 @@ def p_statement_list(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
-      p[0].name = 'StatementList'
+      # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
       if(p[1].name != 'StatmentList'):
