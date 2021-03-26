@@ -165,9 +165,8 @@ def p_postfix_expression_2(p):
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   curscp = currentScope
-  if(p[3].type != 'int'):
-    print("Error: Expression inside '[ ]' is not of type int")
-
+  if(p[3].type not in ['char', 'short', 'int', 'long']):
+    print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
@@ -199,8 +198,7 @@ def p_postfix_expression_6(p):
 	| postfix_expression DECREMENT'''
   tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
-  if(p[1].type not in ['int','float','char']):
-    print("Error at line number " + p[1].lno + "unary operation type mismatch")
+  #Can't think of a case where this is invalid
 
 
 
@@ -238,8 +236,7 @@ def p_unary_expression_1(p):
     #also check if child should be added or not
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
-    if(p[2].type not in ['int','float','char']):
-      print("Error at line :" + p[2].lno + "type mismatch for unary operator")
+    #Can't think of a case where this is invalid
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
