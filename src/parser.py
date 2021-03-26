@@ -774,21 +774,29 @@ def p_declarator(p):
 
   #p[0] = build_AST(p)
 
-def p_direct_declarator(p):
+def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
-                        | direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator LPAREN parameter_type_list RPAREN
                         | direct_declarator LPAREN identifier_list RPAREN
-                        | direct_declarator LPAREN RPAREN
   '''
   
-  p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
+  # 
   if(len(p) == 2):
+    p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
     p[0].val = p[1]
+  elif(len(p) == 3):
+    p[0] = p[2]
+  else:
+    p[0] = p[1]
   #TODO: Handle Children
   #p[0] = build_AST(p)
+
+def p_direct_declarator_2(p):
+  '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
+                        | direct_declarator LPAREN RPAREN'''
+  p[0] = p[1]
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
