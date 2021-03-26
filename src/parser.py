@@ -628,8 +628,8 @@ def p_init_declarator(p):
     #maybe make different function to do this
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],tempNode,p[3]])
+    # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
+    p[0] = Node(name = 'DeclWithIntialization',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[3]])
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -664,6 +664,7 @@ def p_type_specifier_2(p):
   '''type_specifier : struct_or_union_specifier
                     | enum_specifier '''
   p[0] = p[1]
+  # p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
 
 def p_struct_or_union_specifier(p):
   '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
@@ -764,28 +765,48 @@ def p_pointer(p):
               | MULTIPLY type_qualifier_list pointer
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  # p[0] = build_AST(p)
+  if(len(p) == 2):
+    p[0] = Node(name = '',val = '',type = '*', lno = p.lineno(1), children = [])
+  elif(len(p) == 3):
+    p[0] = Node(name = '',val = '',type = '* ' + p[1].type, lno = p.lineno(1), children = [])
+  else:
+    p[0] = Node(name = '',val = '',type = p[1].type + ' *', lno = p[2].lno, children = [])
 
 def p_type_qualifier_list(p):
   '''type_qualifier_list : type_qualifier
                         | type_qualifier_list type_qualifier
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  if(len(p) == 2):
+    p[0] = p[1]
+    p[0].name = 'type_qualifier_list'
+    p[0].children = p[1]
+  else:
+    p[0] = p[1]
+    p[0].children.append(p[2])
+    # p[0] = Node(name = '',val = '',type = '', lno = p[1].lno, children = [])
 
 def p_parameter_type_list(p):
   '''parameter_type_list : parameter_list
                           | parameter_list COMMA ELLIPSIS
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  p[0] = p[1]
+  # TODO : see what to do in case of ellipsis
 
 def p_parameter_list(p):
     '''parameter_list : parameter_declaration
                       | parameter_list COMMA parameter_declaration
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+      p[0].name = 'parameter_list'
+      p[0].children = p[1]
+    else:
+      p[0] = p[1]
+      p[0].children.append(p[3])
 
 def p_parameter_declaration(p):
     '''parameter_declaration : declaration_specifiers declarator
@@ -793,9 +814,10 @@ def p_parameter_declaration(p):
                              | declaration_specifiers
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
-
-# symbolTable['varName'][3] = {}
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'parameter_declaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 
 def p_identifier_list(p):
@@ -803,14 +825,23 @@ def p_identifier_list(p):
                        | identifier_list COMMA ID
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    # p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = Node(name = 'identifier_list',val = '',type = '', lno = p.lineno(1), children = [p[1]])
+    else:
+      p[0] = p[1]
+      p[0].children.append(p[3])
 
 def p_type_name(p):
     '''type_name : specifier_qualifier_list
                  | specifier_qualifier_list abstract_declarator
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    # p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = Node(name = 'type_name',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 def p_abstract_declarator(p):
     '''abstract_declarator : pointer 
@@ -818,20 +849,30 @@ def p_abstract_declarator(p):
                            | pointer direct_abstract_declarator
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    elif(len(p) == 3):
+      p[0] = Node(name = '',val = p[2].val,type = p[1].type + ' *', lno = p[1].lno, children = [])
 
-def p_direct_abstract_declarator(p):
+def p_direct_abstract_declarator_1(p):
     '''direct_abstract_declarator : LPAREN abstract_declarator RPAREN
                                   | LSQUAREBRACKET RSQUAREBRACKET
                                   | LSQUAREBRACKET constant_expression RSQUAREBRACKET
-                                  | direct_abstract_declarator LPAREN RPAREN
                                   | direct_abstract_declarator LPAREN constant_expression RPAREN 
                                   | LPAREN RPAREN
                                   | LPAREN parameter_type_list RPAREN
                                   | direct_abstract_declarator LPAREN parameter_type_list RPAREN
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    if(len(p) == 3):
+      p[0] = Node(name = '',val = '',type = '', lno = p.lineno(1), children = [])
+    elif(len(p) == 4):
+      p[0] = p[2]
+    else:
+      p[0] = Node(name = '',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
+
+def p_direct_abstract_declarator_2(p):
+  '''direct_abstract_declarator : direct_abstract_declarator LPAREN RPAREN'''
 
 def p_initializer(p):
     '''initializer : assignment_expression
@@ -839,7 +880,11 @@ def p_initializer(p):
                    | openbrace initializer_list COMMA closebrace                                   
     '''
     #p[0] = Node()
-    p[0] = build_AST(p)
+    # p[0] = build_AST(p)
+    if(len(p) == 2):
+      p[0] = p[1]
+    else:
+      p[0] = p[2]
 
 def p_initializer_list(p):
   '''initializer_list : initializer
@@ -867,15 +912,15 @@ def p_statement(p):
     p[0] = p[1]
 def p_labeled_statement_1(p):
     '''labeled_statement : ID COLON statement '''
-    p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [p[1], p[3]], lno = p.lineno(1) )
+    p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [], lno = p.lineno(1) )
 
 def p_labeled_statement_2(p):
     '''labeled_statement : CASE constant_expression COLON statement'''
-    p[0] = Node(name = 'CaseStatement', val = '', type = '', children = [p[2], p[4]], lno = p.lineno(1))
+    p[0] = Node(name = 'CaseStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_labeled_statement_3(p):
     '''labeled_statement : DEFAULT COLON statement'''
-    p[0] = Node(name = 'DefaultStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
+    p[0] = Node(name = 'DefaultStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_compound_statement(p):
     '''compound_statement : openbrace closebrace
@@ -884,10 +929,13 @@ def p_compound_statement(p):
                           | openbrace declaration_list statement_list closebrace
     '''  
     #p[0] = Node()
+    #TODO : see what to do in in first case
     if(len(p) == 3):
+      p[0] = Node(name = '',val = '',type = '', lno = p.lineno(1), children = [])
+    elif(len(p) == 4):
       p[0] = p[2]
     elif(len(p) == 4):
-      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [p[2], p[3]], lno = p.lineno(1))                        
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
 
 def p_declaration_list(p):
     '''declaration_list : declaration
@@ -924,39 +972,42 @@ def p_expression_statement(p):
                             | expression SEMICOLON
     '''
     #p[0] = Node()
-    if(len(p) == 2):
+    if(len(p) == 3):
       p[0] = p[1]
+    # TODO : see what to do in case of only semicolon in rhs
+    # else:
+    #   p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
     
 
 def p_selection_statement_1(p):
     '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX'''
     #p[0] = Node()
-    p[0] = Node(name = 'IfStatment', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+    p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
   
 def p_selection_statement_2(p):
     '''selection_statement : IF LPAREN expression RPAREN statement ELSE statement'''
-    p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [p[3], p[5], p[7]], lno = p.lineno(1))
+    p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_selection_statement_3(p):
     '''selection_statement : SWITCH LPAREN expression RPAREN statement'''
-    p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [p[3], p[5]], lno = p.lineno(1))
+    p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_iteration_statement_1(p):
     '''iteration_statement : WHILE LPAREN expression RPAREN'''
     #p[0] = Node()
-    p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [p[3]], lno = p.lineno(1))
+    p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
   
 def p_iteration_statement_2(p):
     '''iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMICOLON'''
-    p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [p[2], p[5]], lno = p.lineno(1))
+    p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
   
 def p_iteration_statement_3(p):
     '''iteration_statement : FOR LPAREN expression_statement expression_statement RPAREN statement'''
-    p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [p[3], p[4], p[6]], lno = p.lineno(1))
+    p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_iteration_statement_4(p):
     '''iteration_statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement'''
-    p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [p[3], p[4], p[5], p[7]], lno = p.lineno(1)) 
+    p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
 
 def p_jump_statement(p):
     '''jump_statement : GOTO ID SEMICOLON
@@ -967,13 +1018,11 @@ def p_jump_statement(p):
     '''
     #p[0] = Node()
     # p[0] = build_AST(p)
-    tempNode = Node(name = '',val = p[1],type = '', lno = p.lineno(1), children = [])
-    tempNode2 = Node(name = '',val = p[2],type = '', lno = p.lineno(1), children = [])
     if(len(p) == 3):
-      p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [tempNode,tempNode2])
+      p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
     else:
-      tempNode3 = Node(name = '',val = p[3],type = '', lno = p.lineno(1), children = [])
-      p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [tempNode,tempNode2,tempNode3])    
+      # tempNode3 = Node(name = '',val = p[3],type = '', lno = p.lineno(1), children = [])
+      p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
@@ -992,7 +1041,6 @@ def p_external_declaration(p):
     '''
     p[0] = p[1]
     #p[0] = Node()
-    # p[0] = build_AST(p)
 
 def p_function_definition_1(p):
     '''function_definition : declaration_specifiers declarator declaration_list compound_statement
