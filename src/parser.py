@@ -787,11 +787,11 @@ def p_pointer(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   if(len(p) == 2):
-    p[0] = Node(name = 'Multiply',val = '',type = '*', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = '*', lno = p.lineno(1), children = [])
   elif(len(p) == 3):
-    p[0] = Node(name = '',val = '',type = '* ' + p[1].type, lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p.lineno(1), children = [])
   else:
-    p[0] = Node(name = '',val = '',type = p[1].type + ' *', lno = p[2].lno, children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p[2].lno, children = [])
 
 def p_type_qualifier_list(p):
   '''type_qualifier_list : type_qualifier
@@ -847,7 +847,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = '',type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -951,7 +951,7 @@ def p_compound_statement(p):
     #p[0] = Node()
     #TODO : see what to do in in first case
     if(len(p) == 3):
-      p[0] = Node(name = '',val = '',type = '', lno = p.lineno(1), children = [])
+      p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
       p[0] = p[2]
     elif(len(p) == 4):
