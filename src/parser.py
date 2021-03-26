@@ -825,6 +825,7 @@ def p_type_qualifier_list(p):
   else:
     p[0] = p[1]
     p[0].children.append(p[2])
+    p[0].name = 'TypeQualifierList'
     # p[0] = Node(name = '',val = '',type = '', lno = p[1].lno, children = [])
 
 def p_parameter_type_list(p):
@@ -847,6 +848,7 @@ def p_parameter_list(p):
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
+      p[0].name = 'ParameterList'
 
 def p_parameter_declaration(p):
     '''parameter_declaration : declaration_specifiers declarator
@@ -894,6 +896,7 @@ def p_abstract_declarator(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
+      p[0].name = 'AbstractDeclarator'
     elif(len(p) == 3):
       p[0] = Node(name = 'AbstractDeclarator',val = p[2].val,type = p[1].type + ' *', lno = p[1].lno, children = [])
 
@@ -911,11 +914,13 @@ def p_direct_abstract_declarator_1(p):
       p[0] = Node(name = 'DirectAbstractDeclarator1',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
       p[0] = p[2]
+      p[0].name = 'DirectAbstractDeclarator1'
     else:
       p[0] = Node(name = 'DirectAbstractDeclarator1',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
 
 def p_direct_abstract_declarator_2(p):
   '''direct_abstract_declarator : direct_abstract_declarator LPAREN RPAREN'''
+  p[0] = Node(name = 'DirectAbstractDEclarator2', val = p[1].val, type = p[1].type, lno = p[1].lno, children = [])
 
 def p_initializer(p):
     '''initializer : assignment_expression
@@ -928,6 +933,7 @@ def p_initializer(p):
       p[0] = p[1]
     else:
       p[0] = p[2]
+    p[0].name = 'Initializer'
 
 def p_initializer_list(p):
   '''initializer_list : initializer
@@ -977,6 +983,7 @@ def p_compound_statement(p):
       p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
       p[0] = p[2]
+      p[0].name = 'CompoundStatement'
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
 
@@ -1002,6 +1009,7 @@ def p_statement_list(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
+      p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
       if(p[1].name != 'StatmentList'):
@@ -1017,6 +1025,7 @@ def p_expression_statement(p):
     #p[0] = Node()
     if(len(p) == 3):
       p[0] = p[1]
+    p[0].name = 'ExpressionStatement'
     # TODO : see what to do in case of only semicolon in rhs
     # else:
     #   p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
@@ -1077,12 +1086,14 @@ def p_translation_unit(p):
       ts_unit.children.append(p[1])
     else:
       ts_unit.children.append(p[2])
+    
 
 def p_external_declaration(p):
     '''external_declaration : function_definition
                             | declaration
     '''
     p[0] = p[1]
+    p[0].name = 'ExternalDeclaration'
     #p[0] = Node()
 
 def p_function_definition_1(p):
