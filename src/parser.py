@@ -126,7 +126,7 @@ def p_primary_expression_1(p):
                 | LPAREN expression RPAREN
   '''
   # p[0] = build_AST(p)
-  if(len(p) == 3):
+  if(len(p) == 4):
     p[0] = p[2]
     # p[0].name = 'primaryExpression'
   else:
@@ -162,9 +162,8 @@ def p_postfix_expression_2(p):
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   curscp = currentScope
-  if(p[3].type != 'int'):
-    print("Error: Expression inside '[ ]' is not of type int")
-
+  if(p[3].type not in ['char', 'short', 'int', 'long']):
+    print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
@@ -196,8 +195,7 @@ def p_postfix_expression_6(p):
 	| postfix_expression DECREMENT'''
   tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
-  if(p[1].type not in ['int','float','char']):
-    print("Error at line number " + p[1].lno + "unary operation type mismatch")
+  #Can't think of a case where this is invalid
 
 
 
@@ -235,8 +233,7 @@ def p_unary_expression_1(p):
     #also check if child should be added or not
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
-    if(p[2].type not in ['int','float','char']):
-      print("Error at line :" + p[2].lno + "type mismatch for unary operator")
+    #Can't think of a case where this is invalid
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
@@ -799,11 +796,11 @@ def p_pointer(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   if(len(p) == 2):
-    p[0] = Node(name = 'Multiply',val = '',type = '*', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = '*', lno = p.lineno(1), children = [])
   elif(len(p) == 3):
-    p[0] = Node(name = '',val = '',type = '* ' + p[1].type, lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p.lineno(1), children = [])
   else:
-    p[0] = Node(name = '',val = '',type = p[1].type + ' *', lno = p[2].lno, children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p[2].lno, children = [])
 
 def p_type_qualifier_list(p):
   '''type_qualifier_list : type_qualifier
@@ -859,7 +856,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = '',type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -963,7 +960,7 @@ def p_compound_statement(p):
     #p[0] = Node()
     #TODO : see what to do in in first case
     if(len(p) == 3):
-      p[0] = Node(name = '',val = '',type = '', lno = p.lineno(1), children = [])
+      p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
       p[0] = p[2]
     elif(len(p) == 4):
