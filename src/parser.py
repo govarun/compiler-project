@@ -356,7 +356,7 @@ def p_multipicative_expression(p):
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
     type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if(p[1].type not in type_dict | p[3].type not in type_dict):
+    if(p[1].type not in type_dict or p[3].type not in type_dict):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
@@ -365,7 +365,7 @@ def p_multipicative_expression(p):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
 
       return_data_type = higher_data_type
-      if return_data_type >= 4 | return_data_type == 0 :
+      if return_data_type >= 4 or return_data_type == 0 :
         return_data_type = 2
       p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
@@ -389,7 +389,7 @@ def p_additive_expression(p):
     p[0] = p[1]
   else:
     type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict | p[3].type not in type_dict:
+    if p[1].type not in type_dict or p[3].type not in type_dict:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
@@ -411,7 +411,7 @@ def p_shift_expression(p):
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
     type_dict = {'short' , 'int' , 'long'}
-    if p[1].type not in type_dict | p[3].type not in type_dict:
+    if p[1].type not in type_dict or p[3].type not in type_dict:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
@@ -432,7 +432,7 @@ def p_relational_expression(p):
     p[0] = p[1]
   else:
     type_dict = {'char' , 'short' , 'int' , 'long' , 'float' , 'double'}
-    if p[1].type not in type_dict | p[3].type not in type_dict:
+    if p[1].type not in type_dict or p[3].type not in type_dict:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
@@ -449,7 +449,7 @@ def p_equality_expresssion(p):
     p[0] = p[1]
   else:
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
 
 def p_and_expression(p):
   '''and_expression : equality_expression
@@ -462,6 +462,11 @@ def p_and_expression(p):
   else:
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    valid = ['int'] #TODO: check this if more AND should be taken
+    if p[1].type not in valid or p[3].type not in valid:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[2].type, 'for the AND operator')
+    else:
+      p[0].type = 'int'
 
 def p_exclusive_or_expression(p):
   '''exclusive_or_expression : and_expression
@@ -537,9 +542,7 @@ def p_assignment_expression(p):
     #check children
     tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lineno, children = [p[1],tempNode,p[3]])
-    if(p[1].val not in symbol_table[0].keys()):
-      print (p[1].lineno, 'COMPILATION ERROR: unary_expression ' + p[1].val + ' not declared')
-      sys.exit()
+    find_if_ID_is_declared(p[1].val, p[1].lineno)
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
@@ -672,6 +675,8 @@ def p_struct_or_union_specifier(p):
   | struct_or_union ID
   '''
   # p[0] = build_AST(p)
+  # TODO : check the semicolon thing after closebrace in gramamar
+  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno , children = [])
 
 def p_struct_or_union(p):
   '''struct_or_union : STRUCT
@@ -684,12 +689,19 @@ def p_struct_declaration_list(p):
   '''struct_declaration_list : struct_declaration
 	| struct_declaration_list struct_declaration
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  if(len(p) == 2):
+    p[0].children.append(p[1])
+  else:
+    p[0].children.append(p[2])
+
 
 def p_struct_declaration(p):
   '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = '', val = '', type = 'struct_declaration', lno = p[1].lno, children = [])
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -698,53 +710,78 @@ def p_specifier_qualifier_list(p):
   | type_qualifier
   '''
   #p[0] = Node()
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+
 
 def p_struct_declarator_list(p):
   '''struct_declarator_list : struct_declarator
 	| struct_declarator_list COMMA struct_declarator
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = '', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  if(len(p) == 2):
+    p[0].children.append(p[1])
+  else:
+    p[0].children.append(p[3])
 
 def p_struct_declarator(p):  
   '''struct_declarator : declarator
 	| COLON constant_expression
 	| declarator COLON constant_expression
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  if len(p) == 2 or len(p) == 4:
+    p[0] = p[1] 
+  if len(p) == 3:
+    p[0] = p[2]
+  
 
 def p_enum_specifier(p):
   '''enum_specifier : ENUM openbrace enumerator_list closebrace
 	| ENUM ID openbrace enumerator_list closebrace
 	| ENUM ID
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  if(len(p) == 5):
+    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[3].lno, children = [])
+  elif(len(p) == 6):
+    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[4].lno, children = [])
+  else:
+    p[0] = Node(name = 'Enum_Specifier', val = '', type = 'Enum_Specifier', lno = p[2].lno, children = [])
 
 def p_enumerator_list(p):
   '''enumerator_list : enumerator
 	| enumerator_list COMMA enumerator
   '''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = 'Enumerator_List', val= '', type = p[1].type, lno = p[1].lno, children = [])
+  if(len(p) == 2):
+    p[0].children.append(p[1])
+  else:
+    p[0].children.append(p[3])
 
 def p_enumerator(p):
   '''enumerator : ID
 	| ID EQUALS constant_expression
 	'''
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+  p[0] = Node(name = 'Enumerator', val = '', type = '', lno = p.lineno(1), children = [])
 
 def p_type_qualifier(p):
     '''type_qualifier : CONST
                       | VOLATILE
     '''
-    #p[0] = Node()
-    p[0] = build_AST(p)
+    p[0] = Node(name = 'Type_Qualifier', val = '', type = '', lno = p.lineno(1), children = [])
+    #p[0] = build_AST(p)
 
 def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  #p[0] = Node()
-  p[0] = build_AST(p)
+  p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
+
+  #p[0] = build_AST(p)
 
 def p_direct_declarator(p):
   '''direct_declarator : ID
@@ -755,8 +792,10 @@ def p_direct_declarator(p):
                         | direct_declarator LPAREN identifier_list RPAREN
                         | direct_declarator LPAREN RPAREN
   '''
-  #p[0] = Node()
-  p[0] = build_AST(p)
+  
+  p[0] = Node(name = 'Direct_Declarator', val = '', type = '', lno = p.lineno(1), children = [])
+  #TODO: Handle Children
+  #p[0] = build_AST(p)
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
