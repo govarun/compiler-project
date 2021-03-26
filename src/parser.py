@@ -798,9 +798,9 @@ def p_pointer(p):
   if(len(p) == 2):
     p[0] = Node(name = 'Pointer',val = '',type = '*', lno = p.lineno(1), children = [])
   elif(len(p) == 3):
-    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + ' *', lno = p.lineno(1), children = [])
   else:
-    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + '*', lno = p[2].lno, children = [])
+    p[0] = Node(name = 'Pointer',val = '',type = p[2].type + ' *', lno = p[2].lno, children = [])
 
 def p_type_qualifier_list(p):
   '''type_qualifier_list : type_qualifier
