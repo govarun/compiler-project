@@ -15,6 +15,7 @@ symbol_table = []
 symbol_table.append({'parent_scope_name':'','scope_name':'s0'})
 symbol_table[0]['printInt'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
 symbol_table[0]['printString'] = ['int', 'Function 1', -1, {}, 4,[],-1,[]]
+symbol_table.append({'parent':'','scope':'s1'})
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -33,14 +34,6 @@ class Node:
     
     # add more later
 ts_unit = Node('START',val = '',type ='' ,children = [])
-def find_if_ID_is_declared(id,lineno):
-  curscp = currentScope
-  while(parent[curscp] != curscp):
-    if(id in symbol_table[curscp].keys()):
-      return 1
-    curscp = parent[curscp]
-  print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
-  return 0
 
 def get_higher_data_type(type_1 , type_2):
   to_num = {}
@@ -79,8 +72,9 @@ def ignore_1(s):
 
 def find_if_ID_is_declared(id,lineno):
   curscp = currentScope
-  print("here" + str(curscp))
+  # print("here" + str(curscp))
   while(parent[curscp] != curscp):
+    # print("here" + str(curscp))
     if(id in symbol_table[curscp].keys()):
       return 1
     curscp = parent[curscp]
@@ -175,13 +169,13 @@ def p_postfix_expression_2(p):
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  find_if_ID_is_declared(p[1].val,p[1].lno)
+  # find_if_ID_is_declared(p[1].val,p[1].lno)
 
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
-  find_if_ID_is_declared(p[1].val,p[1].lno)
+  # find_if_ID_is_declared(p[1].val,p[1].lno)
   #check if function argument_list_expression matches with the actual one
 
 
@@ -541,9 +535,9 @@ def p_assignment_expression(p):
     p[0] = p[1]
   else:
     #check children
-    tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
-    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lineno, children = [p[1],tempNode,p[3]])
-    find_if_ID_is_declared(p[1].val, p[1].lineno)
+    # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
+    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[3]])
+    # find_if_ID_is_declared(p[1].val, p[1].lno)
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
@@ -561,7 +555,7 @@ def p_assignment_operator(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   # p[0] = p[1]
-  p[0] = Node(name = '',val = p[1],type = '', lno = p[1].lno, children = [p[1]])
+  p[0] = Node(name = '',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
 
 def p_expression(p):
   '''expression : assignment_expression
