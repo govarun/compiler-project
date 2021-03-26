@@ -1,4 +1,3 @@
-int main()
-{
-    5 % 1.2 ;
+int main(){
+    int x = 2;
 }

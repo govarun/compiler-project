@@ -126,7 +126,7 @@ def p_primary_expression_1(p):
                 | LPAREN expression RPAREN
   '''
   # p[0] = build_AST(p)
-  if(len(p) == 3):
+  if(len(p) == 4):
     p[0] = p[2]
     # p[0].name = 'primaryExpression'
   else:
