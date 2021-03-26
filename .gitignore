@@ -4,6 +4,9 @@ src/graph1.dot
 src/parser.out
 src/parsetab.py
 src/pydot_graph.png
+src/test.c
+src/a
+src/a.out
 *.dot
 *.out
 *.png
