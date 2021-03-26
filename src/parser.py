@@ -756,7 +756,10 @@ def p_type_qualifier(p):
     '''type_qualifier : CONST
                       | VOLATILE
     '''
-    p[0] = Node(name = 'TypeQualifier', val = '', type = '', lno = p.lineno(1), children = [])
+    if p1 == 'CONST':
+      p[0] = Node(name = 'TypeQualifier', val = '', type = 'const', lno = p.lineno(1), children = [])
+    else:
+      p[0] = Node(name = 'TypeQualifier', val = '', type = 'volatile', lno = p.lineno(1), children = [])
     #p[0] = build_AST(p)
 
 def p_declarator(p):
@@ -845,6 +848,7 @@ def p_parameter_declaration(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
+      p[0].name = 'ParameterDeclaration'
     else:
       p[0] = Node(name = 'ParameterDeclaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
@@ -860,6 +864,7 @@ def p_identifier_list(p):
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
+      p[0].name = 'IdentifierList'
 
 def p_type_name(p):
     '''type_name : specifier_qualifier_list
@@ -869,6 +874,7 @@ def p_type_name(p):
     # p[0] = build_AST(p)
     if(len(p) == 2):
       p[0] = p[1]
+      p[0].name = 'TypeName'
     else:
       p[0] = Node(name = 'TypeName',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
