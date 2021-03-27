@@ -3,6 +3,7 @@
 import ply.yacc as yacc
 import sys
 import pydot
+import copy
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
@@ -18,12 +19,13 @@ nextScope = 1
 parent = {}
 parent[0] = 0
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
     self.name = name
     self.val = val
     self.type = type
     self.lno = lno
     self.scope = scope
+    self.array = array
     if children:
       self.children = children
     else:
@@ -567,12 +569,24 @@ def p_declaration(p):
     #fill later
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
+        if(child.children[0].val in symbol_table[currentScope].keys()):
+          print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
+        if(len(child.children[0].array) > 0):
+          symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
+        if(len(child.children[0].type) > 0):
+          symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
       else:
+        if(child.val in symbol_table[currentScope].keys()):
+          print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        if(len(child.array) > 0):
+          symbol_table[currentScope][child.val]['array'] = child.array
+        if(len(child.type) > 0):
+          symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
 
 
 def p_declaration_specifiers(p):
@@ -618,7 +632,7 @@ def p_init_declarator(p):
     p[0] = p[1]
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]])
+    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -765,22 +779,23 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
     p[0].val = p[1].val
+    p[0].array = p[1].array
   else:
+    p[0].type = p[1].type
     p[0].val = p[2].val
+    p[0].array = p[2].array
 
   #p[0] = build_AST(p)
 
 def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
-                        | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
                         | direct_declarator LPAREN parameter_type_list RPAREN
                         | direct_declarator LPAREN identifier_list RPAREN
-  '''
-  
+  ''' 
   # 
   if(len(p) == 2):
     p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
@@ -793,6 +808,12 @@ def p_direct_declarator_1(p):
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
+  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
+  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
+  p[0].array = copy.deepcopy(p[1].array)
+  p[0].array.append(p[3].val)
+
+def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator LPAREN RPAREN'''
   p[0] = p[1]
