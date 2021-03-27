@@ -331,20 +331,22 @@ def p_multipicative_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
+      valid_type = ['char' , 'short' , 'int' , 'long']
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
-      if higher_data_type >= 4 :
+      
+      if higher_data_type not in valid_type:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
 
       return_data_type = higher_data_type
-      if return_data_type >= 4 or return_data_type == 0 :
-        return_data_type = 2
+      if return_data_type == 'char' :
+        return_data_type = 'int'
       p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
     else:
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       return_data_type = higher_data_type
-      if return_data_type == 0 :
-        return_data_type = 2
+      if return_data_type == 'char' :
+        return_data_type = 'int'
       p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
 ###############
