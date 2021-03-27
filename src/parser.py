@@ -1051,7 +1051,7 @@ def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
-    #p[0] = Node()
+    p[0] = Node()
     if(len(p) == 3):
       p[0] = p[1]
     p[0].name = 'ExpressionStatement'
@@ -1173,7 +1173,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code, debug = True)
+  result = parser.parse(code)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
