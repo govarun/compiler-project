@@ -801,7 +801,7 @@ def p_declarator(p):
 def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
-                        | direct_declarator LPAREN parameter_type_list RPAREN
+                        | direct_declarator lopenparen parameter_type_list RPAREN
                         | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
@@ -823,7 +823,7 @@ def p_direct_declarator_2(p):
 
 def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
-                        | direct_declarator LPAREN RPAREN'''
+                        | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
 
 def p_pointer(p):
@@ -1165,7 +1165,7 @@ def p_function_definition_1(p):
       p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [p[2],p[3],p[4]])
 
 def p_function_definition_2(p):
-  '''function_definition : declaration_specifiers declarator compound_statement'''
+  '''function_definition : declaration_specifiers declarator function_compound_statement'''
   # no need to keep type in AST
   print(p[1])
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [p[2],p[3]])
@@ -1208,7 +1208,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
