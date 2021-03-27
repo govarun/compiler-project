@@ -802,7 +802,7 @@ def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LPAREN parameter_type_list RPAREN
-                        | direct_declarator LPAREN identifier_list RPAREN
+                        | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
   if(len(p) == 2):
@@ -1016,6 +1016,23 @@ def p_compound_statement(p):
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
 
+def p_function_compound_statement(p):
+    '''function_compound_statement : LCURLYBRACKET closebrace
+                          | LCURLYBRACKET statement_list closebrace
+                          | LCURLYBRACKET declaration_list closebrace
+                          | LCURLYBRACKET declaration_list statement_list closebrace
+    '''  
+    #p[0] = Node()
+    #TODO : see what to do in in first case
+    if(len(p) == 3):
+      p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
+    elif(len(p) == 4):
+      p[0] = p[2]
+      p[0].name = 'CompoundStatement'
+    elif(len(p) == 4):
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
+
+
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
@@ -1126,9 +1143,9 @@ def p_external_declaration(p):
     #p[0] = Node()
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list compound_statement
-                           | declarator declaration_list compound_statement
-                           | declarator compound_statement                                                                              
+    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement
+                           | declarator declaration_list function_compound_statement
+                           | declarator function_compound_statement                                                                              
     ''' 
     #p[0] = Node()
     # p[0] = build_AST(p)  
@@ -1148,6 +1165,17 @@ def p_function_definition_2(p):
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
+  global currentScope
+  global nextScope
+  
+  parent[nextScope] = currentScope
+  currentScope = nextScope
+  symbol_table.append({})
+  nextScope = nextScope + 1
+  p[0] = p[1]
+
+def p_lopenparen(p):
+  '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
   
