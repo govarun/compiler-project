@@ -802,7 +802,7 @@ def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator LPAREN parameter_type_list RPAREN
-                        | direct_declarator LPAREN identifier_list RPAREN
+                        | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
   if(len(p) == 2):
@@ -870,14 +870,12 @@ def p_parameter_list(p):
                       | parameter_list COMMA parameter_declaration
     '''
     #p[0] = Node()
+    p[0] = Node(name = 'ParameterList', val = '', type = '', children = [], lno = p.lineno(1))
     if(len(p) == 2):
-      p[0] = p[1]
-      p[0].name = 'ParameterList'
-      p[0].children = p[1]
+      p[0].children.append(p[1])
     else:
-      p[0] = p[1]
+      p[0].children = p[1].children
       p[0].children.append(p[3])
-      p[0].name = 'ParameterList'
 
 def p_parameter_declaration(p):
     '''parameter_declaration : declaration_specifiers declarator
@@ -890,6 +888,15 @@ def p_parameter_declaration(p):
       p[0].name = 'ParameterDeclaration'
     else:
       p[0] = Node(name = 'ParameterDeclaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
+    if(p[2].name == 'Declarator'):
+      if(p[2].val in symbol_table[currentScope].keys()):
+        print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
+      symbol_table[currentScope][p[2].val] = {}
+      symbol_table[currentScope][p[2].val]['type'] = p[1].type
+      if(len(p[2].type) > 0):
+        symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+      if(len(p[2].array) > 0):
+        symbol_table[currentScope][p[2].val]['array'] = p[2].array
 
 
 def p_identifier_list(p):
@@ -1016,6 +1023,23 @@ def p_compound_statement(p):
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
 
+def p_function_compound_statement(p):
+    '''function_compound_statement : LCURLYBRACKET closebrace
+                          | LCURLYBRACKET statement_list closebrace
+                          | LCURLYBRACKET declaration_list closebrace
+                          | LCURLYBRACKET declaration_list statement_list closebrace
+    '''  
+    #p[0] = Node()
+    #TODO : see what to do in in first case
+    if(len(p) == 3):
+      p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
+    elif(len(p) == 4):
+      p[0] = p[2]
+      p[0].name = 'CompoundStatement'
+    elif(len(p) == 4):
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
+
+
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
@@ -1126,9 +1150,9 @@ def p_external_declaration(p):
     #p[0] = Node()
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list compound_statement
-                           | declarator declaration_list compound_statement
-                           | declarator compound_statement                                                                              
+    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement
+                           | declarator declaration_list function_compound_statement
+                           | declarator function_compound_statement                                                                              
     ''' 
     #p[0] = Node()
     # p[0] = build_AST(p)  
@@ -1148,6 +1172,17 @@ def p_function_definition_2(p):
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
+  global currentScope
+  global nextScope
+  
+  parent[nextScope] = currentScope
+  currentScope = nextScope
+  symbol_table.append({})
+  nextScope = nextScope + 1
+  p[0] = p[1]
+
+def p_lopenparen(p):
+  '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
   
@@ -1183,7 +1218,7 @@ def runmain(code):
   graph.write_png('pydot_graph.png')
 
 def visualize_symbol_table():
-  for i in range (1,nextScope):
+  for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
       print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
