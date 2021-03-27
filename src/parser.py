@@ -574,7 +574,7 @@ def p_declaration(p):
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
 
-
+# TODO : change the below to support long, short etc.
 def p_declaration_specifiers(p):
   '''declaration_specifiers : storage_class_specifier
 	| storage_class_specifier declaration_specifiers
@@ -583,10 +583,18 @@ def p_declaration_specifiers(p):
 	| type_qualifier
 	| type_qualifier declaration_specifiers
   '''
+  # TypeQualifier, TypeSpecifier1, StorageClassSpecifier
   if(len(p) == 2):
     p[0] = p[1]
   elif(len(p) == 3):
-    p[0] = Node(name = 'DeclarationSpecifiers',val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
+    if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    if(p[1].name == 'TypeSpecifier1' and (p[2].name.startswith('TypeSpecifier1') or p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    # if(p[1].name == '')
+    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
