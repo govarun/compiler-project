@@ -640,7 +640,7 @@ def p_init_declarator_list(p):
   if(len(p) == 2):
     p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
   else:
-    #check once
+    #check onceƒ
     p[0] = p[1]
     p[0].children.append(p[3])
 
@@ -654,6 +654,7 @@ def p_init_declarator(p):
     # extra node might be needed for error checking
     #maybe make different function to do this
     p[0] = p[1]
+    p[0].name = 'InitDeclarator'
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
