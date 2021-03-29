@@ -1,9 +1,3 @@
-int f(int a,int b){
+int **f(int a,char *b){
     return f(2, 3);
-}
-int f(){
-    ;
-}
-int main(){
-    int a;
 }

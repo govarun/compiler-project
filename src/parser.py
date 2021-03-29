@@ -788,14 +788,18 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
+  # print(p[1].children)
+  # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
+    p[0] = p[1]
     p[0].val = p[1].val
     p[0].array = p[1].array
   else:
+    p[0] = p[2]
     p[0].type = p[1].type
     p[0].val = p[2].val
     p[0].array = p[2].array
+  # print(p[0].children)
   # if(p[1].name == 'ID'):
   #     p[0].name = 'ID'
 
@@ -819,6 +823,8 @@ def p_direct_declarator_1(p):
     p[0] = p[1]
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
+    p[0].children = p[3].children
+    # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
@@ -901,7 +907,9 @@ def p_parameter_declaration(p):
       p[0] = p[1]
       p[0].name = 'ParameterDeclaration'
     else:
-      p[0] = Node(name = 'ParameterDeclaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
+      p[0] = Node(name = 'ParameterDeclaration',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
+      if(len(p[2].type) > 0):
+        p[0].type = p[1].type + ' ' + p[2].type
     if(p[2].name == 'Declarator'):
       if(p[2].val in symbol_table[currentScope].keys()):
         print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
@@ -1187,6 +1195,16 @@ def p_function_definition_2(p):
   # if(p[2].val in symbol_table[currentScope].keys()):
   #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
   symbol_table[currentScope][p[2].val]['type'] = p[1].type
+  # print(p[2].children)
+  if(len(p[2].type) > 0):
+    symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+  if(len(p[2].children) > 0):
+    tempList = []
+    for child in p[2].children:
+      # print(child.type)
+      tempList.append(child.type)
+    symbol_table[currentScope][p[2].val]['argumentList'] = tempList
+    # print("ys")
   # symbol_table[currentScope][p[2].val]['']
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
