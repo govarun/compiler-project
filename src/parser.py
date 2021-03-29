@@ -215,6 +215,8 @@ def p_argument_expression_list(p):
     # heavy doubt
     p[0] = p[1]
     p[0].children.append(p[3])
+    # for child in p[0].children:
+    #   print(child.type)
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -792,10 +794,12 @@ def p_declarator(p):
   # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
     p[0] = p[1]
+    p[0].name = 'Declarator'
     p[0].val = p[1].val
     p[0].array = p[1].array
   else:
     p[0] = p[2]
+    p[0].name = 'Declarator'
     p[0].type = p[1].type
     p[0].val = p[2].val
     p[0].array = p[2].array
