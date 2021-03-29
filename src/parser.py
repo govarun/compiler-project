@@ -818,6 +818,10 @@ def p_direct_declarator_1(p):
   else:
     p[0] = p[1]
     p[0].children = p
+  if(len (p) == 5 and p[3].name == 'ParameterList'):
+    if(p[1].val in symbol_table[parent[currentScope]].keys()):
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    symbol_table[parent[currentScope]][p[1].val] = {}
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
@@ -831,6 +835,10 @@ def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
+  if(p[3] == ')'):
+    if(p[1].val in symbol_table[parent[currentScope]].keys()):
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    symbol_table[parent[currentScope]][p[1].val] = {}
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -1176,9 +1184,8 @@ def p_function_definition_2(p):
   # if(p[2].name != 'ID'):
   #   print("Syntax error near line " + p[2].lno)
   # else:
-  if(p[2].val in symbol_table[currentScope].keys()):
-    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
-  symbol_table[currentScope][p[2].val] = {}
+  # if(p[2].val in symbol_table[currentScope].keys()):
+  #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
   symbol_table[currentScope][p[2].val]['type'] = p[1].type
   # symbol_table[currentScope][p[2].val]['']
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
