@@ -178,7 +178,7 @@ def p_postfix_expression_4(p):
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   # find_if_ID_is_declared(p[1].val,p[1].lno)
   #check if function argument_list_expression matches with the actual one
-
+  
 
 
 def p_postfix_expression_5(p):
@@ -571,6 +571,7 @@ def p_declaration(p):
       if(child.name == 'InitDeclarator'):
         if(child.children[0].val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
+        # print(child.children[0].val,child.children[1].val)
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
@@ -795,8 +796,8 @@ def p_declarator(p):
     p[0].type = p[1].type
     p[0].val = p[2].val
     p[0].array = p[2].array
-
-  #p[0] = build_AST(p)
+  # if(p[1].name == 'ID'):
+  #     p[0].name = 'ID'
 
 def p_direct_declarator_1(p):
   '''direct_declarator : ID
@@ -806,12 +807,17 @@ def p_direct_declarator_1(p):
   ''' 
   # 
   if(len(p) == 2):
-    p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
-    p[0].val = p[1]
+    p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
+    # p[0].val = p[1]
+    # # insert in symbol table here
+    # if(p[1] in symbol_table[currentScope].keys()):
+    #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
+
   elif(len(p) == 3):
     p[0] = p[2]
   else:
     p[0] = p[1]
+    p[0].children = p
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
@@ -1157,18 +1163,26 @@ def p_function_definition_1(p):
     #p[0] = Node()
     # p[0] = build_AST(p)  
     if(len(p) == 3):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = p[1].type, lno = p[1].lno, children = [p[1],p[2]])
+      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
     elif(len(p) == 4):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = p[1].type, lno = p[1].lno, children = [p[1],p[2],p[3]])
+      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
     else:
       # no need to keep type in AST
-      p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [p[2],p[3],p[4]])
+      p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
 
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
   # no need to keep type in AST
-  print(p[1])
-  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [p[2],p[3]])
+  # if(p[2].name != 'ID'):
+  #   print("Syntax error near line " + p[2].lno)
+  # else:
+  if(p[2].val in symbol_table[currentScope].keys()):
+    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
+  symbol_table[currentScope][p[2].val] = {}
+  symbol_table[currentScope][p[2].val]['type'] = p[1].type
+  # symbol_table[currentScope][p[2].val]['']
+  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
+
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
@@ -1208,7 +1222,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -1223,15 +1237,3 @@ def visualize_symbol_table():
       print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
-
-  # print(result)
-  # while True:
-  #   # try:
-  #   #   s = input('calc > ')
-  #   # except EOFError:
-  #   #   break
-  #   # z = code.readlines()
-  #   if not s: continue
-  #   print(s)
-  #   result = parser.parse(s,debug=True)
-  #   print(result)

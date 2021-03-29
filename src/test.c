@@ -1,6 +1,6 @@
-int func(int a,int b){
-    int c;
+int f(int a,int b){
+    ;
 }
 int main(){
-    int d;
+    int a;
 }
