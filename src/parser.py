@@ -186,7 +186,6 @@ def p_postfix_expression_4(p):
       # print(p[3].children[i].val)
       curVal = p[3].children[i].val
       curType = symbol_table[currentScope][curVal]['type']
-      # print(curType)
       if(arguments != curType):
         print("Syntax Error at line " + str(p[1].lno), "Type mismatch in argument " + str(i+1) + " of function call")
       i += 1
@@ -654,7 +653,7 @@ def p_init_declarator(p):
     # extra node might be needed for error checking
     #maybe make different function to do this
     p[0] = p[1]
-    p[0].name = 'InitDeclarator'
+    # p[0].name = 'InitDeclarator'
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
