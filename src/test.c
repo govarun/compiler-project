@@ -1,9 +1,7 @@
+int **f(int a,char *b){
+    return 1;
+}
 int main(){
-    char a = 23*12, b;
-    {
-        int x, y = 5;
-        {
-            const int z = 100*10;
-        }
-    }
+    int a,b;
+    f(a,b);
 }

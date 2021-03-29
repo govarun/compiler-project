@@ -3,6 +3,7 @@
 import ply.yacc as yacc
 import sys
 import pydot
+import copy
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
@@ -18,12 +19,13 @@ nextScope = 1
 parent = {}
 parent[0] = 0
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
     self.name = name
     self.val = val
     self.type = type
     self.lno = lno
     self.scope = scope
+    self.array = array
     if children:
       self.children = children
     else:
@@ -176,7 +178,7 @@ def p_postfix_expression_4(p):
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   # find_if_ID_is_declared(p[1].val,p[1].lno)
   #check if function argument_list_expression matches with the actual one
-
+  
 
 
 def p_postfix_expression_5(p):
@@ -213,6 +215,8 @@ def p_argument_expression_list(p):
     # heavy doubt
     p[0] = p[1]
     p[0].children.append(p[3])
+    # for child in p[0].children:
+    #   print(child.type)
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -331,20 +335,22 @@ def p_multipicative_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
+      valid_type = ['char' , 'short' , 'int' , 'long']
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
-      if higher_data_type >= 4 :
+      
+      if higher_data_type not in valid_type:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
 
       return_data_type = higher_data_type
-      if return_data_type >= 4 or return_data_type == 0 :
-        return_data_type = 2
+      if return_data_type == 'char' :
+        return_data_type = 'int'
       p[0] = Node(name = 'Mod',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
     else:
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       return_data_type = higher_data_type
-      if return_data_type == 0 :
-        return_data_type = 2
+      if return_data_type == 'char' :
+        return_data_type = 'int'
       p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [p[1],tempNode,p[3]])
 
 ###############
@@ -565,14 +571,27 @@ def p_declaration(p):
     #fill later
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
+        if(child.children[0].val in symbol_table[currentScope].keys()):
+          print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
+        # print(child.children[0].val,child.children[1].val)
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
+        if(len(child.children[0].array) > 0):
+          symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
+        if(len(child.children[0].type) > 0):
+          symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
       else:
+        if(child.val in symbol_table[currentScope].keys()):
+          print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        if(len(child.array) > 0):
+          symbol_table[currentScope][child.val]['array'] = child.array
+        if(len(child.type) > 0):
+          symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
 
-
+# TODO : change the below to support long, short etc.
 def p_declaration_specifiers(p):
   '''declaration_specifiers : storage_class_specifier
 	| storage_class_specifier declaration_specifiers
@@ -581,10 +600,18 @@ def p_declaration_specifiers(p):
 	| type_qualifier
 	| type_qualifier declaration_specifiers
   '''
+  # TypeQualifier, TypeSpecifier1, StorageClassSpecifier
   if(len(p) == 2):
     p[0] = p[1]
   elif(len(p) == 3):
-    p[0] = Node(name = 'DeclarationSpecifiers',val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
+    if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    if(p[1].name == 'TypeSpecifier1' and (p[2].name.startswith('TypeSpecifier1') or p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
+      print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    # if(p[1].name == '')
+    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -617,7 +644,7 @@ def p_init_declarator(p):
     p[0].name = 'InitDeclarator'
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]])
+    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -764,37 +791,65 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
-  p[0] = Node(name = 'Declarator', val = '', type = p[1].type, lno = p.lineno(1), children = [])
+  # print(p[1].children)
+  # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
+    p[0] = p[1]
+    p[0].name = 'Declarator'
     p[0].val = p[1].val
+    p[0].array = p[1].array
   else:
+    p[0] = p[2]
+    p[0].name = 'Declarator'
+    p[0].type = p[1].type
     p[0].val = p[2].val
-
-  #p[0] = build_AST(p)
+    p[0].array = p[2].array
+  # print(p[0].children)
+  # if(p[1].name == 'ID'):
+  #     p[0].name = 'ID'
 
 def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
-                        | direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET
-                        | direct_declarator LPAREN parameter_type_list RPAREN
-                        | direct_declarator LPAREN identifier_list RPAREN
-  '''
-  
+                        | direct_declarator lopenparen parameter_type_list RPAREN
+                        | direct_declarator lopenparen identifier_list RPAREN
+  ''' 
   # 
   if(len(p) == 2):
-    p[0] = Node(name = 'DirectDeclarator', val = '', type = '', lno = p.lineno(1), children = [])
-    p[0].val = p[1]
+    p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
+    # p[0].val = p[1]
+    # # insert in symbol table here
+    # if(p[1] in symbol_table[currentScope].keys()):
+    #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
+
   elif(len(p) == 3):
     p[0] = p[2]
   else:
     p[0] = p[1]
+    p[0].children = p
+  if(len (p) == 5 and p[3].name == 'ParameterList'):
+    p[0].children = p[3].children
+    # print(p[0].children)
+    if(p[1].val in symbol_table[parent[currentScope]].keys()):
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    symbol_table[parent[currentScope]][p[1].val] = {}
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
+  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
+  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
+  p[0].array = copy.deepcopy(p[1].array)
+  p[0].array.append(p[3].val)
+
+def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
-                        | direct_declarator LPAREN RPAREN'''
+                        | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
+  if(p[3] == ')'):
+    if(p[1].val in symbol_table[parent[currentScope]].keys()):
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    symbol_table[parent[currentScope]][p[1].val] = {}
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -840,14 +895,12 @@ def p_parameter_list(p):
                       | parameter_list COMMA parameter_declaration
     '''
     #p[0] = Node()
+    p[0] = Node(name = 'ParameterList', val = '', type = '', children = [], lno = p.lineno(1))
     if(len(p) == 2):
-      p[0] = p[1]
-      p[0].name = 'ParameterList'
-      p[0].children = p[1]
+      p[0].children.append(p[1])
     else:
-      p[0] = p[1]
+      p[0].children = p[1].children
       p[0].children.append(p[3])
-      p[0].name = 'ParameterList'
 
 def p_parameter_declaration(p):
     '''parameter_declaration : declaration_specifiers declarator
@@ -859,7 +912,18 @@ def p_parameter_declaration(p):
       p[0] = p[1]
       p[0].name = 'ParameterDeclaration'
     else:
-      p[0] = Node(name = 'ParameterDeclaration',val = '',type = p[1].type, lno = p[1].lno, children = [])
+      p[0] = Node(name = 'ParameterDeclaration',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
+      if(len(p[2].type) > 0):
+        p[0].type = p[1].type + ' ' + p[2].type
+    if(p[2].name == 'Declarator'):
+      if(p[2].val in symbol_table[currentScope].keys()):
+        print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
+      symbol_table[currentScope][p[2].val] = {}
+      symbol_table[currentScope][p[2].val]['type'] = p[1].type
+      if(len(p[2].type) > 0):
+        symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+      if(len(p[2].array) > 0):
+        symbol_table[currentScope][p[2].val]['array'] = p[2].array
 
 
 def p_identifier_list(p):
@@ -986,6 +1050,23 @@ def p_compound_statement(p):
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
 
+def p_function_compound_statement(p):
+    '''function_compound_statement : LCURLYBRACKET closebrace
+                          | LCURLYBRACKET statement_list closebrace
+                          | LCURLYBRACKET declaration_list closebrace
+                          | LCURLYBRACKET declaration_list statement_list closebrace
+    '''  
+    #p[0] = Node()
+    #TODO : see what to do in in first case
+    if(len(p) == 3):
+      p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
+    elif(len(p) == 4):
+      p[0] = p[2]
+      p[0].name = 'CompoundStatement'
+    elif(len(p) == 4):
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
+
+
 def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
@@ -1021,7 +1102,7 @@ def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
-    #p[0] = Node()
+    p[0] = Node()
     if(len(p) == 3):
       p[0] = p[1]
     p[0].name = 'ExpressionStatement'
@@ -1096,28 +1177,56 @@ def p_external_declaration(p):
     #p[0] = Node()
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list compound_statement
-                           | declarator declaration_list compound_statement
-                           | declarator compound_statement                                                                              
+    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement
+                           | declarator declaration_list function_compound_statement
+                           | declarator function_compound_statement                                                                              
     ''' 
     #p[0] = Node()
     # p[0] = build_AST(p)  
     if(len(p) == 3):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = p[1].type, lno = p[1].lno, children = [p[1],p[2]])
+      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
     elif(len(p) == 4):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = p[1].type, lno = p[1].lno, children = [p[1],p[2],p[3]])
+      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
     else:
       # no need to keep type in AST
-      p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [p[2],p[3],p[4]])
+      p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
 
 def p_function_definition_2(p):
-  '''function_definition : declaration_specifiers declarator compound_statement'''
+  '''function_definition : declaration_specifiers declarator function_compound_statement'''
   # no need to keep type in AST
-  print(p[1])
-  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [p[2],p[3]])
+  # if(p[2].name != 'ID'):
+  #   print("Syntax error near line " + p[2].lno)
+  # else:
+  # if(p[2].val in symbol_table[currentScope].keys()):
+  #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
+  symbol_table[currentScope][p[2].val]['type'] = p[1].type
+  # print(p[2].children)
+  if(len(p[2].type) > 0):
+    symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+  if(len(p[2].children) > 0):
+    tempList = []
+    for child in p[2].children:
+      # print(child.type)
+      tempList.append(child.type)
+    symbol_table[currentScope][p[2].val]['argumentList'] = tempList
+    # print("ys")
+  # symbol_table[currentScope][p[2].val]['']
+  p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
+
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
+  global currentScope
+  global nextScope
+  
+  parent[nextScope] = currentScope
+  currentScope = nextScope
+  symbol_table.append({})
+  nextScope = nextScope + 1
+  p[0] = p[1]
+
+def p_lopenparen(p):
+  '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
   
@@ -1143,7 +1252,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -1153,20 +1262,8 @@ def runmain(code):
   graph.write_png('pydot_graph.png')
 
 def visualize_symbol_table():
-  for i in range (1,nextScope):
+  for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
       print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
-
-  # print(result)
-  # while True:
-  #   # try:
-  #   #   s = input('calc > ')
-  #   # except EOFError:
-  #   #   break
-  #   # z = code.readlines()
-  #   if not s: continue
-  #   print(s)
-  #   result = parser.parse(s,debug=True)
-  #   print(result)
