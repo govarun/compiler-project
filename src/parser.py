@@ -175,8 +175,21 @@ def p_postfix_expression_3(p):
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
-  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
-  # find_if_ID_is_declared(p[1].val,p[1].lno)
+  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
+  # print(p[1].val)
+  if(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+    print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")
+  else:
+    i = 0
+    # curScope = symbol_table[0][p[1].val]['FunctionScope']
+    for arguments in symbol_table[0][p[1].val]['argumentList']:
+      # print(p[3].children[i].val)
+      curVal = p[3].children[i].val
+      curType = symbol_table[currentScope][curVal]['type']
+      # print(curType)
+      if(arguments != curType):
+        print("Syntax Error at line " + str(p[1].lno), "Type mismatch in argument " + str(i+1) + " of function call")
+      i += 1
   #check if function argument_list_expression matches with the actual one
   
 
@@ -216,7 +229,7 @@ def p_argument_expression_list(p):
     p[0] = p[1]
     p[0].children.append(p[3])
     # for child in p[0].children:
-    #   print(child.type)
+    #   print(symbol_table[currentScope][child.val]['type'])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -832,6 +845,7 @@ def p_direct_declarator_1(p):
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
+    # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
   #TODO: Handle Children
   #p[0] = build_AST(p)
 
