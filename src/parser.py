@@ -707,7 +707,7 @@ def p_struct_or_union(p):
 	| UNION
   '''
   # p[0] = build_AST(p)
-  p[0] = p[1]
+  p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
 
 def p_struct_declaration_list(p):
   '''struct_declaration_list : struct_declaration
@@ -1265,7 +1265,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 

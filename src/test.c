@@ -1,8 +1,7 @@
-int f(int a,char b){
+struct point{
+    int x ;
+};
+int main()
+{
     ;
-}
-int main(){
-    // int a[10];
-    int a,b;
-    f(a,b);
 }
