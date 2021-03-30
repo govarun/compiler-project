@@ -198,6 +198,9 @@ def p_postfix_expression_5(p):
   | postfix_expression ARROW ID'''
   # no period in ast, but ID should always be present, making a tempNode to show 
   # ID as child of p[0].
+  # TODO : This is the reduction of p1.x, where x is in ID, and postfix_expression stores p1
+  # TODO : p[1].val should be defined in symbol table
+  # TODO : p[3] should be a field of (get from symbol table - struct point)
   tempNode = Node(name = '',val = p[3],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'PeriodOrArrowExpression',val = tempNode.val,lno = tempNode.lno,type = tempNode.type,children = [p[1],tempNode])
   # structure things , do later
