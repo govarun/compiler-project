@@ -78,13 +78,13 @@ def find_if_ID_is_declared(id,lineno):
   while(parent[curscp] != curscp):
     # print("here" + str(curscp))
     if(id in symbol_table[curscp].keys()):
-      return 1
+      return curscp
     curscp = parent[curscp]
   if (curscp == 0):
     if(id in symbol_table[curscp].keys()):
-      return 1
+      return curscp
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
-  return 0
+  return -1
 
 
 
@@ -122,7 +122,10 @@ def build_AST(p):
 def p_primary_expression_0(p):
   '''primary_expression : ID'''
   p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
-  find_if_ID_is_declared(p[1],p.lineno(1))
+  temp = find_if_ID_is_declared(p[1],p.lineno(1))
+  if(temp != -1):
+    p[0].type = symbol_table[temp][p[1]]['type']
+
 
 def p_primary_expression_1(p):
   '''primary_expression : OCTAL_CONST
@@ -387,9 +390,9 @@ def p_additive_expression(p):
     if p[1].type not in type_list or p[3].type not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
+    print("here " , p[1].type , p[3].type)
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
 ##############
 
@@ -585,7 +588,7 @@ def p_declaration(p):
     p[0] = p[1]
   else:
     # a = 1
-    p[0] = Node(name = 'Declaration',val = p[1],type = '', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
@@ -1324,7 +1327,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
