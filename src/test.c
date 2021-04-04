@@ -1,6 +1,5 @@
 int main(){
     int x = 1;
-    if(x < 1){
-        x++;
-    }
+    const int y = 2;
+    x = x+y;
 }

@@ -52,7 +52,8 @@ def get_higher_data_type(type_1 , type_2):
   to_str[3] = 'long'
   to_str[4] = 'float'
   to_str[5] = 'double'
-
+  type_1 =  type_1.split()[-1]
+  type_2 =  type_2.split()[-1]
   num_type_1 = to_num[type_1]
   num_type_2 = to_num[type_2]
   return to_str[max(num_type_1 , num_type_2)]
@@ -352,7 +353,7 @@ def p_multipicative_expression(p):
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if(p[1].type not in type_list or p[3].type not in type_list):
+    if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     if(p[2] == '%'):
@@ -387,10 +388,9 @@ def p_additive_expression(p):
     p[0] = p[1]
   else:
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type not in type_list or p[3].type not in type_list:
+    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
-    print("here " , p[1].type , p[3].type)
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
     p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
@@ -409,7 +409,7 @@ def p_shift_expression(p):
   else:
     # We know shift only possible in int(unsigned) type, so no need to pass for now
     type_list = ['short' , 'int' , 'long']
-    if p[1].type not in type_list or p[3].type not in type_list:
+    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
@@ -430,7 +430,7 @@ def p_relational_expression(p):
     p[0] = p[1]
   else:
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type not in type_list or p[3].type not in type_list:
+    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
@@ -446,8 +446,7 @@ def p_equality_expresssion(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [p[1],p[3]])
 
 def p_and_expression(p):
   '''and_expression : equality_expression
@@ -461,10 +460,12 @@ def p_and_expression(p):
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
     valid = ['int', 'char'] #TODO: check this if more AND should be taken
-    if p[1].type not in valid or p[3].type not in valid:
+    if p[1].type.split()[-1] not in valid or p[3].type.split()[-1] not in valid:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[2].type, 'for the AND operator')
     else:
       p[0].type = 'int' # should not be char, even if the and was done for two chars
+
+# TODO: do the above expression things below as well
 
 def p_exclusive_or_expression(p):
   '''exclusive_or_expression : and_expression
@@ -475,8 +476,7 @@ def p_exclusive_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = '',children = [p[1],p[3]])
 
 def p_inclusive_or_expression(p):
   '''inclusive_or_expression : exclusive_or_expression
@@ -487,8 +487,7 @@ def p_inclusive_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = '',children = [p[1],p[3]])
 
 def p_logical_and_expression(p):
   '''logical_and_expression : inclusive_or_expression 
@@ -499,8 +498,7 @@ def p_logical_and_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = '',children = [p[1],p[3]])
 
 def p_logical_or_expression(p):
   '''logical_or_expression : logical_and_expression
@@ -511,8 +509,7 @@ def p_logical_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = '',children = [p[1],tempNode,p[3]])
+    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = '',children = [p[1],p[3]])
 
 def p_conditional_expression(p):
   '''conditional_expression : logical_or_expression
@@ -523,7 +520,6 @@ def p_conditional_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    # tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
     #check type and shoul COLON, CONDOP be passed as children
     p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [p[1],p[3],p[5]])
 
@@ -538,7 +534,6 @@ def p_assignment_expression(p):
     p[0] = p[1]
   else:
     #check children
-    # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lineno, children = [])
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [p[1],p[3]])
     # find_if_ID_is_declared(p[1].val, p[1].lno)
 
