@@ -17,7 +17,10 @@ symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
+scopeName = {}
 parent[0] = 0
+scopeName[0] = 'global'
+curScopeName = 'global'
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
     self.name = name
@@ -709,6 +712,8 @@ def p_struct_or_union(p):
   '''struct_or_union : STRUCT
 	| UNION
   '''
+  global scopeName
+  scopeName = 'struct'
   # p[0] = build_AST(p)
   p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
 
@@ -830,7 +835,9 @@ def p_direct_declarator_1(p):
                         | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
+  global curScopeName
   if(len(p) == 2):
+    curScopeName = 'function'
     p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
     # p[0].val = p[1]
     # # insert in symbol table here
@@ -843,6 +850,8 @@ def p_direct_declarator_1(p):
     p[0] = p[1]
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
+    curScopeName = 'function'
+    print("here" + curScopeName)
     p[0].children = p[3].children
     # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
@@ -1128,39 +1137,68 @@ def p_expression_statement(p):
     
 
 def p_selection_statement_1(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement %prec IFX'''
+    '''selection_statement : if LPAREN expression RPAREN statement %prec IFX'''
     #p[0] = Node()
     p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
   
 def p_selection_statement_2(p):
-    '''selection_statement : IF LPAREN expression RPAREN statement ELSE statement'''
+    '''selection_statement : if LPAREN expression RPAREN statement ELSE statement'''
     p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
+def p_if(p):
+  '''if : IF'''
+  global curScopeName
+  curScopeName = 'if'
+  p[0] = p[1]
+
 def p_selection_statement_3(p):
-    '''selection_statement : SWITCH LPAREN expression RPAREN statement'''
+    '''selection_statement : switch LPAREN expression RPAREN statement'''
     p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
+def p_switch(p):
+  '''switch : SWITCH'''
+  global curScopeName
+  curScopeName = 'if'
+  p[0] = p[1]
+
 def p_iteration_statement_1(p):
-    '''iteration_statement : WHILE LPAREN expression RPAREN'''
+    '''iteration_statement : while LPAREN expression RPAREN'''
     #p[0] = Node()
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
   
+def p_while(p):
+  '''while : WHILE'''
+  global curScopeName
+  curScopeName = 'loop'
+  p[0] = p[1]
+
 def p_iteration_statement_2(p):
-    '''iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMICOLON'''
+    '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
     p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
-  
+
+def p_do(p):
+  '''do : DO'''
+  global curScopeName
+  curScopeName = 'loop'
+  p[0] = p[1]
+
+
 def p_iteration_statement_3(p):
-    '''iteration_statement : FOR LPAREN expression_statement expression_statement RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
     p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_iteration_statement_4(p):
-    '''iteration_statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement expression_statement expression RPAREN statement'''
     p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
+
+def p_for(p):
+  '''for : FOR'''
+  global curScopeName
+  curScopeName = 'loop'
+  p[0] = p[1]
 
 def p_jump_statement(p):
     '''jump_statement : GOTO ID SEMICOLON
-                      | CONTINUE SEMICOLON
-                      | BREAK SEMICOLON
                       | RETURN SEMICOLON
                       | RETURN expression SEMICOLON
     '''
@@ -1171,6 +1209,22 @@ def p_jump_statement(p):
     else:
       # tempNode3 = Node(name = '',val = p[3],type = '', lno = p.lineno(1), children = [])
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
+
+def p_jump_statement_2(p):
+  '''jump_statement : BREAK SEMICOLON
+                    | CONTINUE SEMICOLON'''
+  global curScopeName
+  p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
+  curscp = currentScope
+  # print("here" + str(curscp))
+  flag = 0
+  while(parent[curscp] != curscp):
+    if(scopeName[curscp] == 'loop'):
+      flag = 1
+    curscp = parent[curscp]
+  if(flag == 0):
+    print(p[0].lno, 'break/continue not inside loop')
+
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
@@ -1234,9 +1288,10 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
-  
+  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
+  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1245,9 +1300,10 @@ def p_lopenparen(p):
   '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
-  
+  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
+  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1268,7 +1324,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -1278,8 +1334,9 @@ def runmain(code):
   graph.write_png('pydot_graph.png')
 
 def visualize_symbol_table():
+  global scopeName
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
-      print('\nIn Scope ' + str(i))
+      print('\nIn Scope ' + str(i), scopeName[i])
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])

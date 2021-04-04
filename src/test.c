@@ -1,9 +1,9 @@
- struct point{
-    int x ;
-    int y ;
-};
-int main()
-{
-    struct point p1;
-    p1.x = 0;
+int main(){
+    int x,y;
+    for(x = 1;x < 2;x++){
+        int f;
+        if(f < 2){
+            continue;
+        }
+    }
 }
