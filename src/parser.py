@@ -594,6 +594,7 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
+    #print("here : ", p[1].type)
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
         if(child.children[0].val in symbol_table[currentScope].keys()):
