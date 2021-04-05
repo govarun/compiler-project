@@ -1,5 +1,5 @@
 int main(){
-    int x = 1;
-    const int y = 2;
-    x = x+y;
+    int x,y;
+    const int z = 1;
+    z = x+y;
 }
