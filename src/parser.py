@@ -58,7 +58,17 @@ def get_higher_data_type(type_1 , type_2):
   num_type_2 = to_num[type_2]
   return to_str[max(num_type_1 , num_type_2)]
 
-
+def get_data_type_size(type):
+  type = str(type)
+  if type.endswith("*") or type == "long" or type == "double":
+    return 8
+  elif type == "int" or type == "float":
+    return 4
+  elif type == "short":
+    return 2
+  elif type == "char":
+    return 1
+  
 
 def ignore_1(s):
   if(s == "}"):
@@ -86,6 +96,7 @@ def find_if_ID_is_declared(id,lineno):
       return curscp
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
   return -1
+
 
 
 
