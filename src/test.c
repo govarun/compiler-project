@@ -1,5 +1,9 @@
+struct point{
+    int x ;
+    int y ;
+};
 int main()
-{   
-    int y;
+{
+    ;
     return 0 ;
 }
