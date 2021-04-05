@@ -732,6 +732,18 @@ def p_struct_or_union_specifier(p):
 
   if len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
+    # print(p[0].type)
+    flag = 0
+    curscp = currentScope
+    while(parent[curscp] != curscp):
+      if(p[0].type in symbol_table[curscp].keys()):
+        flag = 1
+      curscp = parent[curscp]
+    if (curscp == 0):
+      if(p[0].type in symbol_table[curscp].keys()):
+        flag = 1
+    if(flag == 0):
+      print("COMPILATION ERROR : at line " + str(p[1].lno) + ", " + p[0].type + " is not a type")
 
 
 
@@ -1356,7 +1368,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
