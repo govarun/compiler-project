@@ -179,7 +179,7 @@ def p_postfix_expression_1(p):
   p[0] = p[1]
 
 def p_postfix_expression_2(p):
-  '''postfix_expression : postfix_expression LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
+  '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   curscp = currentScope
@@ -190,7 +190,7 @@ def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
-    print("COMPILATION ERROR  at line " + str(p[1].lno) + ", no function named " + p[1].val + " declared")
+    print("COMPILATION ERROR  at line " + str(p[1].lno) + ", no function named " + p[1].val)
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -907,7 +907,7 @@ def p_direct_declarator_1(p):
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
-  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
+  '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
   p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
@@ -1363,7 +1363,7 @@ def p_closebrace(p):
 def p_error(p):
     # print(p)
     if(p):
-      print("Syntax error in input at line" + str(p.lineno))
+      print("Syntax error in input at line " + str(p.lineno))
     # p.lineno(1)
 
 def runmain(code):

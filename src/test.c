@@ -1,5 +1,4 @@
 int main()
-{   
-    int f;
-    f(); 
+{
+    int b[10*10];
 }
