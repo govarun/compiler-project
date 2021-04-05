@@ -1,4 +1,10 @@
+int f(int x){
+    return x;
+}
+
 int main()
 {
-    int b[10*10];
+    int f;
+    f=f(f);
+    return 0;
 }

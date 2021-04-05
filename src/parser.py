@@ -1003,7 +1003,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
