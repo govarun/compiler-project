@@ -7,6 +7,8 @@ int main()
     int x ;
     int y ;
     };
-    struct f p1 ;
-    p1.x ; 
+    struct f p1;
+    p1.y ;
+    p2.x ;
+
 }
