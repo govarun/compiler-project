@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "main.py", line 40, in <module>
+    parser.runmain(code)
+  File "/home/lavish/compiler-project/src/parser.py", line 1391, in runmain
+    result = parser.parse(code,debug=False)
+  File "/home/lavish/.local/lib/python3.8/site-packages/ply/yacc.py", line 333, in parse
+    return self.parseopt_notrack(input, lexer, debug, tracking, tokenfunc)
+  File "/home/lavish/.local/lib/python3.8/site-packages/ply/yacc.py", line 1120, in parseopt_notrack
+    p.callable(pslice)
+  File "/home/lavish/compiler-project/src/parser.py", line 225, in p_postfix_expression_5
+    struct_name = symbol_table[currentScope][p[1].val]['type']
+KeyError: 'p2'

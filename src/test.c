@@ -1,10 +1,11 @@
-int f(int x){
-    return x;
-}
 
 int main()
 {
-    int f;
-    f=f(f);
-    return 0;
+    struct point{
+    int x ;
+    int y ;
+    };
+    struct f p1;
+    p1.y ;
+    p2.x ;
 }
