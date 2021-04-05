@@ -594,7 +594,7 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    #print("here : ", p[1].type)
+    print("here : ", p[1].type)
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
         if(child.children[0].val in symbol_table[currentScope].keys()):
@@ -726,7 +726,7 @@ def p_struct_or_union_specifier(p):
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
-          print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
+          print('COMPILATION ERROR : line ' + str(child.lno) + ' : ' + child.val + ' already declared')
       curr_list = [child.type, child.val, 0, 0]
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
