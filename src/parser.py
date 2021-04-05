@@ -179,7 +179,7 @@ def p_postfix_expression_1(p):
   p[0] = p[1]
 
 def p_postfix_expression_2(p):
-  '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
+  '''postfix_expression : postfix_expression LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
   curscp = currentScope
@@ -188,9 +188,9 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  # find_if_ID_is_declared(p[1].val,p[1].lno)
-
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
+  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
+    print("COMPILATION ERROR  at line " + str(p[1].lno) + ", no function named " + p[1].val + " declared")
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -594,7 +594,7 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    #print("here : ", p[1].type)
+    # print("here : ", p[1].type)
     for child in p[2].children:
       if(child.name == 'InitDeclarator'):
         if(child.children[0].val in symbol_table[currentScope].keys()):
@@ -1325,7 +1325,7 @@ def p_function_definition_2(p):
       tempList.append(child.type)
     symbol_table[currentScope][p[2].val]['argumentList'] = tempList
     # print("ys")
-  # symbol_table[currentScope][p[2].val]['']
+  symbol_table[currentScope][p[2].val]['isFunc'] = 1
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
 
