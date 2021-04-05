@@ -59,7 +59,17 @@ def get_higher_data_type(type_1 , type_2):
   num_type_2 = to_num[type_2]
   return to_str[max(num_type_1 , num_type_2)]
 
-
+def get_data_type_size(type):
+  type = str(type)
+  if type.endswith("*") or type == "long" or type == "double":
+    return 8
+  elif type == "int" or type == "float":
+    return 4
+  elif type == "short":
+    return 2
+  elif type == "char":
+    return 1
+  
 
 def ignore_1(s):
   if(s == "}"):
@@ -87,6 +97,7 @@ def find_if_ID_is_declared(id,lineno):
       return curscp
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
   return -1
+
 
 
 
@@ -702,7 +713,24 @@ def p_struct_or_union_specifier(p):
   '''
   # p[0] = build_AST(p)
   # TODO : check the semicolon thing after closebrace in gramamar
-  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
+  # TODO : Manage the size and offset of fields
+  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
+  if len(p) == 6:
+    val_name = p[1].type + ' ' + p[2]
+    if val_name in symbol_table[currentScope].keys():
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    symbol_table[currentScope][val_name] = {}
+    symbol_table[currentScope][val_name]['type'] = val_name
+    temp_list = []
+    for child in p[4].children:
+      for prev_list in temp_list:
+        if prev_list[1] == child.val:
+          print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
+      curr_list = [child.type, child.val, 0, 0]
+      temp_list.append(curr_list)
+    symbol_table[currentScope][val_name]['field_list'] = temp_list
+
+
 
 def p_struct_or_union(p):
   '''struct_or_union : STRUCT
@@ -719,16 +747,21 @@ def p_struct_declaration_list(p):
   #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclarationList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   if(len(p) == 2):
-    p[0].children.append(p[1])
+    p[0].children = p[1].children
   else:
-    p[0].children.append(p[2])
+    p[0].children = p[1].children
+    p[0].children.extend(p[2].children)
 
 
 def p_struct_declaration(p):
   '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = 'StructDeclaration', val = '', type = 'struct_declaration', lno = p[1].lno, children = [])
+  p[0] = Node(name = 'StructDeclaration', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0].children = p[2].children
+  for child in p[0].children:
+    child.type = p[1].type
+  
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -750,6 +783,7 @@ def p_struct_declarator_list(p):
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
+    p[0].children = p[1].children 
     p[0].children.append(p[3])
 
 def p_struct_declarator(p):  
@@ -839,7 +873,7 @@ def p_direct_declarator_1(p):
     # if(p[1] in symbol_table[currentScope].keys()):
     #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
-  elif(len(p) == 3):
+  elif(len(p) == 4):
     p[0] = p[2]
   else:
     p[0] = p[1]
@@ -848,7 +882,7 @@ def p_direct_declarator_1(p):
     curScopeName = 3
     # print("here" + curScopeName)
     p[0].children = p[3].children
-    print(p[0].children)
+    # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
@@ -1319,7 +1353,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
