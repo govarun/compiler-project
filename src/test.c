@@ -1,12 +1,7 @@
-struct point{
-    int z ;
-    int y ;
-    int y ;
+struct f{
+    int x ;
 }
-
-
 int main()
 {
-    int x ;
     return 0 ;
 }

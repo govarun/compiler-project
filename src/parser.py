@@ -713,7 +713,8 @@ def p_struct_or_union_specifier(p):
   '''
   # p[0] = build_AST(p)
   # TODO : check the semicolon thing after closebrace in gramamar
-  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
+  # TODO : Manage the size and offset of fields
+  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
   if len(p) == 6:
     val_name = p[1].type + ' ' + p[2]
     if val_name in symbol_table[currentScope].keys():
