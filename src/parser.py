@@ -188,9 +188,9 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  # find_if_ID_is_declared(p[1].val,p[1].lno)
-
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
+  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
+    print("COMPILATION ERROR  at line " + str(p[1].lno) + ", no function named " + p[1].val)
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -220,6 +220,14 @@ def p_postfix_expression_5(p):
   # TODO : This is the reduction of p1.x, where x is in ID, and postfix_expression stores p1
   # TODO : p[1].val should be defined in symbol table
   # TODO : p[3] should be a field of (get from symbol table - struct point)
+  if p[1].val not in symbol_table[currentScope].keys():
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+  struct_name = symbol_table[currentScope][p[1].val]['type']
+  found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
+  if found_scope == -1 :
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " type of " + p[1].val + " not found")
+  if p[3] not in symbol_table[found_scope][struct_name]['field_list']:
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : field not declared in corresponding struct")
   tempNode = Node(name = '',val = p[3],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'PeriodOrArrowExpression',val = tempNode.val,lno = tempNode.lno,type = tempNode.type,children = [p[1],tempNode])
   # structure things , do later
@@ -594,10 +602,7 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    print("here : ", p[1].type)
-    for child in p[2].children:
       if(child.name == 'InitDeclarator'):
-        if(child.children[0].val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
         # print(child.children[0].val,child.children[1].val)
         symbol_table[currentScope][child.children[0].val] = {}
@@ -608,6 +613,7 @@ def p_declaration(p):
         if(len(child.children[0].type) > 0):
           symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
       else:
+        print("here : ", child.val)
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
@@ -616,6 +622,15 @@ def p_declaration(p):
           symbol_table[currentScope][child.val]['array'] = child.array
         if(len(child.type) > 0):
           symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
+        # TODO : Confirm with others about two possible approaches
+        # if(p[1].type.startswith('struct')):
+        #   found_scope = find_if_ID_is_declared(p[1].type, p.lineno(1))
+        #   if found_scope != -1:
+        #     symbol_table[currentScope][child.val]['field_list'] = symbol_table[found_scope][p[1].type]['field_list']
+
+        
+        
+        
 
 # TODO : change the below to support long, short etc.
 def p_declaration_specifiers(p):
@@ -907,7 +922,7 @@ def p_direct_declarator_1(p):
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
-  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
+  '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
   p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
@@ -1325,7 +1340,7 @@ def p_function_definition_2(p):
       tempList.append(child.type)
     symbol_table[currentScope][p[2].val]['argumentList'] = tempList
     # print("ys")
-  # symbol_table[currentScope][p[2].val]['']
+  symbol_table[currentScope][p[2].val]['isFunc'] = 1
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
 
@@ -1363,7 +1378,7 @@ def p_closebrace(p):
 def p_error(p):
     # print(p)
     if(p):
-      print("Syntax error in input at line" + str(p.lineno))
+      print("Syntax error in input at line " + str(p.lineno))
     # p.lineno(1)
 
 def runmain(code):
