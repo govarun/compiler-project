@@ -714,6 +714,11 @@ def p_struct_or_union_specifier(p):
   # p[0] = build_AST(p)
   # TODO : check the semicolon thing after closebrace in gramamar
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
+  val_name = p[1].type + ' ' + p[2]
+  if val_name in symbol_table[currentScope].keys():
+    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+  symbol_table[currentScope][val_name] = {}
+
 
 def p_struct_or_union(p):
   '''struct_or_union : STRUCT
@@ -732,6 +737,7 @@ def p_struct_declaration_list(p):
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
+    p[0].children = p[1].children
     p[0].children.append(p[2])
 
 
@@ -761,6 +767,7 @@ def p_struct_declarator_list(p):
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
+    p[0].children = p[1].children 
     p[0].children.append(p[3])
 
 def p_struct_declarator(p):  
@@ -1330,7 +1337,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
