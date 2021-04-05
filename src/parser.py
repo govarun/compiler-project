@@ -746,7 +746,8 @@ def p_struct_declaration_list(p):
     p[0].children.append(p[1])
   else:
     p[0].children = p[1].children
-    p[0].children.append(p[2])
+    for child in p[2].children:
+      p[0].children.append(child)
 
 
 def p_struct_declaration(p):
