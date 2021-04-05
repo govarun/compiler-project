@@ -848,7 +848,7 @@ def p_direct_declarator_1(p):
     curScopeName = 3
     # print("here" + curScopeName)
     p[0].children = p[3].children
-    # print(p[0].children)
+    print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
