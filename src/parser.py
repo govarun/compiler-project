@@ -714,10 +714,18 @@ def p_struct_or_union_specifier(p):
   # p[0] = build_AST(p)
   # TODO : check the semicolon thing after closebrace in gramamar
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
-  val_name = p[1].type + ' ' + p[2]
-  if val_name in symbol_table[currentScope].keys():
-    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
-  symbol_table[currentScope][val_name] = {}
+  if len(p) == 6:
+    val_name = p[1].type + ' ' + p[2]
+    if val_name in symbol_table[currentScope].keys():
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    symbol_table[currentScope][val_name] = {}
+    symbol_table[currentScope][val_name]['type'] = val_name
+    temp_list = []
+    for child in p[4].children:
+      curr_list = [child.type, child.val, 0, 0]
+      temp_list.append(curr_list)
+    symbol_table[currentScope][val_name]['field_list'] = temp_list
+
 
 
 def p_struct_or_union(p):
@@ -745,7 +753,8 @@ def p_struct_declaration(p):
   '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
   '''
   #p[0] = build_AST(p)
-  p[0] = Node(name = 'StructDeclaration', val = '', type = 'struct_declaration', lno = p[1].lno, children = [])
+  p[0] = Node(name = 'StructDeclaration', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  p[0].children = p[2].children
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list

@@ -3,9 +3,7 @@ struct point{
     int y ;
 }
 
-struct point{
-    int x , y , z ;
-}
+
 int main()
 {
     return 0 ;
