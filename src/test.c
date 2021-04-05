@@ -1,5 +1,6 @@
-int main(){
-    int x,y;
-    const int z = 1;
-    z = x+y;
+int x;
+int main()
+{   
+    int y;
+    return 0 ;
 }

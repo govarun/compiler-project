@@ -12,6 +12,7 @@ precedence = (
      ('nonassoc', 'ELSE')
  )
 
+# in scope name, 0 denotes global, 1 denotes loop and 2 denotes if/switch, 3 denotes function
 symbol_table = []
 symbol_table.append({})
 currentScope = 0
@@ -19,8 +20,8 @@ nextScope = 1
 parent = {}
 scopeName = {}
 parent[0] = 0
-scopeName[0] = 'global'
-curScopeName = 'global'
+scopeName[0] = 0
+curScopeName = 0
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
     self.name = name
@@ -707,8 +708,7 @@ def p_struct_or_union(p):
   '''struct_or_union : STRUCT
 	| UNION
   '''
-  global scopeName
-  scopeName = 'struct'
+
   # p[0] = build_AST(p)
   p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
 
@@ -832,7 +832,7 @@ def p_direct_declarator_1(p):
   # 
   global curScopeName
   if(len(p) == 2):
-    curScopeName = 'function'
+    curScopeName = 3
     p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
     # p[0].val = p[1]
     # # insert in symbol table here
@@ -845,15 +845,15 @@ def p_direct_declarator_1(p):
     p[0] = p[1]
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
-    curScopeName = 'function'
-    print("here" + curScopeName)
+    curScopeName = 3
+    # print("here" + curScopeName)
     p[0].children = p[3].children
     # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
+
     # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
-  #TODO: Handle Children
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
@@ -1143,7 +1143,7 @@ def p_selection_statement_2(p):
 def p_if(p):
   '''if : IF'''
   global curScopeName
-  curScopeName = 'if'
+  curScopeName = 2
   p[0] = p[1]
 
 def p_selection_statement_3(p):
@@ -1153,7 +1153,7 @@ def p_selection_statement_3(p):
 def p_switch(p):
   '''switch : SWITCH'''
   global curScopeName
-  curScopeName = 'if'
+  curScopeName = 2
   p[0] = p[1]
 
 def p_iteration_statement_1(p):
@@ -1164,7 +1164,7 @@ def p_iteration_statement_1(p):
 def p_while(p):
   '''while : WHILE'''
   global curScopeName
-  curScopeName = 'loop'
+  curScopeName = 1
   p[0] = p[1]
 
 def p_iteration_statement_2(p):
@@ -1174,7 +1174,7 @@ def p_iteration_statement_2(p):
 def p_do(p):
   '''do : DO'''
   global curScopeName
-  curScopeName = 'loop'
+  curScopeName = 1
   p[0] = p[1]
 
 
@@ -1189,7 +1189,7 @@ def p_iteration_statement_4(p):
 def p_for(p):
   '''for : FOR'''
   global curScopeName
-  curScopeName = 'loop'
+  curScopeName = 1
   p[0] = p[1]
 
 def p_jump_statement(p):
@@ -1214,7 +1214,7 @@ def p_jump_statement_2(p):
   # print("here" + str(curscp))
   flag = 0
   while(parent[curscp] != curscp):
-    if(scopeName[curscp] == 'loop'):
+    if(scopeName[curscp] == 1):
       flag = 1
     curscp = parent[curscp]
   if(flag == 0):
