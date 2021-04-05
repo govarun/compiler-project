@@ -1,10 +1,10 @@
 struct point{
-    int x ;
+    int z ;
+    int y ;
     int y ;
 }
 
 
 int main()
 {
-    return 0 ;
-}
+    int x ;
