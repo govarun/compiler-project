@@ -188,9 +188,9 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
-  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
-    print("COMPILATION ERROR  at line " + str(p[1].lno) + ", no function named " + p[1].val)
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
+  # find_if_ID_is_declared(p[1].val,p[1].lno)
+
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -222,14 +222,20 @@ def p_postfix_expression_5(p):
   # TODO : p[3] should be a field of (get from symbol table - struct point)
   if p[1].val not in symbol_table[currentScope].keys():
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+
+  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = '',children = [])
   struct_name = symbol_table[currentScope][p[1].val]['type']
   found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
   if found_scope == -1 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " type of " + p[1].val + " not found")
-  if p[3] not in symbol_table[found_scope][struct_name]['field_list']:
+  flag = 0 
+  for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+    if curr_list[1] == p[3]:
+      flag = 1 
+      p[0].val = curr_list[0]
+  if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field not declared in corresponding struct")
-  tempNode = Node(name = '',val = p[3],lno = p[1].lno,type = '',children = '')
-  p[0] = Node(name = 'PeriodOrArrowExpression',val = tempNode.val,lno = tempNode.lno,type = tempNode.type,children = [p[1],tempNode])
+ 
   # structure things , do later
 
 
@@ -602,7 +608,11 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
+    #print("here : ", p[1].type)
+    for child in p[2].children:
+      # print(child.name)
       if(child.name == 'InitDeclarator'):
+        if(child.children[0].val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
         # print(child.children[0].val,child.children[1].val)
         symbol_table[currentScope][child.children[0].val] = {}
@@ -741,7 +751,7 @@ def p_struct_or_union_specifier(p):
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
-          print('COMPILATION ERROR : line ' + str(child.lno) + ' : ' + child.val + ' already declared')
+          print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
       curr_list = [child.type, child.val, 0, 0]
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
@@ -922,7 +932,7 @@ def p_direct_declarator_1(p):
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
-  '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
+  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
   p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
@@ -1018,7 +1028,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -1340,7 +1350,7 @@ def p_function_definition_2(p):
       tempList.append(child.type)
     symbol_table[currentScope][p[2].val]['argumentList'] = tempList
     # print("ys")
-  symbol_table[currentScope][p[2].val]['isFunc'] = 1
+  # symbol_table[currentScope][p[2].val]['']
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
 
@@ -1378,13 +1388,13 @@ def p_closebrace(p):
 def p_error(p):
     # print(p)
     if(p):
-      print("Syntax error in input at line " + str(p.lineno))
+      print("Syntax error in input at line" + str(p.lineno))
     # p.lineno(1)
 
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
