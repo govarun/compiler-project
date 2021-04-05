@@ -743,11 +743,10 @@ def p_struct_declaration_list(p):
   #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclarationList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   if(len(p) == 2):
-    p[0].children.append(p[1])
+    p[0].children = p[1].children
   else:
     p[0].children = p[1].children
-    for child in p[2].children:
-      p[0].children.append(child)
+    p[0].children.extend(p[2].children)
 
 
 def p_struct_declaration(p):
@@ -756,6 +755,9 @@ def p_struct_declaration(p):
   #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclaration', val = '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].children = p[2].children
+  for child in p[0].children:
+    child.type = p[1].type
+  
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -867,7 +869,7 @@ def p_direct_declarator_1(p):
     # if(p[1] in symbol_table[currentScope].keys()):
     #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
-  elif(len(p) == 3):
+  elif(len(p) == 4):
     p[0] = p[2]
   else:
     p[0] = p[1]
@@ -876,7 +878,7 @@ def p_direct_declarator_1(p):
     curScopeName = 3
     # print("here" + curScopeName)
     p[0].children = p[3].children
-    print(p[0].children)
+    # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
