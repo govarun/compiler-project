@@ -1,6 +1,7 @@
-struct f{
+struct point{
     int x ;
-}
+    int y ;
+};
 int main()
 {
     struct f p1 ;
