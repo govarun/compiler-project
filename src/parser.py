@@ -730,6 +730,9 @@ def p_struct_or_union_specifier(p):
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
 
+  if len(p) == 3:
+    p[0].type = p[1].type + ' ' + p[2]
+
 
 
 def p_struct_or_union(p):

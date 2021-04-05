@@ -3,5 +3,6 @@ struct f{
 }
 int main()
 {
-    return 0 ;
+    struct f p1 ;
+    p1.x ; 
 }
