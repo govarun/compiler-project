@@ -8,3 +8,5 @@ struct point{
 int main()
 {
     int x ;
+    return 0 ;
+}
