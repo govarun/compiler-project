@@ -1,8 +1,9 @@
+struct point{
+    int x;
+    char y ;
+}
+
 int main()
 {
-    const int z = 5;
-    int a, b;
-    char* x;
-    float y;
-    int c[3][5][7];
+    return 0;
 }

@@ -780,13 +780,16 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][val_name] = {}
     symbol_table[currentScope][val_name]['type'] = val_name
     temp_list = []
+    curr_offset = 0 
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
-      curr_list = [child.type, child.val, 0, 0]
+      curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
+      curr_offset = curr_offset + get_data_type_size(child.type)
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
+    symbol_table[currentScope][val_name]['size'] = curr_offset
 
   if len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
