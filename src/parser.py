@@ -33,13 +33,14 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0 ):
     self.name = name
     self.val = val
     self.type = type
     self.lno = lno
     self.scope = scope
     self.array = array
+    self.maxDepth = maxDepth
     if children:
       self.children = children
     else:
@@ -70,6 +71,7 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type_1):
+  # print(type_1)
   type_size = {}
   type_size['char'] = 1
   type_size['short'] = 2
@@ -208,6 +210,8 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  p[0].array = copy.deepcopy(p[1].array)
+  p[0].array.append(p[3].val)
   curscp = currentScope
   if(p[3].type not in ['char', 'short', 'int', 'long']):
     print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
@@ -600,6 +604,9 @@ def p_assignment_expression(p):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
+    tempScope = find_if_ID_is_declared(p[1].val, p.lineno(1))
+    if(len(p[1].array) > 0 and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) != len(p[1].array))):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 def p_assignment_operator(p):
@@ -652,7 +659,8 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    #print("here : ", p[1].type)
+    # print(p[1].type)
+    # p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -676,6 +684,7 @@ def p_declaration(p):
           symbol_table[currentScope][child.children[0].val]['size'] = 8
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
+        # print(p[1].type)
         # print("here : ", child.val)
         # if(p[1].type.startswith('typedef')):
         #   to_be_typedef = []
@@ -696,6 +705,7 @@ def p_declaration(p):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        # print(p[1].type)
         symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
         totalEle = 1
         if(len(child.array) > 0):
@@ -737,8 +747,14 @@ def p_declaration_specifiers(p):
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     # if(p[1].name == '')
-    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
     curType.append(p[1].type + ' ' + p[2].type)
+    
+    ty = ""
+    if len(p[1].type) > 0:
+      ty = p[1].type + ' ' + p[2].type
+    else:
+      ty = p[2].type
+    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = ty, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -774,6 +790,8 @@ def p_init_declarator(p):
     # if(p[1].type.startswith('typedef')):
     #   print("COMPILATION ERROR at line " + str(p[1].lno) + " typedef intialized")
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
+    if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
+      print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -1139,7 +1157,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -1203,6 +1221,8 @@ def p_initializer(p):
     else:
       p[0] = p[2]
     p[0].name = 'Initializer'
+    if(len(p) == 4):
+      p[0].maxDepth = p[2].maxDepth + 1
 
 def p_initializer_list(p):
   '''initializer_list : initializer
@@ -1210,7 +1230,7 @@ def p_initializer_list(p):
   '''
   #p[0] = Node()
   if(len(p) == 2):
-    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1))
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth)
   else:
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
     if(p[1].name != 'InitializerList'):
@@ -1218,6 +1238,7 @@ def p_initializer_list(p):
     else:
       p[0].children = p[1].children
     p[0].children.append(p[3])
+    p[0].maxDepth = max(p[1].maxDepth, p[3].maxDepth)
 
 def p_statement(p):
     '''statement : labeled_statement
@@ -1500,7 +1521,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
