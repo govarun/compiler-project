@@ -427,6 +427,9 @@ def p_multipicative_expression(p):
     p[0] = p[1]
   else:
     # val empty 
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'MulDiv',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
@@ -472,7 +475,10 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    if(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
+    elif(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
       if(p[3].type == 'float'):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
@@ -718,6 +724,9 @@ def p_assignment_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'AssignmentOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
     if('struct' in p[1].type.split() and 'struct' not in p[3].type.split()):
