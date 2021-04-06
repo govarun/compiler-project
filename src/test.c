@@ -7,9 +7,8 @@ struct point{
 }
 int main()
 {
-    int x =1;
-    struct point p1, p2;
-    p1 = p2;
-    // x = f() + 5;
+    int * x , y ;
+    x = &y ;
+    x  = x * y; // should not give error
     return 0 ;
 }

@@ -13,9 +13,11 @@ precedence = (
  )
 
 # in scope name, 0 denotes global, 1 denotes loop and 2 denotes if/switch, 3 denotes function
+curType = []
 symbol_table = []
 symbol_table.append({})
-typedef_list = []
+# typedef_list = {}
+# all_typedef = []
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -48,6 +50,10 @@ class Node:
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
 def get_higher_data_type(type_1 , type_2):
+  if(type_1.endswith('*')):
+    return type_1
+  if(type_2.endswith('*')):
+    return type_2
   to_num = {}
   to_num['char'] = 0
   to_num['short'] = 1
@@ -163,10 +169,10 @@ def p_primary_expression_0(p):
   p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
   if(temp != -1):
-    if('type' in symbol_table[temp][p[1]]):
-      p[0].type = symbol_table[temp][p[1]]['type']
-    else:
-      p[0].type = 'int'
+    # if('type' in symbol_table[temp][p[1]]):
+    p[0].type = symbol_table[temp][p[1]]['type']
+    # else:
+    #   p[0].type = 'int'
   # TODO : this is temp fix for recursion, find neat fix
 def p_primary_expression_1(p):
   '''primary_expression : OCTAL_CONST
@@ -221,7 +227,7 @@ def p_postfix_expression_3(p):
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
-  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+  elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
   
 
@@ -239,6 +245,8 @@ def p_postfix_expression_4(p):
     for arguments in symbol_table[0][p[1].val]['argumentList']:
       # print(p[3].children[i].val)
       curVal = p[3].children[i].val
+      if(curVal not in symbol_table[currentScope].keys()):
+        continue
       curType = symbol_table[currentScope][curVal]['type']
       if(arguments.split()[-1] != curType.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
@@ -342,7 +350,7 @@ def p_unary_expression_2(p):
   # p[1] can be &,*,+,-,~,!
   if(p[1] == '&'):
     # no '&' child added, will deal in traversal
-    p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
+    p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
   elif(p[1] == '*'):
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   elif(p[1] == '-'):
@@ -452,9 +460,23 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+    if(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
+      if(p[3].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
+    elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
+      if(p[1].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
+    elif(p[1].type.endswith('*') or p[3].type.endswith('*')):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
+    else :
+      type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+      if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
     found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
@@ -752,7 +774,8 @@ def p_declaration(p):
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  global typedef_list
+  # global typedef_list
+  # global all_typedef
   if(len(p) == 3):
     p[0] = p[1]
   else:
@@ -786,17 +809,21 @@ def p_declaration(p):
       else:
         # print(p[1].type)
         # print("here : ", child.val)
-        if(p[1].type.startswith('typedef')):
-          to_be_typedef = []
-          for i in p[1].type.split():
-            if(i != 'typedef'):
-              to_be_typedef.append(i)
-          # print(to_be_typedef)
-          for i in child.type:
-            to_be_typedef.append(i)
-          to_be_typedef_str = ' '.join([str(elem) for elem in to_be_typedef])
-          # if(to_be_typedef_str not in typedef_list.keys()):
-
+        # if(p[1].type.startswith('typedef')):
+        #   to_be_typedef = []
+        #   for i in p[1].type.split():
+        #     if(i != 'typedef'):
+        #       to_be_typedef.append(i)
+        #   # print(to_be_typedef)
+        #   for i in child.type:
+        #     to_be_typedef.append(i)
+        #   to_be_typedef_str = ' '.join([str(elem) for elem in to_be_typedef])
+        #   if(to_be_typedef_str not in typedef_list.keys()):
+        #     typedef_list[to_be_typedef_str] = [child.val]
+        #     all_typedef.append(child.val)
+        #   else:
+        #     typedef_list[to_be_typedef_str].append(child.val)
+        #     all_typedef.append(child.val)
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
@@ -834,6 +861,7 @@ def p_declaration_specifiers(p):
   # TypeQualifier, TypeSpecifier1, StorageClassSpecifier
   if(len(p) == 2):
     p[0] = p[1]
+    curType.append(p[1].type)
   elif(len(p) == 3):
     if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
@@ -841,6 +869,8 @@ def p_declaration_specifiers(p):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+    # if(p[1].name == '')
+    curType.append(p[1].type + ' ' + p[2].type)
     
     ty = ""
     if len(p[1].type) > 0:
@@ -1086,6 +1116,9 @@ def p_declarator(p):
     p[0] = p[2]
     p[0].name = 'Declarator'
     p[0].type = p[1].type
+    # print(p[2].val)
+    if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
+      symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
     p[0].val = p[2].val
     p[0].array = p[2].array
   # print(p[0].children)
@@ -1119,10 +1152,19 @@ def p_direct_declarator_1(p):
     curScopeName = 3
     # print("here" + curScopeName)
     p[0].children = p[3].children
+    p[0].type = curType[-1]
+    # print(p[0].type)
     # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
+    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
+    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
+    tempList = []
+    for child in p[3].children:
+      # print(child.type)
+      tempList.append(child.type)
+    symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
 
     # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
   #p[0] = build_AST(p)
@@ -1138,9 +1180,20 @@ def p_direct_declarator_3(p):
                         | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
   if(p[3] == ')'):
+    # p[0].type = curType[-1]
+    # print(p[0].type)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
+    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
+    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
+    symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
+    # if(len(p[3].children) > 0):
+    #   tempList = []
+    # for child in p[3].children:
+    #   # print(child.type)
+    #   tempList.append(child.type)
+    # symbol_table[currentScope][p[1].val]['argumentList'] = tempList
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -1538,17 +1591,17 @@ def p_function_definition_1(p):
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
 
-  symbol_table[currentScope][p[2].val]['type'] = p[1].type
-  if(len(p[2].type) > 0):
-    symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
-  if(len(p[2].children) > 0):
-    tempList = []
-    for child in p[2].children:
-      # print(child.type)
-      tempList.append(child.type)
-    symbol_table[currentScope][p[2].val]['argumentList'] = tempList
+  # symbol_table[currentScope][p[2].val]['type'] = p[1].type
+  # if(len(p[2].type) > 0):
+  #   symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+  # if(len(p[2].children) > 0):
+  #   tempList = []
+  #   for child in p[2].children:
+  #     # print(child.type)
+  #     tempList.append(child.type)
+  #   symbol_table[currentScope][p[2].val]['argumentList'] = tempList
 
-  symbol_table[currentScope][p[2].val]['isFunc'] = 1
+  # symbol_table[currentScope][p[2].val]['isFunc'] = 1
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
 
