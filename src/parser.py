@@ -26,7 +26,7 @@ curScopeName = 0
 size={}
 size['int'] = 4
 size['char'] = 1
-size['float'] = 8
+size['float'] = 4
 
 
 class Node:
@@ -66,18 +66,29 @@ def get_higher_data_type(type_1 , type_2):
   num_type_2 = to_num[type_2]
   return to_str[max(num_type_1 , num_type_2)]
 
-def get_data_type_size(type):
-  # if type.startswith("struct"):
-  #   return 
-  type = type.split()[-1]
-  if type.endswith("*") or type == "long" or type == "double":
+def get_data_type_size(type_1):
+  type_size = {}
+  type_size['char'] = 1
+  type_size['short'] = 2
+  type_size['int'] = 4
+  type_size['long'] = 8
+  type_size['float'] = 4
+  type_size['double'] = 8
+  if(type_1.endswith('*')):
     return 8
-  elif type == "int" or type == "float":
-    return 4
-  elif type == "short":
-    return 2
-  elif type == "char":
-    return 1
+  if( type_1.startswith('struct')):
+    curscp = currentScope
+    while(parent[curscp] != curscp):
+      if(type_1 in symbol_table[curscp].keys()):
+        break
+      curscp = parent[curscp]
+    if (curscp == 0):
+      if(type_1 not in symbol_table[curscp].keys()):
+        return -1 # If id is not found in symbol table
+    return symbol_table[curscp][type_1]['size']    
+  type_1 = type_1.split()[-1]
+  return type_size[type_1]
+  
   
 
 def ignore_1(s):
@@ -769,13 +780,18 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][val_name] = {}
     symbol_table[currentScope][val_name]['type'] = val_name
     temp_list = []
+    curr_offset = 0 
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
-      curr_list = [child.type, child.val, 0, 0]
+      if get_data_type_size(child.type) == -1:
+        print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
+      curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
+      curr_offset = curr_offset + get_data_type_size(child.type)
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
+    symbol_table[currentScope][val_name]['size'] = curr_offset
 
   if len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
