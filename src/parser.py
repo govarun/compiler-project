@@ -50,6 +50,10 @@ class Node:
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
 def get_higher_data_type(type_1 , type_2):
+  if(type_1.endswith('*')):
+    return type_1
+  if(type_2.endswith('*')):
+    return type_2
   to_num = {}
   to_num['char'] = 0
   to_num['short'] = 1
