@@ -4,11 +4,10 @@ int f(){
 
 struct point{
     int x;
-}
+} 
 int main()
 {
-    int * x , y ;
-    x = &y ;
-    x  = x * y; // should not give error
-    return 0 ;
+    int x;
+    x = x + x;
+    return 0;
 }

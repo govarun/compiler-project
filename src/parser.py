@@ -131,6 +131,18 @@ def find_if_ID_is_declared(id,lineno):
   return -1
 
 
+def find_scope(id, lineno):
+  curscp = currentScope
+  # print("here" + str(curscp))
+  while(parent[curscp] != curscp):
+    # print("here" + str(curscp))
+    if(id in symbol_table[curscp].keys()):
+      return curscp
+    curscp = parent[curscp]
+  if (curscp == 0):
+    if(id in symbol_table[curscp].keys()):
+      return curscp
+  return -1
 
 
 cur_num = 0
@@ -267,15 +279,15 @@ def p_postfix_expression_5(p):
 
   #print("here : ", p[1].name)
   if (not p[1].name.startswith('Period')):
-    struct_scope = find_if_ID_is_declared(p[1].val , p[1].lno)
-    if p[1].val not in symbol_table[struct_scope].keys():
+    struct_scope = find_scope(p[1].val , p[1].lno)
+    if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
       print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   struct_name = p[1].type
-
+  # TODO : Doubt about parameter passed to find_scope 
   #print("here : ", struct_name)
-  found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
+  found_scope = find_scope(struct_name , p[1].lno)
   
   flag = 0 
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
@@ -296,7 +308,7 @@ def p_postfix_expression_6(p):
 	| postfix_expression DECREMENT'''
   tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
-  found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+  found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[1].val].keys()) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   #Can't think of a case where this is invalid
@@ -341,7 +353,7 @@ def p_unary_expression_1(p):
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
     #Can't think of a case where this is invalid
-    found_scope = find_if_ID_is_declared(p[2].val, p[2].lno)
+    found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[2].val].keys()) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
 
@@ -421,11 +433,11 @@ def p_multipicative_expression(p):
     if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)      
     
@@ -478,11 +490,11 @@ def p_additive_expression(p):
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
@@ -507,11 +519,11 @@ def p_shift_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
@@ -536,11 +548,11 @@ def p_relational_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
@@ -560,11 +572,11 @@ def p_equality_expresssion(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)  
 
@@ -585,11 +597,11 @@ def p_and_expression(p):
     if p[1].type.split()[-1] not in valid or p[3].type.split()[-1] not in valid:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[3].type, 'for the AND operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     
@@ -609,11 +621,11 @@ def p_exclusive_or_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
@@ -632,13 +644,13 @@ def p_inclusive_or_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
-    # found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
-    # if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
-    #   print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
+    found_scope = find_scope(p[1].val, p[1].lno)
+    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    # found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
-    # if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
-    #   print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    found_scope = find_scope(p[3].val, p[3].lno)
+    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = '',children = [])
 
 def p_logical_and_expression(p):
@@ -653,11 +665,11 @@ def p_logical_and_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = '',children = [])
@@ -675,11 +687,11 @@ def p_logical_or_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = '',children = [])
@@ -714,15 +726,15 @@ def p_assignment_expression(p):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
-    tempScope = find_if_ID_is_declared(p[1].val, p.lineno(1))
+    tempScope = find_scope(p[1].val, p.lineno(1))
     if(len(p[1].array) > 0 and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) != len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
   
-    found_scope = find_if_ID_is_declared(p[1].val, p[1].lno)
+    found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[1].val].keys())):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
-    found_scope = find_if_ID_is_declared(p[3].val, p[3].lno)
+    found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[3].val].keys())):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
