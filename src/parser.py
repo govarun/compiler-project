@@ -255,9 +255,10 @@ def p_postfix_expression_5(p):
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
     if curr_list[1] == p[3]:
       flag = 1 
-      p[0].val = curr_list[0]
+      p[0].type = curr_list[0]
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field not declared in corresponding struct")
+  #print("p_postfix_Expression_5 : type = ", p[0].type)
  
   # structure things , do later
 
@@ -303,7 +304,7 @@ def p_unary_expression_1(p):
   # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
-    print("p_unary_expression : ", p[1].type)
+    #print("p_unary_expression : ", p[1].type)
   else:
     #check lineno
     #also check if child should be added or not
@@ -579,10 +580,10 @@ def p_assignment_expression(p):
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
-    print("p_assignment_expression: ", p[1].type)
-    print("p_assignment_expression: uncomment")
-    # if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-    #   print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    #print("p_assignment_expression: ", p[1].type)
+    #print("p_assignment_expression: uncomment")
+    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
     # find_if_ID_is_declared(p[1].val, p[1].lno)
 
