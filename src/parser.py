@@ -1418,17 +1418,20 @@ def p_for(p):
   p[0] = p[1]
 
 def p_jump_statement(p):
-    '''jump_statement : GOTO ID SEMICOLON
-                      | RETURN SEMICOLON
+    '''jump_statement : RETURN SEMICOLON
                       | RETURN expression SEMICOLON
     '''
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 3):
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
+      if(curType[-1] != 'void'):
+        print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
     else:
-      # tempNode3 = Node(name = '',val = p[3],type = '', lno = p.lineno(1), children = [])
+      if(curType[-1] != p[2].type):
+        print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
+
 
 def p_jump_statement_2(p):
   '''jump_statement : BREAK SEMICOLON
@@ -1445,6 +1448,9 @@ def p_jump_statement_2(p):
   if(flag == 0):
     print(p[0].lno, 'break/continue not inside loop')
 
+def p_jump_statement_3(p):
+  '''jump_statement : GOTO ID SEMICOLON'''
+  p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
