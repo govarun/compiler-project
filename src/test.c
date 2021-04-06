@@ -1,8 +1,8 @@
-struct f{
-    int x ;
-}
 int main()
 {
-    struct f p1 ;
-    p1.x ;
+    const int z = 5;
+    int a, b;
+    char* x;
+    float y;
+    int c[3][5][7];
 }

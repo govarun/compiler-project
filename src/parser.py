@@ -22,6 +22,13 @@ scopeName = {}
 parent[0] = 0
 scopeName[0] = 0
 curScopeName = 0
+
+size={}
+size['int'] = 4
+size['char'] = 1
+size['float'] = 8
+
+
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
     self.name = name
@@ -618,20 +625,32 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
+        symbol_table[currentScope][child.children[0].val]['size'] = size[p[1].type.split(' ')[-1]]
+        totalEle = 1
         if(len(child.children[0].array) > 0):
           symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
+          for i in child.children[0].array:
+            totalEle = totalEle*i
         if(len(child.children[0].type) > 0):
           symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
+          symbol_table[currentScope][child.children[0].val]['size'] = 8
+        symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
-        print("here : ", child.val)
+        # print("here : ", child.val)
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        symbol_table[currentScope][child.val]['size'] = size[p[1].type.split(' ')[-1]]
+        totalEle = 1
         if(len(child.array) > 0):
           symbol_table[currentScope][child.val]['array'] = child.array
+          for i in child.array:
+            totalEle = totalEle*i
         if(len(child.type) > 0):
           symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
+          symbol_table[currentScope][child.val]['size'] = 8
+        symbol_table[currentScope][child.val]['size'] *= totalEle
         # TODO : Confirm with others about two possible approaches
         # if(p[1].type.startswith('struct')):
         #   found_scope = find_if_ID_is_declared(p[1].type, p.lineno(1))
@@ -932,10 +951,10 @@ def p_direct_declarator_1(p):
   #p[0] = build_AST(p)
 
 def p_direct_declarator_2(p):
-  '''direct_declarator : direct_declarator LSQUAREBRACKET constant_expression RSQUAREBRACKET'''
+  '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
   p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
   p[0].array = copy.deepcopy(p[1].array)
-  p[0].array.append(p[3].val)
+  p[0].array.append(int(p[3]))
 
 def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
@@ -1394,7 +1413,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
