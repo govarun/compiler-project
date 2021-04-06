@@ -1,6 +1,9 @@
+struct point
+{
+    int p1, p2;
+    int a[10];
+} 
 int main()
 {
-    int arr[10];
-    arr[2] = 1;
-    return 0 ;
+    const int x;
 }

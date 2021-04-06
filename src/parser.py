@@ -656,7 +656,7 @@ def p_declaration(p):
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
     # print(p[1].type)
-    p[1].type = p[1].type.lstrip()
+    # p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -737,8 +737,13 @@ def p_declaration_specifiers(p):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
-    # if(p[1].name == '')
-    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
+    
+    ty = ""
+    if len(p[1].type) > 0:
+      ty = p[1].type + ' ' + p[2].type
+    else:
+      ty = p[2].type
+    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = ty, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
