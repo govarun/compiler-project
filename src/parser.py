@@ -772,6 +772,8 @@ def p_struct_or_union_specifier(p):
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
+      if get_data_type_size(child.type) == -1:
+        print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
       curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
       curr_offset = curr_offset + get_data_type_size(child.type)
       temp_list.append(curr_list)
