@@ -7,7 +7,7 @@ Action : Shift and goto state 36
 State  : 36
 Stack  : STRUCT . LexToken(ID,'point',1,7)
 Action : Reduce rule [struct_or_union -> STRUCT] with ['struct'] and goto state 34
-Result : <Node @ 0x7fd7cccd8d00> (<parser.Node object at 0x7fd7cccd8d00>)
+Result : <Node @ 0x7fbf6a2ab5e0> (<parser.Node object at 0x7fbf6a2ab5e0>)
 
 State  : 34
 Stack  : struct_or_union . LexToken(ID,'point',1,7)
@@ -20,7 +20,7 @@ Action : Shift and goto state 61
 State  : 61
 Stack  : struct_or_union ID LCURLYBRACKET . LexToken(INT,'int',2,18)
 Action : Reduce rule [openbrace -> LCURLYBRACKET] with ['{'] and goto state 149
-Result : <str @ 0x7fd7cd2bc270> ('{')
+Result : <str @ 0x7fbf6a85b1f0> ('{')
 
 State  : 149
 Stack  : struct_or_union ID openbrace . LexToken(INT,'int',2,18)
@@ -29,12 +29,12 @@ Action : Shift and goto state 20
 State  : 20
 Stack  : struct_or_union ID openbrace INT . LexToken(ID,'x',2,22)
 Action : Reduce rule [type_specifier -> INT] with ['int'] and goto state 153
-Result : <Node @ 0x7fd7cccd8d60> (<parser.Node object at 0x7fd7cccd8d60>)
+Result : <Node @ 0x7fbf6a2ab640> (<parser.Node object at 0x7fbf6a2ab640>)
 
 State  : 153
 Stack  : struct_or_union ID openbrace type_specifier . LexToken(ID,'x',2,22)
-Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fd7cccd8d60>] and goto state 152
-Result : <Node @ 0x7fd7cccd8e20> (<parser.Node object at 0x7fd7cccd8e20>)
+Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fbf6a2ab640>] and goto state 152
+Result : <Node @ 0x7fbf6a2ab700> (<parser.Node object at 0x7fbf6a2ab700>)
 
 State  : 152
 Stack  : struct_or_union ID openbrace specifier_qualifier_list . LexToken(ID,'x',2,22)
@@ -43,22 +43,22 @@ Action : Shift and goto state 32
 State  : 32
 Stack  : struct_or_union ID openbrace specifier_qualifier_list ID . LexToken(SEMICOLON,';',2,23)
 Action : Reduce rule [direct_declarator -> ID] with ['x'] and goto state 11
-Result : <Node @ 0x7fd7cccd8c10> (<parser.Node object at 0x7fd7cccd8c10>)
+Result : <Node @ 0x7fbf6a2ab4f0> (<parser.Node object at 0x7fbf6a2ab4f0>)
 
 State  : 11
 Stack  : struct_or_union ID openbrace specifier_qualifier_list direct_declarator . LexToken(SEMICOLON,';',2,23)
-Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fd7cccd8c10>] and goto state 252
-Result : <Node @ 0x7fd7cccd8c10> (<parser.Node object at 0x7fd7cccd8c10>)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a2ab4f0>] and goto state 252
+Result : <Node @ 0x7fbf6a2ab4f0> (<parser.Node object at 0x7fbf6a2ab4f0>)
 
 State  : 252
 Stack  : struct_or_union ID openbrace specifier_qualifier_list declarator . LexToken(SEMICOLON,';',2,23)
-Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fd7cccd8c10>] and goto state 251
-Result : <Node @ 0x7fd7cccd8c10> (<parser.Node object at 0x7fd7cccd8c10>)
+Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fbf6a2ab4f0>] and goto state 251
+Result : <Node @ 0x7fbf6a2ab4f0> (<parser.Node object at 0x7fbf6a2ab4f0>)
 
 State  : 251
 Stack  : struct_or_union ID openbrace specifier_qualifier_list struct_declarator . LexToken(SEMICOLON,';',2,23)
-Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fd7cccd8c10>] and goto state 250
-Result : <Node @ 0x7fd7cccd8e80> (<parser.Node object at 0x7fd7cccd8e80>)
+Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fbf6a2ab4f0>] and goto state 250
+Result : <Node @ 0x7fbf6a2ab760> (<parser.Node object at 0x7fbf6a2ab760>)
 
 State  : 250
 Stack  : struct_or_union ID openbrace specifier_qualifier_list struct_declarator_list . LexToken(SEMICOLON,';',2,23)
@@ -66,13 +66,13 @@ Action : Shift and goto state 320
 
 State  : 320
 Stack  : struct_or_union ID openbrace specifier_qualifier_list struct_declarator_list SEMICOLON . LexToken(CHAR,'char',3,29)
-Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fd7cccd8e20>,<Node @ 0x7fd7cccd8e80>,';'] and goto state 151
-Result : <Node @ 0x7fd7cccd8c70> (<parser.Node object at 0x7fd7cccd8c70>)
+Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fbf6a2ab700>,<Node @ 0x7fbf6a2ab760>,';'] and goto state 151
+Result : <Node @ 0x7fbf6a2ab550> (<parser.Node object at 0x7fbf6a2ab550>)
 
 State  : 151
 Stack  : struct_or_union ID openbrace struct_declaration . LexToken(CHAR,'char',3,29)
-Action : Reduce rule [struct_declaration_list -> struct_declaration] with [<Node @ 0x7fd7cccd8c70>] and goto state 247
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
+Action : Reduce rule [struct_declaration_list -> struct_declaration] with [<Node @ 0x7fbf6a2ab550>] and goto state 247
+Result : <Node @ 0x7fbf6a449880> (<parser.Node object at 0x7fbf6a449880>)
 
 State  : 247
 Stack  : struct_or_union ID openbrace struct_declaration_list . LexToken(CHAR,'char',3,29)
@@ -81,12 +81,12 @@ Action : Shift and goto state 18
 State  : 18
 Stack  : struct_or_union ID openbrace struct_declaration_list CHAR . LexToken(ID,'y',3,34)
 Action : Reduce rule [type_specifier -> CHAR] with ['char'] and goto state 153
-Result : <Node @ 0x7fd7cccd8d60> (<parser.Node object at 0x7fd7cccd8d60>)
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
 
 State  : 153
 Stack  : struct_or_union ID openbrace struct_declaration_list type_specifier . LexToken(ID,'y',3,34)
-Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fd7cccd8d60>] and goto state 152
-Result : <Node @ 0x7fd7cccd8fd0> (<parser.Node object at 0x7fd7cccd8fd0>)
+Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fbf6a449760>] and goto state 152
+Result : <Node @ 0x7fbf6a4496d0> (<parser.Node object at 0x7fbf6a4496d0>)
 
 State  : 152
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list . LexToken(ID,'y',3,34)
@@ -95,22 +95,22 @@ Action : Shift and goto state 32
 State  : 32
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list ID . LexToken(SEMICOLON,';',3,36)
 Action : Reduce rule [direct_declarator -> ID] with ['y'] and goto state 11
-Result : <Node @ 0x7fd7cccd8eb0> (<parser.Node object at 0x7fd7cccd8eb0>)
+Result : <Node @ 0x7fbf6a449820> (<parser.Node object at 0x7fbf6a449820>)
 
 State  : 11
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list direct_declarator . LexToken(SEMICOLON,';',3,36)
-Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fd7cccd8eb0>] and goto state 252
-Result : <Node @ 0x7fd7cccd8eb0> (<parser.Node object at 0x7fd7cccd8eb0>)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a449820>] and goto state 252
+Result : <Node @ 0x7fbf6a449820> (<parser.Node object at 0x7fbf6a449820>)
 
 State  : 252
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list declarator . LexToken(SEMICOLON,';',3,36)
-Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fd7cccd8eb0>] and goto state 251
-Result : <Node @ 0x7fd7cccd8eb0> (<parser.Node object at 0x7fd7cccd8eb0>)
+Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fbf6a449820>] and goto state 251
+Result : <Node @ 0x7fbf6a449820> (<parser.Node object at 0x7fbf6a449820>)
 
 State  : 251
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator . LexToken(SEMICOLON,';',3,36)
-Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fd7cccd8eb0>] and goto state 250
-Result : <Node @ 0x7fd7cccd8f40> (<parser.Node object at 0x7fd7cccd8f40>)
+Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fbf6a449820>] and goto state 250
+Result : <Node @ 0x7fbf6a449790> (<parser.Node object at 0x7fbf6a449790>)
 
 State  : 250
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator_list . LexToken(SEMICOLON,';',3,36)
@@ -118,450 +118,379 @@ Action : Shift and goto state 320
 
 State  : 320
 Stack  : struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator_list SEMICOLON . LexToken(RCURLYBRACKET,'}',4,38)
-Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fd7cccd8fd0>,<Node @ 0x7fd7cccd8f40>,';'] and goto state 249
-Result : <Node @ 0x7fd7cccd8e20> (<parser.Node object at 0x7fd7cccd8e20>)
+Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fbf6a4496d0>,<Node @ 0x7fbf6a449790>,';'] and goto state 249
+Result : <Node @ 0x7fbf6a4497f0> (<parser.Node object at 0x7fbf6a4497f0>)
 
 State  : 249
 Stack  : struct_or_union ID openbrace struct_declaration_list struct_declaration . LexToken(RCURLYBRACKET,'}',4,38)
-Action : Reduce rule [struct_declaration_list -> struct_declaration_list struct_declaration] with [<Node @ 0x7fd7cccd8d90>,<Node @ 0x7fd7cccd8e20>] and goto state 247
-Result : <Node @ 0x7fd7cccd8fa0> (<parser.Node object at 0x7fd7cccd8fa0>)
+Action : Reduce rule [struct_declaration_list -> struct_declaration_list struct_declaration] with [<Node @ 0x7fbf6a449880>,<Node @ 0x7fbf6a4497f0>] and goto state 247
+Result : <Node @ 0x7fbf6a449730> (<parser.Node object at 0x7fbf6a449730>)
 
 State  : 247
 Stack  : struct_or_union ID openbrace struct_declaration_list . LexToken(RCURLYBRACKET,'}',4,38)
 Action : Shift and goto state 74
 
 State  : 74
-Stack  : struct_or_union ID openbrace struct_declaration_list RCURLYBRACKET . LexToken(INT,'int',6,41)
+Stack  : struct_or_union ID openbrace struct_declaration_list RCURLYBRACKET . LexToken(STRUCT,'struct',6,41)
 Action : Reduce rule [closebrace -> RCURLYBRACKET] with ['}'] and goto state 319
-Result : <str @ 0x7fd7cd2bc2b0> ('}')
+Result : <str @ 0x7fbf6a85b230> ('}')
 
 State  : 319
-Stack  : struct_or_union ID openbrace struct_declaration_list closebrace . LexToken(INT,'int',6,41)
-Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID openbrace struct_declaration_list closebrace] with [<Node @ 0x7fd7cccd8d00>,'point','{',<Node @ 0x7fd7cccd8fa0>,'}'] and goto state 27
-Result : <Node @ 0x7fd7cccd8d60> (<parser.Node object at 0x7fd7cccd8d60>)
+Stack  : struct_or_union ID openbrace struct_declaration_list closebrace . LexToken(STRUCT,'struct',6,41)
+Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID openbrace struct_declaration_list closebrace] with [<Node @ 0x7fbf6a2ab5e0>,'point','{',<Node @ 0x7fbf6a449730>,'}'] and goto state 27
+Result : <Node @ 0x7fbf6a4494f0> (<parser.Node object at 0x7fbf6a4494f0>)
 
 State  : 27
-Stack  : struct_or_union_specifier . LexToken(INT,'int',6,41)
-Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fd7cccd8d60>] and goto state 8
-Result : <Node @ 0x7fd7cccd8d60> (<parser.Node object at 0x7fd7cccd8d60>)
+Stack  : struct_or_union_specifier . LexToken(STRUCT,'struct',6,41)
+Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fbf6a4494f0>] and goto state 8
+Result : <Node @ 0x7fbf6a4494f0> (<parser.Node object at 0x7fbf6a4494f0>)
 
 State  : 8
-Stack  : type_specifier . LexToken(INT,'int',6,41)
-Action : Shift and goto state 20
-
-State  : 20
-Stack  : type_specifier INT . LexToken(ID,'main',6,45)
-Action : Reduce rule [type_specifier -> INT] with ['int'] and goto state 8
-Result : <Node @ 0x7fd7cccd8e50> (<parser.Node object at 0x7fd7cccd8e50>)
-
-State  : 8
-Stack  : type_specifier type_specifier . LexToken(ID,'main',6,45)
-Action : Reduce rule [declaration_specifiers -> type_specifier] with [<Node @ 0x7fd7cccd8e50>] and goto state 49
-Result : <Node @ 0x7fd7cccd8e50> (<parser.Node object at 0x7fd7cccd8e50>)
-
-State  : 49
-Stack  : type_specifier declaration_specifiers . LexToken(ID,'main',6,45)
-Action : Reduce rule [declaration_specifiers -> type_specifier declaration_specifiers] with [<Node @ 0x7fd7cccd8d60>,<Node @ 0x7fd7cccd8e50>] and goto state 5
-Result : <Node @ 0x7fd7cccd8e20> (<parser.Node object at 0x7fd7cccd8e20>)
-
-State  : 5
-Stack  : declaration_specifiers . LexToken(ID,'main',6,45)
-Action : Shift and goto state 32
-
-State  : 32
-Stack  : declaration_specifiers ID . LexToken(LPAREN,'(',6,49)
-Action : Reduce rule [direct_declarator -> ID] with ['main'] and goto state 11
-Result : <Node @ 0x7fd7cccd8f40> (<parser.Node object at 0x7fd7cccd8f40>)
-
-State  : 11
-Stack  : declaration_specifiers direct_declarator . LexToken(LPAREN,'(',6,49)
-Action : Shift and goto state 54
-
-State  : 54
-Stack  : declaration_specifiers direct_declarator LPAREN . LexToken(RPAREN,')',6,50)
-Action : Reduce rule [lopenparen -> LPAREN] with ['('] and goto state 52
-Result : <str @ 0x7fd7cd1f20b0> ('(')
-
-State  : 52
-Stack  : declaration_specifiers direct_declarator lopenparen . LexToken(RPAREN,')',6,50)
-Action : Shift and goto state 138
-
-State  : 138
-Stack  : declaration_specifiers direct_declarator lopenparen RPAREN . LexToken(LCURLYBRACKET,'{',7,52)
-Action : Reduce rule [direct_declarator -> direct_declarator lopenparen RPAREN] with [<Node @ 0x7fd7cccd8f40>,'(',')'] and goto state 11
-Result : <Node @ 0x7fd7cccd8f40> (<parser.Node object at 0x7fd7cccd8f40>)
-
-State  : 11
-Stack  : declaration_specifiers direct_declarator . LexToken(LCURLYBRACKET,'{',7,52)
-Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fd7cccd8f40>] and goto state 39
-Result : <Node @ 0x7fd7cccd8f40> (<parser.Node object at 0x7fd7cccd8f40>)
-
-State  : 39
-Stack  : declaration_specifiers declarator . LexToken(LCURLYBRACKET,'{',7,52)
-Action : Shift and goto state 46
-
-State  : 46
-Stack  : declaration_specifiers declarator LCURLYBRACKET . LexToken(STRUCT,'struct',8,58)
+Stack  : type_specifier . LexToken(STRUCT,'struct',6,41)
 Action : Shift and goto state 36
 
 State  : 36
-Stack  : declaration_specifiers declarator LCURLYBRACKET STRUCT . LexToken(ID,'point',8,65)
+Stack  : type_specifier STRUCT . LexToken(ID,'line',6,48)
 Action : Reduce rule [struct_or_union -> STRUCT] with ['struct'] and goto state 34
-Result : <Node @ 0x7fd7cccd8be0> (<parser.Node object at 0x7fd7cccd8be0>)
+Result : <Node @ 0x7fbf6a449880> (<parser.Node object at 0x7fbf6a449880>)
 
 State  : 34
-Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union . LexToken(ID,'point',8,65)
+Stack  : type_specifier struct_or_union . LexToken(ID,'line',6,48)
 Action : Shift and goto state 59
 
 State  : 59
-Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union ID . LexToken(ID,'p1',8,71)
-Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID] with [<Node @ 0x7fd7cccd8be0>,'point'] and goto state 27
-Result : <Node @ 0x7fd7cccd8e50> (<parser.Node object at 0x7fd7cccd8e50>)
+Stack  : type_specifier struct_or_union ID . LexToken(LCURLYBRACKET,'{',6,52)
+Action : Shift and goto state 61
+
+State  : 61
+Stack  : type_specifier struct_or_union ID LCURLYBRACKET . LexToken(STRUCT,'struct',7,58)
+Action : Reduce rule [openbrace -> LCURLYBRACKET] with ['{'] and goto state 149
+Result : <str @ 0x7fbf6a85b1f0> ('{')
+
+State  : 149
+Stack  : type_specifier struct_or_union ID openbrace . LexToken(STRUCT,'struct',7,58)
+Action : Shift and goto state 36
+
+State  : 36
+Stack  : type_specifier struct_or_union ID openbrace STRUCT . LexToken(ID,'point',7,65)
+Action : Reduce rule [struct_or_union -> STRUCT] with ['struct'] and goto state 34
+Result : <Node @ 0x7fbf6a449820> (<parser.Node object at 0x7fbf6a449820>)
+
+State  : 34
+Stack  : type_specifier struct_or_union ID openbrace struct_or_union . LexToken(ID,'point',7,65)
+Action : Shift and goto state 59
+
+State  : 59
+Stack  : type_specifier struct_or_union ID openbrace struct_or_union ID . LexToken(ID,'p1',7,71)
+Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID] with [<Node @ 0x7fbf6a449820>,'point'] and goto state 27
+Result : <Node @ 0x7fbf6a4495e0> (<parser.Node object at 0x7fbf6a4495e0>)
 
 State  : 27
-Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union_specifier . LexToken(ID,'p1',8,71)
-Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fd7cccd8e50>] and goto state 8
-Result : <Node @ 0x7fd7cccd8e50> (<parser.Node object at 0x7fd7cccd8e50>)
+Stack  : type_specifier struct_or_union ID openbrace struct_or_union_specifier . LexToken(ID,'p1',7,71)
+Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fbf6a4495e0>] and goto state 153
+Result : <Node @ 0x7fbf6a4495e0> (<parser.Node object at 0x7fbf6a4495e0>)
 
-State  : 8
-Stack  : declaration_specifiers declarator LCURLYBRACKET type_specifier . LexToken(ID,'p1',8,71)
-Action : Reduce rule [declaration_specifiers -> type_specifier] with [<Node @ 0x7fd7cccd8e50>] and goto state 47
-Result : <Node @ 0x7fd7cccd8e50> (<parser.Node object at 0x7fd7cccd8e50>)
+State  : 153
+Stack  : type_specifier struct_or_union ID openbrace type_specifier . LexToken(ID,'p1',7,71)
+Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fbf6a4495e0>] and goto state 152
+Result : <Node @ 0x7fbf6a449700> (<parser.Node object at 0x7fbf6a449700>)
 
-State  : 47
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers . LexToken(ID,'p1',8,71)
+State  : 152
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list . LexToken(ID,'p1',7,71)
 Action : Shift and goto state 32
 
 State  : 32
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers ID . LexToken(SEMICOLON,';',8,74)
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list ID . LexToken(SEMICOLON,';',7,74)
 Action : Reduce rule [direct_declarator -> ID] with ['p1'] and goto state 11
-Result : <Node @ 0x7fd7cccd8df0> (<parser.Node object at 0x7fd7cccd8df0>)
+Result : <Node @ 0x7fbf6a449790> (<parser.Node object at 0x7fbf6a449790>)
 
 State  : 11
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers direct_declarator . LexToken(SEMICOLON,';',8,74)
-Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fd7cccd8df0>] and goto state 136
-Result : <Node @ 0x7fd7cccd8df0> (<parser.Node object at 0x7fd7cccd8df0>)
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list direct_declarator . LexToken(SEMICOLON,';',7,74)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a449790>] and goto state 252
+Result : <Node @ 0x7fbf6a449790> (<parser.Node object at 0x7fbf6a449790>)
 
-State  : 136
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers declarator . LexToken(SEMICOLON,';',8,74)
-Action : Reduce rule [init_declarator -> declarator] with [<Node @ 0x7fd7cccd8df0>] and goto state 42
-Result : <Node @ 0x7fd7cccd8df0> (<parser.Node object at 0x7fd7cccd8df0>)
+State  : 252
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list declarator . LexToken(SEMICOLON,';',7,74)
+Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fbf6a449790>] and goto state 251
+Result : <Node @ 0x7fbf6a449790> (<parser.Node object at 0x7fbf6a449790>)
 
-State  : 42
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator . LexToken(SEMICOLON,';',8,74)
-Action : Reduce rule [init_declarator_list -> init_declarator] with [<Node @ 0x7fd7cccd8df0>] and goto state 41
-Result : <Node @ 0x7fd7cccd8f70> (<parser.Node object at 0x7fd7cccd8f70>)
+State  : 251
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list struct_declarator . LexToken(SEMICOLON,';',7,74)
+Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fbf6a449790>] and goto state 250
+Result : <Node @ 0x7fbf6a4492e0> (<parser.Node object at 0x7fbf6a4492e0>)
 
-State  : 41
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator_list . LexToken(SEMICOLON,';',8,74)
-Action : Shift and goto state 67
+State  : 250
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list struct_declarator_list . LexToken(SEMICOLON,';',7,74)
+Action : Shift and goto state 320
 
-State  : 67
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator_list SEMICOLON . LexToken(ID,'p1',9,80)
-Action : Reduce rule [declaration -> declaration_specifiers init_declarator_list SEMICOLON] with [<Node @ 0x7fd7cccd8e50>,<Node @ 0x7fd7cccd8f70>,';'] and goto state 45
-Result : <Node @ 0x7fd7cccd8d30> (<parser.Node object at 0x7fd7cccd8d30>)
+State  : 320
+Stack  : type_specifier struct_or_union ID openbrace specifier_qualifier_list struct_declarator_list SEMICOLON . LexToken(STRUCT,'struct',8,80)
+Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fbf6a449700>,<Node @ 0x7fbf6a4492e0>,';'] and goto state 151
+Result : <Node @ 0x7fbf6a4493d0> (<parser.Node object at 0x7fbf6a4493d0>)
 
-State  : 45
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration . LexToken(ID,'p1',9,80)
-Action : Reduce rule [declaration_list -> declaration] with [<Node @ 0x7fd7cccd8d30>] and goto state 73
-Result : <Node @ 0x7fd7cccd8d30> (<parser.Node object at 0x7fd7cccd8d30>)
+State  : 151
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration . LexToken(STRUCT,'struct',8,80)
+Action : Reduce rule [struct_declaration_list -> struct_declaration] with [<Node @ 0x7fbf6a4493d0>] and goto state 247
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
 
-State  : 73
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list . LexToken(ID,'p1',9,80)
-Action : Shift and goto state 83
+State  : 247
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list . LexToken(STRUCT,'struct',8,80)
+Action : Shift and goto state 36
 
-State  : 83
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list ID . LexToken(PERIOD,'.',9,82)
-Action : Reduce rule [primary_expression -> ID] with ['p1'] and goto state 114
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
+State  : 36
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list STRUCT . LexToken(ID,'point',8,87)
+Action : Reduce rule [struct_or_union -> STRUCT] with ['struct'] and goto state 34
+Result : <Node @ 0x7fbf6a4495e0> (<parser.Node object at 0x7fbf6a4495e0>)
 
-State  : 114
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list primary_expression . LexToken(PERIOD,'.',9,82)
-Action : Reduce rule [postfix_expression -> primary_expression] with [<Node @ 0x7fd7cccd8d90>] and goto state 107
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
+State  : 34
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list struct_or_union . LexToken(ID,'point',8,87)
+Action : Shift and goto state 59
 
-State  : 107
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression . LexToken(PERIOD,'.',9,82)
-Action : Shift and goto state 209
+State  : 59
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list struct_or_union ID . LexToken(ID,'p2',8,93)
+Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID] with [<Node @ 0x7fbf6a4495e0>,'point'] and goto state 27
+Result : <Node @ 0x7fbf6a449190> (<parser.Node object at 0x7fbf6a449190>)
 
-State  : 209
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD . LexToken(ID,'y',9,83)
-Action : Shift and goto state 289
+State  : 27
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list struct_or_union_specifier . LexToken(ID,'p2',8,93)
+Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fbf6a449190>] and goto state 153
+Result : <Node @ 0x7fbf6a449190> (<parser.Node object at 0x7fbf6a449190>)
 
-State  : 289
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD ID . LexToken(EQUALS,'=',9,85)
-Action : Reduce rule [postfix_expression -> postfix_expression PERIOD ID] with [<Node @ 0x7fd7cccd8d90>,'.','y'] and goto state 107
-Result : <Node @ 0x7fd7cccd8f10> (<parser.Node object at 0x7fd7cccd8f10>)
+State  : 153
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list type_specifier . LexToken(ID,'p2',8,93)
+Action : Reduce rule [specifier_qualifier_list -> type_specifier] with [<Node @ 0x7fbf6a449190>] and goto state 152
+Result : <Node @ 0x7fbf6a449220> (<parser.Node object at 0x7fbf6a449220>)
 
-State  : 107
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression . LexToken(EQUALS,'=',9,85)
-Action : Reduce rule [unary_expression -> postfix_expression] with [<Node @ 0x7fd7cccd8f10>] and goto state 105
-Result : <Node @ 0x7fd7cccd8f10> (<parser.Node object at 0x7fd7cccd8f10>)
+State  : 152
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list . LexToken(ID,'p2',8,93)
+Action : Shift and goto state 32
 
-State  : 105
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression . LexToken(EQUALS,'=',9,85)
-Action : Shift and goto state 194
+State  : 32
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list ID . LexToken(SEMICOLON,';',8,96)
+Action : Reduce rule [direct_declarator -> ID] with ['p2'] and goto state 11
+Result : <Node @ 0x7fbf6a449250> (<parser.Node object at 0x7fbf6a449250>)
 
-State  : 194
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression EQUALS . LexToken(INT_CONST,'5',9,87)
-Action : Reduce rule [assignment_operator -> EQUALS] with ['='] and goto state 193
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
+State  : 11
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list direct_declarator . LexToken(SEMICOLON,';',8,96)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a449250>] and goto state 252
+Result : <Node @ 0x7fbf6a449250> (<parser.Node object at 0x7fbf6a449250>)
 
-State  : 193
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator . LexToken(INT_CONST,'5',9,87)
-Action : Shift and goto state 126
+State  : 252
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list declarator . LexToken(SEMICOLON,';',8,96)
+Action : Reduce rule [struct_declarator -> declarator] with [<Node @ 0x7fbf6a449250>] and goto state 251
+Result : <Node @ 0x7fbf6a449250> (<parser.Node object at 0x7fbf6a449250>)
 
-State  : 126
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator INT_CONST . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [primary_expression -> INT_CONST] with ['5'] and goto state 114
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
+State  : 251
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator . LexToken(SEMICOLON,';',8,96)
+Action : Reduce rule [struct_declarator_list -> struct_declarator] with [<Node @ 0x7fbf6a449250>] and goto state 250
+Result : <Node @ 0x7fbf6a4495b0> (<parser.Node object at 0x7fbf6a4495b0>)
 
-State  : 114
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator primary_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [postfix_expression -> primary_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 107
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
+State  : 250
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator_list . LexToken(SEMICOLON,';',8,96)
+Action : Shift and goto state 320
 
-State  : 107
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator postfix_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [unary_expression -> postfix_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 105
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
+State  : 320
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list specifier_qualifier_list struct_declarator_list SEMICOLON . LexToken(RCURLYBRACKET,'}',9,98)
+Action : Reduce rule [struct_declaration -> specifier_qualifier_list struct_declarator_list SEMICOLON] with [<Node @ 0x7fbf6a449220>,<Node @ 0x7fbf6a4495b0>,';'] and goto state 249
+Result : <Node @ 0x7fbf6a4493d0> (<parser.Node object at 0x7fbf6a4493d0>)
 
-State  : 105
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator unary_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [cast_expression -> unary_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 111
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
+State  : 249
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list struct_declaration . LexToken(RCURLYBRACKET,'}',9,98)
+Action : Reduce rule [struct_declaration_list -> struct_declaration_list struct_declaration] with [<Node @ 0x7fbf6a449760>,<Node @ 0x7fbf6a4493d0>] and goto state 247
+Result : <Node @ 0x7fbf6a449460> (<parser.Node object at 0x7fbf6a449460>)
 
-State  : 111
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator cast_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [multiplicative_expression -> cast_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 135
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 135
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator multiplicative_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [additive_expression -> multiplicative_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 134
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 134
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator additive_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [shift_expression -> additive_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 133
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 133
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator shift_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [relational_expression -> shift_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 132
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 132
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator relational_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [equality_expression -> relational_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 131
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 131
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator equality_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [and_expression -> equality_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 130
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 130
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator and_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [exclusive_or_expression -> and_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 129
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 129
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator exclusive_or_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [inclusive_or_expression -> exclusive_or_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 121
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 121
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator inclusive_or_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [logical_and_expression -> inclusive_or_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 113
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 113
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator logical_and_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [logical_or_expression -> logical_and_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 106
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 106
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator logical_or_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [conditional_expression -> logical_or_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 104
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 104
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator conditional_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [assignment_expression -> conditional_expression] with [<Node @ 0x7fd7ccc6e070>] and goto state 282
-Result : <Node @ 0x7fd7ccc6e070> (<parser.Node object at 0x7fd7ccc6e070>)
-
-State  : 282
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list unary_expression assignment_operator assignment_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [assignment_expression -> unary_expression assignment_operator assignment_expression] with [<Node @ 0x7fd7cccd8f10>,<Node @ 0x7fd7cccd8ee0>,<Node @ 0x7fd7ccc6e070>] and goto state 99
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
-
-State  : 99
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list assignment_expression . LexToken(SEMICOLON,';',9,89)
-Action : Reduce rule [expression -> assignment_expression] with [<Node @ 0x7fd7cccd8d90>] and goto state 87
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
-
-State  : 87
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list expression . LexToken(SEMICOLON,';',9,89)
-Action : Shift and goto state 178
-
-State  : 178
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list expression SEMICOLON . LexToken(RETURN,'return',10,95)
-Action : Reduce rule [expression_statement -> expression SEMICOLON] with [<Node @ 0x7fd7cccd8d90>,';'] and goto state 78
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
-
-State  : 78
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list expression_statement . LexToken(RETURN,'return',10,95)
-Action : Reduce rule [statement -> expression_statement] with [<Node @ 0x7fd7cccd8d90>] and goto state 75
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
-
-State  : 75
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement . LexToken(RETURN,'return',10,95)
-Action : Reduce rule [statement_list -> statement] with [<Node @ 0x7fd7cccd8d90>] and goto state 168
-Result : <Node @ 0x7fd7cccd8d90> (<parser.Node object at 0x7fd7cccd8d90>)
-
-State  : 168
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list . LexToken(RETURN,'return',10,95)
-Action : Shift and goto state 96
-
-State  : 96
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN . LexToken(INT_CONST,'0',10,102)
-Action : Shift and goto state 126
-
-State  : 126
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN INT_CONST . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [primary_expression -> INT_CONST] with ['0'] and goto state 114
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 114
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN primary_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [postfix_expression -> primary_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 107
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 107
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN postfix_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [unary_expression -> postfix_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 105
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 105
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN unary_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [cast_expression -> unary_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 111
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 111
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN cast_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [multiplicative_expression -> cast_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 135
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 135
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN multiplicative_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [additive_expression -> multiplicative_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 134
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 134
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN additive_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [shift_expression -> additive_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 133
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 133
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN shift_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [relational_expression -> shift_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 132
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 132
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN relational_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [equality_expression -> relational_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 131
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 131
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN equality_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [and_expression -> equality_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 130
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 130
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN and_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [exclusive_or_expression -> and_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 129
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 129
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN exclusive_or_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [inclusive_or_expression -> exclusive_or_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 121
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 121
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN inclusive_or_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [logical_and_expression -> inclusive_or_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 113
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 113
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN logical_and_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [logical_or_expression -> logical_and_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 106
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 106
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN logical_or_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [conditional_expression -> logical_or_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 104
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 104
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN conditional_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [assignment_expression -> conditional_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 99
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 99
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN assignment_expression . LexToken(SEMICOLON,';',10,103)
-Action : Reduce rule [expression -> assignment_expression] with [<Node @ 0x7fd7cccd8ee0>] and goto state 190
-Result : <Node @ 0x7fd7cccd8ee0> (<parser.Node object at 0x7fd7cccd8ee0>)
-
-State  : 190
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN expression . LexToken(SEMICOLON,';',10,103)
-Action : Shift and goto state 281
-
-State  : 281
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RETURN expression SEMICOLON . LexToken(RCURLYBRACKET,'}',11,105)
-Action : Reduce rule [jump_statement -> RETURN expression SEMICOLON] with ['return',<Node @ 0x7fd7cccd8ee0>,';'] and goto state 81
-Result : <Node @ 0x7fd7cccd8f70> (<parser.Node object at 0x7fd7cccd8f70>)
-
-State  : 81
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list jump_statement . LexToken(RCURLYBRACKET,'}',11,105)
-Action : Reduce rule [statement -> jump_statement] with [<Node @ 0x7fd7cccd8f70>] and goto state 166
-Result : <Node @ 0x7fd7cccd8f70> (<parser.Node object at 0x7fd7cccd8f70>)
-
-State  : 166
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list statement . LexToken(RCURLYBRACKET,'}',11,105)
-Action : Reduce rule [statement_list -> statement_list statement] with [<Node @ 0x7fd7cccd8d90>,<Node @ 0x7fd7cccd8f70>] and goto state 168
-Result : <Node @ 0x7fd7cccd8be0> (<parser.Node object at 0x7fd7cccd8be0>)
-
-State  : 168
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list . LexToken(RCURLYBRACKET,'}',11,105)
+State  : 247
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list . LexToken(RCURLYBRACKET,'}',9,98)
 Action : Shift and goto state 74
 
 State  : 74
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list RCURLYBRACKET . $end
-Action : Reduce rule [closebrace -> RCURLYBRACKET] with ['}'] and goto state 262
-Result : <str @ 0x7fd7cd2bc2b0> ('}')
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list RCURLYBRACKET . LexToken(INT,'int',11,101)
+Action : Reduce rule [closebrace -> RCURLYBRACKET] with ['}'] and goto state 319
+Result : <str @ 0x7fbf6a85b230> ('}')
 
-State  : 262
-Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list statement_list closebrace . $end
-Action : Reduce rule [function_compound_statement -> LCURLYBRACKET declaration_list statement_list closebrace] with ['{',<Node @ 0x7fd7cccd8d30>,<Node @ 0x7fd7cccd8be0>,'}'] and goto state 65
-Result : <NoneType @ 0x90aa10> (None)
+State  : 319
+Stack  : type_specifier struct_or_union ID openbrace struct_declaration_list closebrace . LexToken(INT,'int',11,101)
+Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID openbrace struct_declaration_list closebrace] with [<Node @ 0x7fbf6a449880>,'line','{',<Node @ 0x7fbf6a449460>,'}'] and goto state 27
+Result : <Node @ 0x7fbf6a449160> (<parser.Node object at 0x7fbf6a449160>)
 
-State  : 65
-Stack  : declaration_specifiers declarator function_compound_statement . $end
-Action : Reduce rule [function_definition -> declaration_specifiers declarator function_compound_statement] with [<Node @ 0x7fd7cccd8e20>,<Node @ 0x7fd7cccd8f40>,None] and goto state 3
-Result : <Node @ 0x7fd7cccd8e80> (<parser.Node object at 0x7fd7cccd8e80>)
+State  : 27
+Stack  : type_specifier struct_or_union_specifier . LexToken(INT,'int',11,101)
+Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fbf6a449160>] and goto state 8
+Result : <Node @ 0x7fbf6a449160> (<parser.Node object at 0x7fbf6a449160>)
 
-State  : 3
-Stack  : function_definition . $end
-Action : Reduce rule [external_declaration -> function_definition] with [<Node @ 0x7fd7cccd8e80>] and goto state 2
-Result : <Node @ 0x7fd7cccd8e80> (<parser.Node object at 0x7fd7cccd8e80>)
+State  : 8
+Stack  : type_specifier type_specifier . LexToken(INT,'int',11,101)
+Action : Shift and goto state 20
 
-State  : 2
-Stack  : external_declaration . $end
-Action : Reduce rule [translation_unit -> external_declaration] with [<Node @ 0x7fd7cccd8e80>] and goto state 1
-Result : <NoneType @ 0x90aa10> (None)
+State  : 20
+Stack  : type_specifier type_specifier INT . LexToken(ID,'main',11,105)
+Action : Reduce rule [type_specifier -> INT] with ['int'] and goto state 8
+Result : <Node @ 0x7fbf6a4496d0> (<parser.Node object at 0x7fbf6a4496d0>)
 
-State  : 1
-Stack  : translation_unit . $end
-Done   : Returning <NoneType @ 0x90aa10> (None)
-PLY: PARSE DEBUG END
+State  : 8
+Stack  : type_specifier type_specifier type_specifier . LexToken(ID,'main',11,105)
+Action : Reduce rule [declaration_specifiers -> type_specifier] with [<Node @ 0x7fbf6a4496d0>] and goto state 49
+Result : <Node @ 0x7fbf6a4496d0> (<parser.Node object at 0x7fbf6a4496d0>)
+
+State  : 49
+Stack  : type_specifier type_specifier declaration_specifiers . LexToken(ID,'main',11,105)
+Action : Reduce rule [declaration_specifiers -> type_specifier declaration_specifiers] with [<Node @ 0x7fbf6a449160>,<Node @ 0x7fbf6a4496d0>] and goto state 49
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
+
+State  : 49
+Stack  : type_specifier declaration_specifiers . LexToken(ID,'main',11,105)
+Action : Reduce rule [declaration_specifiers -> type_specifier declaration_specifiers] with [<Node @ 0x7fbf6a4494f0>,<Node @ 0x7fbf6a449760>] and goto state 5
+Result : <Node @ 0x7fbf6a4490d0> (<parser.Node object at 0x7fbf6a4490d0>)
+
+State  : 5
+Stack  : declaration_specifiers . LexToken(ID,'main',11,105)
+Action : Shift and goto state 32
+
+State  : 32
+Stack  : declaration_specifiers ID . LexToken(LPAREN,'(',11,109)
+Action : Reduce rule [direct_declarator -> ID] with ['main'] and goto state 11
+Result : <Node @ 0x7fbf6a449580> (<parser.Node object at 0x7fbf6a449580>)
+
+State  : 11
+Stack  : declaration_specifiers direct_declarator . LexToken(LPAREN,'(',11,109)
+Action : Shift and goto state 54
+
+State  : 54
+Stack  : declaration_specifiers direct_declarator LPAREN . LexToken(RPAREN,')',11,110)
+Action : Reduce rule [lopenparen -> LPAREN] with ['('] and goto state 52
+Result : <str @ 0x7fbf6a78cfb0> ('(')
+
+State  : 52
+Stack  : declaration_specifiers direct_declarator lopenparen . LexToken(RPAREN,')',11,110)
+Action : Shift and goto state 138
+
+State  : 138
+Stack  : declaration_specifiers direct_declarator lopenparen RPAREN . LexToken(LCURLYBRACKET,'{',12,112)
+Action : Reduce rule [direct_declarator -> direct_declarator lopenparen RPAREN] with [<Node @ 0x7fbf6a449580>,'(',')'] and goto state 11
+Result : <Node @ 0x7fbf6a449580> (<parser.Node object at 0x7fbf6a449580>)
+
+State  : 11
+Stack  : declaration_specifiers direct_declarator . LexToken(LCURLYBRACKET,'{',12,112)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a449580>] and goto state 39
+Result : <Node @ 0x7fbf6a449580> (<parser.Node object at 0x7fbf6a449580>)
+
+State  : 39
+Stack  : declaration_specifiers declarator . LexToken(LCURLYBRACKET,'{',12,112)
+Action : Shift and goto state 46
+
+State  : 46
+Stack  : declaration_specifiers declarator LCURLYBRACKET . LexToken(STRUCT,'struct',13,118)
+Action : Shift and goto state 36
+
+State  : 36
+Stack  : declaration_specifiers declarator LCURLYBRACKET STRUCT . LexToken(ID,'line',13,125)
+Action : Reduce rule [struct_or_union -> STRUCT] with ['struct'] and goto state 34
+Result : <Node @ 0x7fbf6a4497f0> (<parser.Node object at 0x7fbf6a4497f0>)
+
+State  : 34
+Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union . LexToken(ID,'line',13,125)
+Action : Shift and goto state 59
+
+State  : 59
+Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union ID . LexToken(ID,'l1',13,130)
+Action : Reduce rule [struct_or_union_specifier -> struct_or_union ID] with [<Node @ 0x7fbf6a4497f0>,'line'] and goto state 27
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
+
+State  : 27
+Stack  : declaration_specifiers declarator LCURLYBRACKET struct_or_union_specifier . LexToken(ID,'l1',13,130)
+Action : Reduce rule [type_specifier -> struct_or_union_specifier] with [<Node @ 0x7fbf6a449760>] and goto state 8
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
+
+State  : 8
+Stack  : declaration_specifiers declarator LCURLYBRACKET type_specifier . LexToken(ID,'l1',13,130)
+Action : Reduce rule [declaration_specifiers -> type_specifier] with [<Node @ 0x7fbf6a449760>] and goto state 47
+Result : <Node @ 0x7fbf6a449760> (<parser.Node object at 0x7fbf6a449760>)
+
+State  : 47
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers . LexToken(ID,'l1',13,130)
+Action : Shift and goto state 32
+
+State  : 32
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers ID . LexToken(SEMICOLON,';',13,133)
+Action : Reduce rule [direct_declarator -> ID] with ['l1'] and goto state 11
+Result : <Node @ 0x7fbf6a4493a0> (<parser.Node object at 0x7fbf6a4493a0>)
+
+State  : 11
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers direct_declarator . LexToken(SEMICOLON,';',13,133)
+Action : Reduce rule [declarator -> direct_declarator] with [<Node @ 0x7fbf6a4493a0>] and goto state 136
+Result : <Node @ 0x7fbf6a4493a0> (<parser.Node object at 0x7fbf6a4493a0>)
+
+State  : 136
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers declarator . LexToken(SEMICOLON,';',13,133)
+Action : Reduce rule [init_declarator -> declarator] with [<Node @ 0x7fbf6a4493a0>] and goto state 42
+Result : <Node @ 0x7fbf6a4493a0> (<parser.Node object at 0x7fbf6a4493a0>)
+
+State  : 42
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator . LexToken(SEMICOLON,';',13,133)
+Action : Reduce rule [init_declarator_list -> init_declarator] with [<Node @ 0x7fbf6a4493a0>] and goto state 41
+Result : <Node @ 0x7fbf6a4492e0> (<parser.Node object at 0x7fbf6a4492e0>)
+
+State  : 41
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator_list . LexToken(SEMICOLON,';',13,133)
+Action : Shift and goto state 67
+
+State  : 67
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_specifiers init_declarator_list SEMICOLON . LexToken(ID,'l1',14,139)
+Action : Reduce rule [declaration -> declaration_specifiers init_declarator_list SEMICOLON] with [<Node @ 0x7fbf6a449760>,<Node @ 0x7fbf6a4492e0>,';'] and goto state 45
+Result : <Node @ 0x7fbf6a4493d0> (<parser.Node object at 0x7fbf6a4493d0>)
+
+State  : 45
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration . LexToken(ID,'l1',14,139)
+Action : Reduce rule [declaration_list -> declaration] with [<Node @ 0x7fbf6a4493d0>] and goto state 73
+Result : <Node @ 0x7fbf6a4493d0> (<parser.Node object at 0x7fbf6a4493d0>)
+
+State  : 73
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list . LexToken(ID,'l1',14,139)
+Action : Shift and goto state 83
+
+State  : 83
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list ID . LexToken(PERIOD,'.',14,141)
+Action : Reduce rule [primary_expression -> ID] with ['l1'] and goto state 114
+Result : <Node @ 0x7fbf6a4495b0> (<parser.Node object at 0x7fbf6a4495b0>)
+
+State  : 114
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list primary_expression . LexToken(PERIOD,'.',14,141)
+Action : Reduce rule [postfix_expression -> primary_expression] with [<Node @ 0x7fbf6a4495b0>] and goto state 107
+Result : <Node @ 0x7fbf6a4495b0> (<parser.Node object at 0x7fbf6a4495b0>)
+
+State  : 107
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression . LexToken(PERIOD,'.',14,141)
+Action : Shift and goto state 209
+
+State  : 209
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD . LexToken(ID,'p3',14,142)
+Action : Shift and goto state 289
+
+State  : 289
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD ID . LexToken(PERIOD,'.',14,144)
+Action : Reduce rule [postfix_expression -> postfix_expression PERIOD ID] with [<Node @ 0x7fbf6a4495b0>,'.','p3'] and goto state 107
+Result : <Node @ 0x7fbf6a449190> (<parser.Node object at 0x7fbf6a449190>)
+
+State  : 107
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression . LexToken(PERIOD,'.',14,144)
+Action : Shift and goto state 209
+
+State  : 209
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD . LexToken(ID,'x',14,145)
+Action : Shift and goto state 289
+
+State  : 289
+Stack  : declaration_specifiers declarator LCURLYBRACKET declaration_list postfix_expression PERIOD ID . LexToken(EQUALS,'=',14,147)
+Action : Reduce rule [postfix_expression -> postfix_expression PERIOD ID] with [<Node @ 0x7fbf6a449190>,'.','x'] and goto state 107
+Traceback (most recent call last):
+  File "main.py", line 40, in <module>
+    parser.runmain(code)
+  File "/home/lavish/compiler-project/src/parser.py", line 1445, in runmain
+    result = parser.parse(code,debug=True)
+  File "/home/lavish/.local/lib/python3.8/site-packages/ply/yacc.py", line 329, in parse
+    return self.parsedebug(input, lexer, debug, tracking, tokenfunc)
+  File "/home/lavish/.local/lib/python3.8/site-packages/ply/yacc.py", line 503, in parsedebug
+    p.callable(pslice)
+  File "/home/lavish/compiler-project/src/parser.py", line 259, in p_postfix_expression_5
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+KeyError: ''

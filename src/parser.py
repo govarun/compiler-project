@@ -241,13 +241,17 @@ def p_postfix_expression_5(p):
   # TODO : This is the reduction of p1.x, where x is in ID, and postfix_expression stores p1
   # TODO : p[1].val should be defined in symbol table
   # TODO : p[3] should be a field of (get from symbol table - struct point)
-  struct_scope = find_if_ID_is_declared(p[1].val , p[1].lno)
+  
 
-  if p[1].val not in symbol_table[struct_scope].keys():
-    print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+  #print("here : ", p[1].name)
+  if (not p[1].name.startswith('Period')):
+    struct_scope = find_if_ID_is_declared(p[1].val , p[1].lno)
+    if p[1].val not in symbol_table[struct_scope].keys():
+      print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = '',children = [])
-  struct_name = symbol_table[struct_scope][p[1].val]['type']
+  struct_name = p[1].type
+  #print("here : ", struct_name)
   found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
   if found_scope == -1 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " type of " + p[1].val + " not found")
@@ -257,8 +261,8 @@ def p_postfix_expression_5(p):
       flag = 1 
       p[0].type = curr_list[0]
   if flag == 0 :
-    print("COMPILATION ERROR at line " + str(p[1].lno) + " : field not declared in corresponding struct")
-  #print("p_postfix_Expression_5 : type = ", p[0].type)
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + p[3] + " not declared in " + struct_name)
+  #print("p_postfix_Expression_5 : type = ", p[0].type, " id = " , p[3])
  
   # structure things , do later
 
@@ -583,7 +587,7 @@ def p_assignment_expression(p):
     #print("p_assignment_expression: ", p[1].type)
     #print("p_assignment_expression: uncomment")
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + str(p[2]) +  ' operator')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
     # find_if_ID_is_declared(p[1].val, p[1].lno)
 
