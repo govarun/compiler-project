@@ -249,14 +249,15 @@ def p_postfix_expression_5(p):
     if p[1].val not in symbol_table[struct_scope].keys():
       print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
-  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = '',children = [])
+  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   struct_name = p[1].type
+
   #print("here : ", struct_name)
   found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
-  if found_scope == -1 :
-    print("COMPILATION ERROR at line " + str(p[1].lno) + " type of " + p[1].val + " not found")
+  
   flag = 0 
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+    print(curr_list)
     if curr_list[1] == p[3]:
       flag = 1 
       p[0].type = curr_list[0]
