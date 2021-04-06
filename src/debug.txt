@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "main.py", line 40, in <module>
+    parser.runmain(code)
+  File "/home/nprakhar/Documents/Sem6/CS335- Compiler/compiler-project/src/parser.py", line 1583, in runmain
+    result = parser.parse(code,debug=False)
+  File "/home/nprakhar/.local/lib/python3.8/site-packages/ply/yacc.py", line 333, in parse
+    return self.parseopt_notrack(input, lexer, debug, tracking, tokenfunc)
+  File "/home/nprakhar/.local/lib/python3.8/site-packages/ply/yacc.py", line 1120, in parseopt_notrack
+    p.callable(pslice)
+  File "/home/nprakhar/Documents/Sem6/CS335- Compiler/compiler-project/src/parser.py", line 465, in p_additive_expression
+    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+  File "/home/nprakhar/Documents/Sem6/CS335- Compiler/compiler-project/src/parser.py", line 67, in get_higher_data_type
+    num_type_1 = to_num[type_1]
+KeyError: 'point'
