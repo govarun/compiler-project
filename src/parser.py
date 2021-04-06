@@ -68,6 +68,7 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type_1):
+  # print(type_1)
   type_size = {}
   type_size['char'] = 1
   type_size['short'] = 2
@@ -649,7 +650,8 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    #print("here : ", p[1].type)
+    # print(p[1].type)
+    p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -673,6 +675,7 @@ def p_declaration(p):
           symbol_table[currentScope][child.children[0].val]['size'] = 8
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
+        # print(p[1].type)
         # print("here : ", child.val)
         if(p[1].type.startswith('typedef')):
           to_be_typedef = []
@@ -689,6 +692,7 @@ def p_declaration(p):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        # print(p[1].type)
         symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
         totalEle = 1
         if(len(child.array) > 0):
@@ -1108,7 +1112,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
