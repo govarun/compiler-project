@@ -5,9 +5,7 @@ void f(int *x, double y)
     return;
 }
 
-int main()
-{
-    int *x;
-    (x += 2);
-    return 0;
+int main(){
+    typedef const int * a;
+    ;
 }
