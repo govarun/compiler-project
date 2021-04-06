@@ -31,13 +31,14 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [] ):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0 ):
     self.name = name
     self.val = val
     self.type = type
     self.lno = lno
     self.scope = scope
     self.array = array
+    self.maxDepth = maxDepth
     if children:
       self.children = children
     else:
@@ -602,7 +603,7 @@ def p_assignment_expression(p):
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_if_ID_is_declared(p[1].val, p.lineno(1))
-    if(len(p[1].array) != len(symbol_table[tempScope][p[1].val]['array'])):
+    if(len(p[1].array) > 0 and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) != len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
@@ -779,6 +780,8 @@ def p_init_declarator(p):
     # if(p[1].type.startswith('typedef')):
     #   print("COMPILATION ERROR at line " + str(p[1].lno) + " typedef intialized")
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
+    if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
+      print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -1186,6 +1189,8 @@ def p_initializer(p):
     else:
       p[0] = p[2]
     p[0].name = 'Initializer'
+    if(len(p) == 4):
+      p[0].maxDepth = p[2].maxDepth + 1
 
 def p_initializer_list(p):
   '''initializer_list : initializer
@@ -1193,7 +1198,7 @@ def p_initializer_list(p):
   '''
   #p[0] = Node()
   if(len(p) == 2):
-    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1))
+    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth)
   else:
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
     if(p[1].name != 'InitializerList'):
@@ -1201,6 +1206,7 @@ def p_initializer_list(p):
     else:
       p[0].children = p[1].children
     p[0].children.append(p[3])
+    p[0].maxDepth = max(p[1].maxDepth, p[3].maxDepth)
 
 def p_statement(p):
     '''statement : labeled_statement
