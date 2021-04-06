@@ -239,6 +239,8 @@ def p_postfix_expression_4(p):
     for arguments in symbol_table[0][p[1].val]['argumentList']:
       # print(p[3].children[i].val)
       curVal = p[3].children[i].val
+      if(curVal not in symbol_table[currentScope].keys()):
+        continue
       curType = symbol_table[currentScope][curVal]['type']
       if(arguments.split()[-1] != curType.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
@@ -336,7 +338,7 @@ def p_unary_expression_2(p):
   # p[1] can be &,*,+,-,~,!
   if(p[1] == '&'):
     # no '&' child added, will deal in traversal
-    p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
+    p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
   elif(p[1] == '*'):
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   elif(p[1] == '-'):
@@ -437,12 +439,23 @@ def p_additive_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
-    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+    if(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
+      if(p[3].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
+    elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
+      if(p[1].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
+    elif(p[1].type.endswith('*') or p[3].type.endswith('*')):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
-    
-    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
+    else :
+      type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+      if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+      higher_data_type = get_higher_data_type(p[1].type , p[3].type)
+      p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
 ##############
 
@@ -993,7 +1006,8 @@ def p_declarator(p):
     p[0] = p[2]
     p[0].name = 'Declarator'
     p[0].type = p[1].type
-    if('isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
+    # print(p[2].val)
+    if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
       symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
     p[0].val = p[2].val
     p[0].array = p[2].array

@@ -1,9 +1,7 @@
-int** f(int a){
-    f(a);
-}
 int main()
 {
-    int x ;
-    x += 5 ;
+    int * x , y ;
+    x = &y ;
+    x  = x + y; // should not give error
     return 0 ;
 }
