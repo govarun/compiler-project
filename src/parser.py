@@ -210,8 +210,10 @@ def p_postfix_expression_2(p):
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
+  if(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+    print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
   # find_if_ID_is_declared(p[1].val,p[1].lno)
-
+  
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -226,8 +228,8 @@ def p_postfix_expression_4(p):
       # print(p[3].children[i].val)
       curVal = p[3].children[i].val
       curType = symbol_table[currentScope][curVal]['type']
-      if(arguments != curType):
-        print("Syntax Error at line " + str(p[1].lno), "Type mismatch in argument " + str(i+1) + " of function call")
+      if(arguments.split()[-1] != curType.split()[-1]):
+        print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
   #check if function argument_list_expression matches with the actual one
   
