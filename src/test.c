@@ -1,3 +1,3 @@
-int f(int x){
-    f(x);
+int** f(int a){
+    f(a);
 }
