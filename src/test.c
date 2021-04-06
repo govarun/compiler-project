@@ -1,6 +1,6 @@
 int main()
 {
-    const int z = 5;
+    // const int z = 5;
     int a, b;
     char* x;
     float y;

@@ -67,7 +67,9 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type):
-  type = str(type)
+  # if type.startswith("struct"):
+  #   return 
+  type = type.split()[-1]
   if type.endswith("*") or type == "long" or type == "double":
     return 8
   elif type == "int" or type == "float":
@@ -625,7 +627,7 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
-        symbol_table[currentScope][child.children[0].val]['size'] = size[p[1].type.split(' ')[-1]]
+        symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
         totalEle = 1
         if(len(child.children[0].array) > 0):
           symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
@@ -641,7 +643,7 @@ def p_declaration(p):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
-        symbol_table[currentScope][child.val]['size'] = size[p[1].type.split(' ')[-1]]
+        symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
         totalEle = 1
         if(len(child.array) > 0):
           symbol_table[currentScope][child.val]['array'] = child.array
