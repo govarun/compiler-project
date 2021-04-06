@@ -584,13 +584,13 @@ def p_assignment_expression(p):
   else:
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
-    type_list = ['char' , 'short' , 'int' , 'long','float','double']
-    #print("p_assignment_expression: ", p[1].type)
-    #print("p_assignment_expression: uncomment")
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + str(p[2].val) +  ' operator')
+    if('struct' in p[1].type.split() and 'struct' not in p[1].type.split()):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
+    elif('struct' not in p[1].type.split() and 'struct' in p[1].type.split()):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
+    elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
+      print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
-    # find_if_ID_is_declared(p[1].val, p[1].lno)
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS

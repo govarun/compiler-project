@@ -1,15 +1,10 @@
-struct point{
-    int x;
-    char y ;
+int f(int * x,int y){
+    x++;
+    return 1;
 }
-
-struct line{
-    struct point p1 ;
-    struct point p2 ;
-}
-
 int main()
 {
-    struct point p1 ;
-    p1.x = 4 ;
+    char x;
+    float y = 2.1;
+    f(x,y);
 }
