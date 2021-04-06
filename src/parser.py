@@ -15,6 +15,7 @@ precedence = (
 # in scope name, 0 denotes global, 1 denotes loop and 2 denotes if/switch, 3 denotes function
 symbol_table = []
 symbol_table.append({})
+typedef_list = []
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -639,6 +640,7 @@ def p_declaration(p):
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
+  global typedef_list
   if(len(p) == 3):
     p[0] = p[1]
   else:
@@ -649,6 +651,9 @@ def p_declaration(p):
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
+        if(p[1].type.startswith('typedef')):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
+          continue
         if(child.children[0].val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
         # print(child.children[0].val,child.children[1].val)
@@ -667,6 +672,16 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
         # print("here : ", child.val)
+        if(p[1].type.startswith('typedef')):
+          to_be_typedef = []
+          for i in p[1].type.split():
+            if(i != 'typedef'):
+              to_be_typedef.append(i)
+          # print(to_be_typedef)
+          for i in child.type:
+            to_be_typedef.append(i)
+          to_be_typedef_str = ' '.join([str(elem) for elem in to_be_typedef])
+          
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
@@ -741,9 +756,11 @@ def p_init_declarator(p):
     # extra node might be needed for error checking
     #maybe make different function to do this
     p[0] = p[1]
-    # p[0].name = 'InitDeclarator'
   else:
     # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
+    # print("here" + p[1].type)
+    # if(p[1].type.startswith('typedef')):
+    #   print("COMPILATION ERROR at line " + str(p[1].lno) + " typedef intialized")
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
 
 def p_storage_class_specifier(p):
@@ -961,7 +978,8 @@ def p_direct_declarator_1(p):
   # 
   global curScopeName
   if(len(p) == 2):
-    curScopeName = 3
+    # curScopeName = 3
+    # find_if_ID_is_declared(p[1],p.lineno(1))
     p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
     # p[0].val = p[1]
     # # insert in symbol table here
@@ -969,6 +987,7 @@ def p_direct_declarator_1(p):
     #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
   elif(len(p) == 4):
+    curScopeName = 3
     p[0] = p[2]
   else:
     p[0] = p[1]

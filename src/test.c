@@ -1,4 +1,3 @@
 int main(){
-    int f;
-    f();
+    typedef const int * a;
 }
