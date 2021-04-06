@@ -210,16 +210,19 @@ def p_postfix_expression_2(p):
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
-  if(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
+    print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
+  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
     print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
-  # find_if_ID_is_declared(p[1].val,p[1].lno)
   
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
   # print(p[1].val)
-  if(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
+    print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
+  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
     print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")
   else:
     i = 0
@@ -1384,14 +1387,8 @@ def p_function_definition_1(p):
 
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
-  # no need to keep type in AST
-  # if(p[2].name != 'ID'):
-  #   print("Syntax error near line " + p[2].lno)
-  # else:
-  # if(p[2].val in symbol_table[currentScope].keys()):
-  #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' variable already declared')
+
   symbol_table[currentScope][p[2].val]['type'] = p[1].type
-  # print(p[2].children)
   if(len(p[2].type) > 0):
     symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
   if(len(p[2].children) > 0):
@@ -1400,8 +1397,8 @@ def p_function_definition_2(p):
       # print(child.type)
       tempList.append(child.type)
     symbol_table[currentScope][p[2].val]['argumentList'] = tempList
-    # print("ys")
-  # symbol_table[currentScope][p[2].val]['']
+
+  symbol_table[currentScope][p[2].val]['isFunc'] = 1
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
 
 
@@ -1439,7 +1436,7 @@ def p_closebrace(p):
 def p_error(p):
     # print(p)
     if(p):
-      print("Syntax error in input at line" + str(p.lineno))
+      print("Syntax error in input at line " + str(p.lineno))
     # p.lineno(1)
 
 def runmain(code):
