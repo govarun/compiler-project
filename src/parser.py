@@ -1069,9 +1069,12 @@ def p_parameter_declaration(p):
         print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
       symbol_table[currentScope][p[2].val] = {}
       symbol_table[currentScope][p[2].val]['type'] = p[1].type
-      symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type)
+      
       if(len(p[2].type) > 0):
         symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
+        symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type+ ' ' + p[2].type)
+      else:
+        symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type)
       if(len(p[2].array) > 0):
         symbol_table[currentScope][p[2].val]['array'] = p[2].array
 
