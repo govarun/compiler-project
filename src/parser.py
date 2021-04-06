@@ -207,6 +207,8 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  p[0].array = copy.deepcopy(p[1].array)
+  p[0].array.append(p[3].val)
   curscp = currentScope
   if(p[3].type not in ['char', 'short', 'int', 'long']):
     print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
@@ -599,6 +601,9 @@ def p_assignment_expression(p):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
+    tempScope = find_if_ID_is_declared(p[1].val, p.lineno(1))
+    if(len(p[1].array) != len(symbol_table[tempScope][p[1].val]['array'])):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
 
 def p_assignment_operator(p):
@@ -651,7 +656,7 @@ def p_declaration(p):
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
     # print(p[1].type)
-    p[1].type = p[1].type.lstrip()
+    # p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -732,8 +737,13 @@ def p_declaration_specifiers(p):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
-    # if(p[1].name == '')
-    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = p[1].type + ' ' + p[2].type, lno = p[1].lno, children = [])
+    
+    ty = ""
+    if len(p[1].type) > 0:
+      ty = p[1].type + ' ' + p[2].type
+    else:
+      ty = p[2].type
+    p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = ty, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -1473,7 +1483,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
