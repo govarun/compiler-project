@@ -68,6 +68,7 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type_1):
+  # print(type_1)
   type_size = {}
   type_size['char'] = 1
   type_size['short'] = 2
@@ -159,9 +160,11 @@ def p_primary_expression_0(p):
   p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
   if(temp != -1):
-    p[0].type = symbol_table[temp][p[1]]['type']
-
-
+    if('type' in symbol_table[temp][p[1]]):
+      p[0].type = symbol_table[temp][p[1]]['type']
+    else:
+      p[0].type = 'int'
+  # TODO : this is temp fix for recursion, find neat fix
 def p_primary_expression_1(p):
   '''primary_expression : OCTAL_CONST
                 | HEX_CONST
@@ -647,7 +650,8 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
-    #print("here : ", p[1].type)
+    # print(p[1].type)
+    p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -671,6 +675,7 @@ def p_declaration(p):
           symbol_table[currentScope][child.children[0].val]['size'] = 8
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
+        # print(p[1].type)
         # print("here : ", child.val)
         if(p[1].type.startswith('typedef')):
           to_be_typedef = []
@@ -681,11 +686,13 @@ def p_declaration(p):
           for i in child.type:
             to_be_typedef.append(i)
           to_be_typedef_str = ' '.join([str(elem) for elem in to_be_typedef])
-          
+          # if(to_be_typedef_str not in typedef_list.keys()):
+
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
+        # print(p[1].type)
         symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
         totalEle = 1
         if(len(child.array) > 0):
@@ -1105,7 +1112,7 @@ def p_identifier_list(p):
     #p[0] = Node()
     # p[0] = build_AST(p)
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p1,type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
     else:
       p[0] = p[1]
       p[0].children.append(p[3])
@@ -1408,6 +1415,7 @@ def p_function_definition_1(p):
       # no need to keep type in AST
       p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
 
+
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
 
@@ -1465,7 +1473,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
