@@ -1,13 +1,8 @@
 int f(){
-    return 0;
+    return 1.2;
 }
-
-struct point{
-    int x;
-} 
 int main()
 {
     int x;
-    x = x + x;
-    return 0;
+    goto x;
 }
