@@ -240,11 +240,13 @@ def p_postfix_expression_5(p):
   # TODO : This is the reduction of p1.x, where x is in ID, and postfix_expression stores p1
   # TODO : p[1].val should be defined in symbol table
   # TODO : p[3] should be a field of (get from symbol table - struct point)
-  if p[1].val not in symbol_table[currentScope].keys():
+  struct_scope = find_if_ID_is_declared(p[1].val , p[1].lno)
+
+  if p[1].val not in symbol_table[struct_scope].keys():
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = '',children = [])
-  struct_name = symbol_table[currentScope][p[1].val]['type']
+  struct_name = symbol_table[struct_scope][p[1].val]['type']
   found_scope = find_if_ID_is_declared(struct_name , p[1].lno)
   if found_scope == -1 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " type of " + p[1].val + " not found")
