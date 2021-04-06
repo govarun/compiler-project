@@ -3,14 +3,9 @@ struct point{
     char y ;
 }
 
-struct line{
-    struct point p ;
-    int y ;
-}
-
 int main()
 {
-    struct line l;
-    l.p.x;
+    struct point p1 ;
+    p1.y = 5 ;
     return 0;
 }

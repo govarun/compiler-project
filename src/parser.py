@@ -74,6 +74,7 @@ def get_data_type_size(type_1):
   type_size['long'] = 8
   type_size['float'] = 4
   type_size['double'] = 8
+  type_size['void'] = 0
   if(type_1.endswith('*')):
     return 8
   if( type_1.startswith('struct')):
@@ -302,6 +303,7 @@ def p_unary_expression_1(p):
   # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
+    print("p_unary_expression : ", p[1].type)
   else:
     #check lineno
     #also check if child should be added or not
@@ -577,8 +579,10 @@ def p_assignment_expression(p):
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+    print("p_assignment_expression: ", p[1].type)
+    print("p_assignment_expression: uncomment")
+    # if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+    #   print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
     # find_if_ID_is_declared(p[1].val, p[1].lno)
 
@@ -1433,7 +1437,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
