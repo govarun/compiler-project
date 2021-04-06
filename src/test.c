@@ -10,6 +10,6 @@ struct line{
 
 int main()
 {
-    struct line l1 ;
-    l1.p3.x = 4 ;
+    struct point p1 ;
+    p1.x = 4 ;
 }

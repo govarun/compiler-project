@@ -588,7 +588,7 @@ def p_assignment_expression(p):
     #print("p_assignment_expression: ", p[1].type)
     #print("p_assignment_expression: uncomment")
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + str(p[2]) +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + str(p[2].val) +  ' operator')
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
     # find_if_ID_is_declared(p[1].val, p[1].lno)
 
@@ -1443,7 +1443,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
