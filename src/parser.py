@@ -277,7 +277,7 @@ def p_postfix_expression_5(p):
   # TODO : p[3] should be a field of (get from symbol table - struct point)
   
 
-  #print("here : ", p[1].name)
+  # print("here : ", p[2])
   if (not p[1].name.startswith('Period')):
     struct_scope = find_scope(p[1].val , p[1].lno)
     if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
@@ -285,7 +285,8 @@ def p_postfix_expression_5(p):
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   struct_name = p[1].type
-  # TODO : Doubt about parameter passed to find_scope 
+  if (struct_name.endswith('*') and p[2] == '.') or (not struct_name.endswith('*') and p[2] == '->') :
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " + p[2] + " on " + struct_name)
   #print("here : ", struct_name)
   found_scope = find_scope(struct_name , p[1].lno)
   
@@ -804,7 +805,6 @@ def p_declaration(p):
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
     # print(p[1].type)
-    # p[1].type = p[1].type.lstrip()
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -891,13 +891,14 @@ def p_declaration_specifiers(p):
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     # if(p[1].name == '')
-    curType.append(p[1].type + ' ' + p[2].type)
-    
+    # print(p[1].type, p[2].type)
     ty = ""
     if len(p[1].type) > 0:
       ty = p[1].type + ' ' + p[2].type
     else:
       ty = p[2].type
+    curType.append(ty)
+    # print(ty)
     p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = ty, lno = p[1].lno, children = [])
   #p[0] = Node()
   # p[0] = build_AST(p)
@@ -985,8 +986,11 @@ def p_struct_or_union_specifier(p):
     val_name = p[1].type + ' ' + p[2]
     if val_name in symbol_table[currentScope].keys():
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    valptr_name = val_name + ' *'
     symbol_table[currentScope][val_name] = {}
     symbol_table[currentScope][val_name]['type'] = val_name
+    symbol_table[currentScope][valptr_name] = {}
+    symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0 
     for child in p[4].children:
@@ -1000,6 +1004,8 @@ def p_struct_or_union_specifier(p):
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
+    symbol_table[currentScope][valptr_name]['field_list'] = temp_list
+    symbol_table[currentScope][valptr_name]['size'] = 8
 
   if len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
@@ -1046,7 +1052,10 @@ def p_struct_declaration(p):
   p[0] = Node(name = 'StructDeclaration', val = '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].children = p[2].children
   for child in p[0].children:
-    child.type = p[1].type
+    if len(child.type) > 0:
+      child.type = p[1].type + ' ' + child.type
+    else:
+      child.type = p[1].type
   
 
 def p_specifier_qualifier_list(p):
@@ -1066,11 +1075,13 @@ def p_struct_declarator_list(p):
   '''
   #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclaratorList', val = '', type = p[1].type, lno = p[1].lno, children = [])
+  # print(p[1].type)
   if(len(p) == 2):
     p[0].children.append(p[1])
   else:
     p[0].children = p[1].children 
     p[0].children.append(p[3])
+    # print(p[3].type)
 
 def p_struct_declarator(p):  
   '''struct_declarator : declarator
@@ -1137,9 +1148,11 @@ def p_declarator(p):
     p[0] = p[2]
     p[0].name = 'Declarator'
     p[0].type = p[1].type
-    # print(p[2].val)
+    # print(p[1].type)
     if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
       symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
+
+      # print(symbol_table[parent[currentScope]][p[2].val]['type'])
     p[0].val = p[2].val
     p[0].array = p[2].array
   # print(p[0].children)
@@ -1672,7 +1685,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 

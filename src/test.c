@@ -1,13 +1,20 @@
-int f(int x)
+struct point
 {
-    return y ;
+    int x;
+    int y;
+}
+
+struct line{
+    struct point *p1, p2;
+    int x, *y;
 }
 
 int main()
 {
-    int x = 5 ;
-    {
-        int x = 6 ;
-    }
-    return 0 ;
+    struct line *l;
+    // l->p1;
+    l->p1->x = 5;
+    l->p1.x = 3;
+    // int x, y, *z;
+    return 0;
 }
