@@ -22,10 +22,10 @@ symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
-scopeName = {}
+# scopeName = {}
 parent[0] = 0
-scopeName[0] = 0
-curScopeName = 0
+# scopeName[0] = 0
+# curScopeName = 0
 loopingDepth = 0
 size={}
 size['int'] = 4
@@ -1202,7 +1202,6 @@ def p_direct_declarator_1(p):
                         | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
-  global curScopeName
   global curFuncReturnType
   if(len(p) == 2):
     # curScopeName = 3
@@ -1214,14 +1213,11 @@ def p_direct_declarator_1(p):
     #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
   elif(len(p) == 4):
-    curScopeName = 3
     p[0] = p[2]
   else:
     p[0] = p[1]
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
-    curScopeName = 3
-    # print("here" + curScopeName)
     p[0].children = p[3].children
     p[0].type = curType[-1]
     # print(p[0].type)
@@ -1549,8 +1545,6 @@ def p_selection_statement_2(p):
 
 def p_if(p):
   '''if : IF'''
-  global curScopeName
-  curScopeName = 2
   p[0] = p[1]
 
 def p_selection_statement_3(p):
@@ -1559,8 +1553,6 @@ def p_selection_statement_3(p):
 
 def p_switch(p):
   '''switch : SWITCH'''
-  global curScopeName
-  curScopeName = 2
   p[0] = p[1]
 
 def p_iteration_statement_1(p):
@@ -1572,10 +1564,8 @@ def p_iteration_statement_1(p):
   
 def p_while(p):
   '''while : WHILE'''
-  global curScopeName
   global loopingDepth
   loopingDepth += 1
-  curScopeName = 1
   p[0] = p[1]
 
 def p_iteration_statement_2(p):
@@ -1586,10 +1576,8 @@ def p_iteration_statement_2(p):
 
 def p_do(p):
   '''do : DO'''
-  global curScopeName
   global loopingDepth
   loopingDepth += 1
-  curScopeName = 1
   p[0] = p[1]
 
 
@@ -1607,10 +1595,8 @@ def p_iteration_statement_4(p):
 
 def p_for(p):
   '''for : FOR'''
-  global curScopeName
   global loopingDepth
   loopingDepth += 1
-  curScopeName = 1
   p[0] = p[1]
 
 def p_jump_statement(p):
@@ -1634,17 +1620,9 @@ def p_jump_statement_2(p):
   '''jump_statement : BREAK SEMICOLON
                     | CONTINUE SEMICOLON'''
   global loopingDepth
-  # print(curScopeName)
+
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
-  # curscp = currentScope
-  # print("here" + str(curscp))
-  # flag = 0
-  # if curScopeName == 1:
-  #   flag = 1
-  # while(parent[curscp] != curscp):
-  #   if(scopeName[curscp] == 1):
-  #     flag = 1
-  #   curscp = parent[curscp]
+
   if(loopingDepth == 0):
     print(p[0].lno, 'break/continue not inside loop')
 
@@ -1709,10 +1687,8 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
-  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
-  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1721,10 +1697,8 @@ def p_lopenparen(p):
   '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
-  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
-  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1758,6 +1732,6 @@ def visualize_symbol_table():
   global scopeName
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
-      print('\nIn Scope ' + str(i), scopeName[i])
+      print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
