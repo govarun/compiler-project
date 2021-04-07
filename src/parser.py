@@ -794,6 +794,8 @@ def p_assignment_expression(p):
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
         print(curr_list)
         if curr_list[1] == p[1].val:
+          if(len(curr_list) < 5 and len(p[1].array) == 0):
+            break
           if(len(curr_list) < 5 or (len(curr_list[4]) != len(p[1].array))):
             print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimension")
     found_scope = find_scope(p[1].val, p[1].lno)
