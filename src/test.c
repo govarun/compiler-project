@@ -1,18 +1,7 @@
-<<<<<<< HEAD
-=======
-int **f(int x)
-{
-    int * y;
-    return y ;
+struct list{
+      struct point a[10];
 }
->>>>>>> 9242018f5d338d8073e55c456ac3e3040e1cf1a4
-int main()
-{
-    int z ;
-    int x = 5 ;
-    {
-        z = x ; // giving traceback error
-    }
-    int z = x ;
-    return 0 ;
+int main(){
+  struct list l;
+  l.a[1].x = 4;
 }

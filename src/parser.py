@@ -1052,7 +1052,13 @@ def p_struct_or_union_specifier(p):
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
       curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
-      curr_offset = curr_offset + get_data_type_size(child.type)
+      totalEle = 1
+      if(len(child.array) > 0):
+        curr_list.append(child.array)
+        for ele in child.array:
+          totalEle *= ele
+      curr_offset = curr_offset + get_data_type_size(child.type)*totalEle
+      curr_list[2] *= totalEle
       temp_list.append(curr_list)
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
