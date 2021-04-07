@@ -14,6 +14,7 @@ precedence = (
 
 # in scope name, 0 denotes global, 1 denotes loop and 2 denotes if/switch, 3 denotes function
 curType = []
+curFuncReturnType = ''
 symbol_table = []
 symbol_table.append({})
 # typedef_list = {}
@@ -306,8 +307,7 @@ def p_postfix_expression_5(p):
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
 	| postfix_expression DECREMENT'''
-  tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],tempNode])
+  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
   found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[1].val].keys()) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
@@ -360,16 +360,18 @@ def p_unary_expression_1(p):
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
   # p[1] can be &,*,+,-,~,!
-  if(p[1] == '&'):
+
+  if(p[1].val == '&'):
     # no '&' child added, will deal in traversal
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
-  elif(p[1] == '*'):
+  elif(p[1].val == '*'):
+    if(not p[2].type.endswith('*')):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
-  elif(p[1] == '-'):
+  elif(p[1].val == '-'):
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   else:
-    tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
-    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
+    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
   # TODO: check if function can have these
 
 def p_unary_expression_3(p):
@@ -394,7 +396,8 @@ def p_unary_operator(p):
   '''
   #p[0] = Node()
   # p[0] = build_AST(p)
-  p[0] = p[1]
+  # p[0] = p[1]
+  p[0] = Node(name = 'UnaryOperator',val = p[1],lno = p.lineno(1),type = '',children = [])
 
 #################
 
@@ -520,6 +523,9 @@ def p_shift_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     # We know shift only possible in int(unsigned) type, so no need to pass for now
     type_list = ['short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
@@ -550,6 +556,9 @@ def p_relational_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -574,6 +583,9 @@ def p_equality_expresssion(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -597,6 +609,9 @@ def p_and_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     p[0] = Node(name = 'AndOperation',val = '',lno = p[1].lno,type = '',children = [])
     valid = ['int', 'char','long','short'] #TODO: check this if more AND should be taken
 
@@ -624,6 +639,9 @@ def p_exclusive_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -635,7 +653,7 @@ def p_exclusive_or_expression(p):
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
-    p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = '',children = [])
+    p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
 def p_inclusive_or_expression(p):
   '''inclusive_or_expression : exclusive_or_expression
@@ -646,6 +664,9 @@ def p_inclusive_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -657,7 +678,7 @@ def p_inclusive_or_expression(p):
     found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
-    p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = '',children = [])
+    p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
 def p_logical_and_expression(p):
   '''logical_and_expression : inclusive_or_expression 
@@ -668,6 +689,9 @@ def p_logical_and_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -678,7 +702,7 @@ def p_logical_and_expression(p):
     found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
-    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = '',children = [])
+    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
 def p_logical_or_expression(p):
   '''logical_or_expression : logical_and_expression
@@ -689,6 +713,9 @@ def p_logical_or_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    if(p[1].type == '' or p[3].type == ''):
+      p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+      return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -700,8 +727,9 @@ def p_logical_or_expression(p):
     found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
-    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = '',children = [])
+    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
+# TODO: everything for conditional_expression
 def p_conditional_expression(p):
   '''conditional_expression : logical_or_expression
 	| logical_or_expression CONDOP expression COLON conditional_expression
@@ -882,7 +910,9 @@ def p_declaration_specifiers(p):
   # TypeQualifier, TypeSpecifier1, StorageClassSpecifier
   if(len(p) == 2):
     p[0] = p[1]
+    # global curFuncReturnType
     curType.append(p[1].type)
+    # print('here',curType[-1],curFuncReturnType)
   elif(len(p) == 3):
     if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
@@ -891,6 +921,7 @@ def p_declaration_specifiers(p):
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     # if(p[1].name == '')
+    curType.pop()
     curType.append(p[1].type + ' ' + p[2].type)
     
     ty = ""
@@ -1154,6 +1185,7 @@ def p_direct_declarator_1(p):
   ''' 
   # 
   global curScopeName
+  global curFuncReturnType
   if(len(p) == 2):
     # curScopeName = 3
     # find_if_ID_is_declared(p[1],p.lineno(1))
@@ -1179,14 +1211,15 @@ def p_direct_declarator_1(p):
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
-    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
+    
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
     tempList = []
     for child in p[3].children:
       # print(child.type)
       tempList.append(child.type)
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
-
+    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
+    curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
     # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
   #p[0] = build_AST(p)
 
@@ -1200,6 +1233,7 @@ def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
+  global curFuncReturnType
   if(p[3] == ')'):
     # p[0].type = curType[-1]
     # print(p[0].type)
@@ -1207,8 +1241,11 @@ def p_direct_declarator_3(p):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
+    curFuncReturnType = copy.deepcopy(curType[-1])
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
+    # symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
+    # curFuncReturnType = copy.deepcopy(curType[-1])
     # if(len(p[3].children) > 0):
     #   tempList = []
     # for child in p[3].children:
@@ -1552,10 +1589,11 @@ def p_jump_statement(p):
     # p[0] = build_AST(p)
     if(len(p) == 3):
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
-      if(curType[-1] != 'void'):
+      if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
     else:
-      if(curType[-1] != p[2].type):
+      if(p[2].type != '' and curFuncReturnType != p[2].type):
+        # print(curFuncReturnType)
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
@@ -1564,10 +1602,13 @@ def p_jump_statement_2(p):
   '''jump_statement : BREAK SEMICOLON
                     | CONTINUE SEMICOLON'''
   global curScopeName
+  # print(curScopeName)
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
   curscp = currentScope
   # print("here" + str(curscp))
   flag = 0
+  # if curScopeName == 1:
+  #   flag = 1
   while(parent[curscp] != curscp):
     if(scopeName[curscp] == 1):
       flag = 1
