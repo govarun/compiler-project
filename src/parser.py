@@ -22,11 +22,11 @@ symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
-scopeName = {}
+# scopeName = {}
 parent[0] = 0
-scopeName[0] = 0
-curScopeName = 0
-
+# scopeName[0] = 0
+# curScopeName = 0
+loopingDepth = 0
 size={}
 size['int'] = 4
 size['char'] = 1
@@ -248,6 +248,21 @@ def p_postfix_expression_3(p):
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
   
+# def compare_types(call_type,argument):
+#   if(call_type == '' or argument == ''):
+#     return -1
+#   if(call_type.endswith('*')):
+#     if(not argument.endswith('*')):
+#       return -1
+#     return 1
+#   if(call_type.startswith('const')):
+#     if(not argument.startswith('const')):
+#       return -1
+  
+#   type_1 = call_type.split()[-1]
+#   type_2 = argument.split()[-1]
+#   # if(type_1 == 'int'):
+
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -266,7 +281,8 @@ def p_postfix_expression_4(p):
       if(curVal not in symbol_table[currentScope].keys()):
         continue
       curType = symbol_table[currentScope][curVal]['type']
-      if(arguments.split()[-1] != curType.split()[-1]):
+      # temp = compare_types(curType,arguments)
+      if(curType.split()[-1] != arguments.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
   #check if function argument_list_expression matches with the actual one
@@ -1173,6 +1189,7 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
+  global curFuncReturnType
   # print(p[1].children)
   # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
@@ -1187,7 +1204,7 @@ def p_declarator(p):
     # print(p[1].type)
     if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
       symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
-
+      curFuncReturnType = curFuncReturnType + ' ' + p[1].type
       # print(symbol_table[parent[currentScope]][p[2].val]['type'])
     p[0].val = p[2].val
     p[0].array = p[2].array
@@ -1202,7 +1219,6 @@ def p_direct_declarator_1(p):
                         | direct_declarator lopenparen identifier_list RPAREN
   ''' 
   # 
-  global curScopeName
   global curFuncReturnType
   if(len(p) == 2):
     # curScopeName = 3
@@ -1214,14 +1230,11 @@ def p_direct_declarator_1(p):
     #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
   elif(len(p) == 4):
-    curScopeName = 3
     p[0] = p[2]
   else:
     p[0] = p[1]
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
-    curScopeName = 3
-    # print("here" + curScopeName)
     p[0].children = p[3].children
     p[0].type = curType[-1]
     # print(p[0].type)
@@ -1549,8 +1562,6 @@ def p_selection_statement_2(p):
 
 def p_if(p):
   '''if : IF'''
-  global curScopeName
-  curScopeName = 2
   p[0] = p[1]
 
 def p_selection_statement_3(p):
@@ -1559,44 +1570,50 @@ def p_selection_statement_3(p):
 
 def p_switch(p):
   '''switch : SWITCH'''
-  global curScopeName
-  curScopeName = 2
   p[0] = p[1]
 
 def p_iteration_statement_1(p):
     '''iteration_statement : while LPAREN expression RPAREN'''
     #p[0] = Node()
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
   
 def p_while(p):
   '''while : WHILE'''
-  global curScopeName
-  curScopeName = 1
+  global loopingDepth
+  loopingDepth += 1
   p[0] = p[1]
 
 def p_iteration_statement_2(p):
     '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
     p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_do(p):
   '''do : DO'''
-  global curScopeName
-  curScopeName = 1
+  global loopingDepth
+  loopingDepth += 1
   p[0] = p[1]
 
 
 def p_iteration_statement_3(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
     p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_iteration_statement_4(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement expression RPAREN statement'''
     p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_for(p):
   '''for : FOR'''
-  global curScopeName
-  curScopeName = 1
+  global loopingDepth
+  loopingDepth += 1
   p[0] = p[1]
 
 def p_jump_statement(p):
@@ -1610,28 +1627,21 @@ def p_jump_statement(p):
       if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
     else:
+      # print(p[2].type,curFuncReturnType)
       if(p[2].type != '' and curFuncReturnType != p[2].type):
         # print(curFuncReturnType)
-        print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
+        print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
 
 def p_jump_statement_2(p):
   '''jump_statement : BREAK SEMICOLON
                     | CONTINUE SEMICOLON'''
-  global curScopeName
-  # print(curScopeName)
+  global loopingDepth
+
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
-  curscp = currentScope
-  # print("here" + str(curscp))
-  flag = 0
-  # if curScopeName == 1:
-  #   flag = 1
-  while(parent[curscp] != curscp):
-    if(scopeName[curscp] == 1):
-      flag = 1
-    curscp = parent[curscp]
-  if(flag == 0):
+
+  if(loopingDepth == 0):
     print(p[0].lno, 'break/continue not inside loop')
 
 def p_jump_statement_3(p):
@@ -1695,10 +1705,8 @@ def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
   global currentScope
   global nextScope
-  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
-  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1707,10 +1715,8 @@ def p_lopenparen(p):
   '''lopenparen : LPAREN'''
   global currentScope
   global nextScope
-  global curScopeName
   parent[nextScope] = currentScope
   currentScope = nextScope
-  scopeName[currentScope] = curScopeName
   symbol_table.append({})
   nextScope = nextScope + 1
   p[0] = p[1]
@@ -1744,6 +1750,6 @@ def visualize_symbol_table():
   global scopeName
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
-      print('\nIn Scope ' + str(i), scopeName[i])
+      print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
