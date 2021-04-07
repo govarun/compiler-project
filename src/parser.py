@@ -1743,7 +1743,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
