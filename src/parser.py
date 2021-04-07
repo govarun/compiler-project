@@ -71,7 +71,7 @@ def get_higher_data_type(type_1 , type_2):
   type_1 =  type_1.split()[-1]
   type_2 =  type_2.split()[-1]
   if (type_1 not in to_num) or type_2 not in to_num:
-    return -1
+    return str(-1)
   num_type_1 = to_num[type_1]
   num_type_2 = to_num[type_2]
   return to_str[max(num_type_1 , num_type_2)]
@@ -99,6 +99,8 @@ def get_data_type_size(type_1):
         return -1 # If id is not found in symbol table
     return symbol_table[curscp][type_1]['size']    
   type_1 = type_1.split()[-1]
+  if type_1 not in type_size.keys():
+    return -1
   return type_size[type_1]
   
   
@@ -487,7 +489,7 @@ def p_additive_expression(p):
       if(p[1].type == 'float'):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
-    elif(p[1].type.endswith('*') or p[3].type.endswith('*')):
+    elif(p[1].type.endswith('*') and p[3].type.endswith('*')):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
     else :
@@ -504,9 +506,6 @@ def p_additive_expression(p):
     found_scope = find_scope(p[3].val, p[3].lno)
     if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
-
-    higher_data_type = get_higher_data_type(p[1].type , p[3].type)
-    p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
 ##############
 
@@ -725,9 +724,12 @@ def p_assignment_expression(p):
   if(len(p) == 2):
     p[0] = p[1]
   else:
+    # print(p[1].type, p[3].type)
     if(p[1].type == '' or p[3].type == ''):
       p[0] = Node(name = 'AssignmentOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       return
+    if p[1].type == '-1' or p[3].type == '-1':
+      return ;
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
     if('struct' in p[1].type.split() and 'struct' not in p[3].type.split()):
@@ -1685,7 +1687,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
