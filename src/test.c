@@ -1,10 +1,10 @@
-int *f(int x)
-{
-    return f(x-1) ;
-}
 int main()
 {
-    int x ;
-    f(x) ;
+    int i = 0 ;
+    break;
+    for(;;)
+        for(;;)
+            break ; // this break should not give error
+    break;
     return 0 ;
 }

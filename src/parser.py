@@ -26,7 +26,7 @@ scopeName = {}
 parent[0] = 0
 scopeName[0] = 0
 curScopeName = 0
-
+loopingDepth = 0
 size={}
 size['int'] = 4
 size['char'] = 1
@@ -1567,20 +1567,28 @@ def p_iteration_statement_1(p):
     '''iteration_statement : while LPAREN expression RPAREN'''
     #p[0] = Node()
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
   
 def p_while(p):
   '''while : WHILE'''
   global curScopeName
+  global loopingDepth
+  loopingDepth += 1
   curScopeName = 1
   p[0] = p[1]
 
 def p_iteration_statement_2(p):
     '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
     p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_do(p):
   '''do : DO'''
   global curScopeName
+  global loopingDepth
+  loopingDepth += 1
   curScopeName = 1
   p[0] = p[1]
 
@@ -1588,14 +1596,20 @@ def p_do(p):
 def p_iteration_statement_3(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
     p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_iteration_statement_4(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement expression RPAREN statement'''
     p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
+    global loopingDepth
+    loopingDepth -= 1
 
 def p_for(p):
   '''for : FOR'''
   global curScopeName
+  global loopingDepth
+  loopingDepth += 1
   curScopeName = 1
   p[0] = p[1]
 
@@ -1619,19 +1633,19 @@ def p_jump_statement(p):
 def p_jump_statement_2(p):
   '''jump_statement : BREAK SEMICOLON
                     | CONTINUE SEMICOLON'''
-  global curScopeName
+  global loopingDepth
   # print(curScopeName)
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
-  curscp = currentScope
+  # curscp = currentScope
   # print("here" + str(curscp))
-  flag = 0
+  # flag = 0
   # if curScopeName == 1:
   #   flag = 1
-  while(parent[curscp] != curscp):
-    if(scopeName[curscp] == 1):
-      flag = 1
-    curscp = parent[curscp]
-  if(flag == 0):
+  # while(parent[curscp] != curscp):
+  #   if(scopeName[curscp] == 1):
+  #     flag = 1
+  #   curscp = parent[curscp]
+  if(loopingDepth == 0):
     print(p[0].lno, 'break/continue not inside loop')
 
 def p_jump_statement_3(p):
