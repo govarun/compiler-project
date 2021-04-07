@@ -10,3 +10,4 @@ src/a.out
 *.dot
 *.out
 *.png
+src/debug.txt
