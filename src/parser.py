@@ -1619,8 +1619,9 @@ def p_switch(p):
   '''switch : SWITCH'''
   p[0] = p[1]
 
+# remember : here statement added in grammar
 def p_iteration_statement_1(p):
-    '''iteration_statement : while LPAREN expression RPAREN'''
+    '''iteration_statement : while LPAREN expression RPAREN statement'''
     #p[0] = Node()
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
@@ -1784,7 +1785,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
