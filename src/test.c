@@ -1,18 +1,11 @@
-struct point{
-    int x ;
-    int y ;
-    int z[5] ;
-}
-
-struct list{
-    struct point p[10] ;
-}
 int main()
 {
-    struct point p ;
-    struct list l ;
-    int a;
-    p.z[5][3];
-    l.p[5][2].z[4] = 3 ;
-    a[2][4][3];
+<<<<<<< HEAD
+    main() ;
+=======
+    struct point p[2];
+    int a[2][3];
+    p.x; 
+    a = 3;
+>>>>>>> 8b67a5ca792527e605185c3ef24f8dd4a515f594
 }
