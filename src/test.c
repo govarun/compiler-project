@@ -9,10 +9,8 @@ struct list{
 }
 int main()
 {
-    struct point p ;
-    struct list l ;
-    int a;
-    p.z[5][3];
-    l.p[5][2].z[4] = 3 ;
-    a[2][4][3];
+    struct point p[2];
+    int a[2][3];
+    p.x; 
+    a = 3;
 }
