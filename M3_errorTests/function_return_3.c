@@ -1,6 +1,6 @@
 int *f(int x)
 {
-    return f(x-1) ;
+    return 5 ;
 }
 int main()
 {
