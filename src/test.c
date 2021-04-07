@@ -1,10 +1,10 @@
-int *f(int x)
-{
-    return f(x-1) ;
-}
 int main()
 {
-    int x ;
-    f(x) ;
+    int z ;
+    int x = 5 ;
+    {
+        z = x ; // giving traceback error
+    }
+    int z = x ;
     return 0 ;
 }

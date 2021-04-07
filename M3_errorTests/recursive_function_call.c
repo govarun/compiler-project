@@ -1,7 +1,7 @@
 int f()
 {
-    f() ;
-    return ;
+    int x = f() ;
+    return 5;
 }
 int main()
 {
