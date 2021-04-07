@@ -34,7 +34,7 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = ''):
     self.name = name
     self.val = val
     self.type = type
@@ -43,6 +43,7 @@ class Node:
     self.array = array
     self.maxDepth = maxDepth
     self.isFunc = isFunc
+    self.parentStruct = parentStruct
     if children:
       self.children = children
     else:
@@ -233,7 +234,7 @@ def p_postfix_expression_1(p):
 def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
-  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc)
+  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
   curscp = currentScope
@@ -318,6 +319,7 @@ def p_postfix_expression_5(p):
     if curr_list[1] == p[3]:
       flag = 1 
       p[0].type = curr_list[0]
+      p[0].parentStruct = struct_name
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + p[3] + " not declared in " + struct_name)
   #print("p_postfix_Expression_5 : type = ", p[0].type, " id = " , p[3])
@@ -785,9 +787,15 @@ def p_assignment_expression(p):
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_scope(p[1].val, p.lineno(1))
-    if(len(p[1].array) > 0 and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) != len(p[1].array))):
+    if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) != len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
-  
+    if(len(p[1].parentStruct) > 0):
+      found_scope = find_scope(p[1].parentStruct , p[1].lno)
+      for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
+        print(curr_list)
+        if curr_list[1] == p[1].val:
+          if(len(curr_list) < 5 or (len(curr_list[4]) != len(p[1].array))):
+            print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimension")
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ((p[1].isFunc == 1)):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)

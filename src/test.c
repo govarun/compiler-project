@@ -1,7 +1,10 @@
-struct list{
-      struct point a[10];
+struct point{
+    int x ;
+    int y ;
+    int z[5] ;
 }
-int main(){
-  struct list l;
-  l.a[1].x = 4;
+int main()
+{
+    struct point p ;
+    p.z = 4;
 }
