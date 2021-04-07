@@ -237,6 +237,19 @@ def p_postfix_expression_2(p):
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
+  tempScope = find_scope(p[1].val, p.lineno(1))
+  if(len(p[0].array) > 0 and len(p[0].parentStruct) == 0 and (('array' not in symbol_table[tempScope][p[0].val].keys() and len(p[0].array) == 1) or len(symbol_table[tempScope][p[0].val]) == len(p[0].array) + 1)):
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val)
+  if(len(p[0].parentStruct) > 0):
+    found_scope = find_scope(p[0].parentStruct , p[1].lno)
+    for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
+      # print(curr_list)
+      if curr_list[1] == p[0].val:
+        if(len(curr_list) < 5 and len(p[0].array) == 0):
+          break
+        if(len(curr_list) < 5 or (len(curr_list[4]) == len(p[0].array) - 1)):
+          print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+
   curscp = currentScope
   if(p[3].type not in ['char', 'short', 'int', 'long']):
     print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
@@ -311,15 +324,27 @@ def p_postfix_expression_5(p):
   if (struct_name.endswith('*') and p[2] == '.') or (not struct_name.endswith('*') and p[2] == '->') :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " + p[2] + " on " + struct_name)
   #print("here : ", struct_name)
-  found_scope = find_scope(struct_name , p[1].lno)
-  
+  found_scope = find_scope(struct_name , p[1].lno) 
   flag = 0 
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
-    print(curr_list)
+    # print(curr_list)
     if curr_list[1] == p[3]:
       flag = 1 
       p[0].type = curr_list[0]
       p[0].parentStruct = struct_name
+
+  # if(len(p[1].parentStruct) > 0):
+  #   if((len(curr_list) == 5 and len(p[1].array) != len(curr_list[4])) or (len(curr_list) == 4 and len(p[1].array) != 0)):
+  #       print("COMPILATION ERROR at line " + str(p[1].lno) + " ,incorrect number of dimensions for " + p[1].val)
+  if(len(p[1].parentStruct) > 0):
+    found_scope = find_scope(p[1].parentStruct , p[1].lno)
+    for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
+      # print(curr_list)
+      if curr_list[1] == p[1].val:
+        if(len(curr_list) < 5 and len(p[1].array) == 0):
+          break
+        if(len(curr_list) < 5 or (len(curr_list[4]) > len(p[1].array))):
+          print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions for " + p[1].val)
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + p[3] + " not declared in " + struct_name)
   #print("p_postfix_Expression_5 : type = ", p[0].type, " id = " , p[3])
@@ -792,12 +817,12 @@ def p_assignment_expression(p):
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
-        print(curr_list)
+        # print(curr_list)
         if curr_list[1] == p[1].val:
           if(len(curr_list) < 5 and len(p[1].array) == 0):
             break
-          if(len(curr_list) < 5 or (len(curr_list[4]) != len(p[1].array))):
-            print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimension")
+          if(len(curr_list) < 5 or (len(curr_list[4]) < len(p[1].array))):
+            print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions")
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and ((p[1].isFunc == 1)):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
