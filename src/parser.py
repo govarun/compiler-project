@@ -34,7 +34,7 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0 ):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0):
     self.name = name
     self.val = val
     self.type = type
@@ -42,6 +42,7 @@ class Node:
     self.scope = scope
     self.array = array
     self.maxDepth = maxDepth
+    self.isFunc = isFunc
     if children:
       self.children = children
     else:
@@ -186,6 +187,8 @@ def p_primary_expression_0(p):
   if(temp != -1):
     # if('type' in symbol_table[temp][p[1]]):
     p[0].type = symbol_table[temp][p[1]]['type']
+    if('isFunc' in symbol_table[temp][p[1]]):
+      p[0].isFunc = 1
     # else:
     #   p[0].type = 'int'
   # TODO : this is temp fix for recursion, find neat fix
@@ -230,7 +233,7 @@ def p_postfix_expression_1(p):
 def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
-  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]])
+  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
   curscp = currentScope
@@ -239,7 +242,7 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]])
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]],isFunc=0)
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
@@ -248,7 +251,7 @@ def p_postfix_expression_3(p):
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
-  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
+  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0)
   # print(p[1].val)
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
@@ -312,9 +315,8 @@ def p_postfix_expression_6(p):
 	| postfix_expression DECREMENT'''
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
   found_scope = find_scope(p[1].val, p[1].lno)
-  if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[1].val].keys()) or ('struct' in p[1].type.split())):
+  if (found_scope != -1) and ((p[1].isFunc == 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-  #Can't think of a case where this is invalid
 
 
 
@@ -357,7 +359,7 @@ def p_unary_expression_1(p):
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
     #Can't think of a case where this is invalid
     found_scope = find_scope(p[2].val, p[2].lno)
-    if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[2].val].keys()) or ('struct' in p[2].type.split())):
+    if (found_scope != -1) and ((p[2].isFunc == 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
 
 def p_unary_expression_2(p):
@@ -443,11 +445,11 @@ def p_multipicative_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)      
     
     if(p[2] == '%'):
@@ -503,11 +505,11 @@ def p_additive_expression(p):
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
 ##############
@@ -532,11 +534,11 @@ def p_shift_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
@@ -564,11 +566,11 @@ def p_relational_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
     p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [])
@@ -591,11 +593,11 @@ def p_equality_expresssion(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)  
 
     p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [])
@@ -619,11 +621,11 @@ def p_and_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[3].type, 'for the AND operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     
     p[0].type = 'int' # should not be char, even if the and was done for two chars
@@ -646,11 +648,11 @@ def p_exclusive_or_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
     p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = 'int',children = [])
@@ -672,11 +674,11 @@ def p_inclusive_or_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
@@ -696,11 +698,11 @@ def p_logical_and_expression(p):
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
@@ -721,11 +723,11 @@ def p_logical_or_expression(p):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[1].val].keys()):
+    if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ('isFunc' in symbol_table[found_scope][p[3].val].keys()):
+    if (found_scope != -1) and (p[3].isFunc == 1):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
 
@@ -771,11 +773,11 @@ def p_assignment_expression(p):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly')
   
     found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[1].val].keys())):
+    if (found_scope != -1) and ((p[1].isFunc == 1)):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
 
     found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (('isFunc' in symbol_table[found_scope][p[3].val].keys())):
+    if (found_scope != -1) and ((p[3].isFunc == 1)):
       print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
 
     if p[2].val != '=':
