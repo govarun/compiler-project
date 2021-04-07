@@ -1,9 +1,14 @@
+static int x = 5 ;
+
 int main()
 {
-    while(0){
-        break;
-        break;
+    int z = 5;
+    int x = 5 ;
+    {
+        int x = 4 ;
+        int z = 2 ;
+        z = x ;
     }
-    break;
-    return 0 ;
+    x = z ;
+    
 }

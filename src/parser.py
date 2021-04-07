@@ -27,6 +27,7 @@ parent[0] = 0
 # scopeName[0] = 0
 # curScopeName = 0
 loopingDepth = 0
+switchDepth = 0
 size={}
 size['int'] = 4
 size['char'] = 1
@@ -806,7 +807,7 @@ def p_assignment_expression(p):
       p[0] = Node(name = 'AssignmentOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       return
     if p[1].type == '-1' or p[3].type == '-1':
-      return ;
+      return
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
     if('struct' in p[1].type.split() and 'struct' not in p[3].type.split()):
@@ -1509,6 +1510,7 @@ def p_statement(p):
                  | jump_statement
     '''
     p[0] = p[1]
+    # print('here', p[0])
 def p_labeled_statement_1(p):
     '''labeled_statement : ID COLON statement '''
     p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [], lno = p.lineno(1) )
@@ -1535,7 +1537,9 @@ def p_compound_statement(p):
       p[0] = p[2]
       p[0].name = 'CompoundStatement'
     elif(len(p) == 4):
-      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))                        
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))   
+    else:
+      p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))
 
 def p_function_compound_statement(p):
     '''function_compound_statement : LCURLYBRACKET closebrace
@@ -1576,9 +1580,13 @@ def p_statement_list(p):
     #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
+      # print('here',p[0])
       # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
+      # print(p[2].lno)
+      # if(p[1] is None):
+      #   print('yes')
       if(p[1].name != 'StatmentList'):
         p[0].children.append(p[1])
       else:
@@ -1589,9 +1597,14 @@ def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
-    p[0] = Node()
+    # p[0] = Node()
+    p[0] = Node(name = 'ExpressionStatement', val='', type='', children = [], lno = p.lineno(1))
+    # print(p[])
+    # print(p[0],'here2')
     if(len(p) == 3):
-      p[0] = p[1]
+      p[0].val = p[1].val
+      p[0].type = p[1].type
+      p[0].children = p[1].children
     p[0].name = 'ExpressionStatement'
     # TODO : see what to do in case of only semicolon in rhs
     # else:
@@ -1614,10 +1627,14 @@ def p_if(p):
 def p_selection_statement_3(p):
     '''selection_statement : switch LPAREN expression RPAREN statement'''
     p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [], lno = p.lineno(1))
+    global switchDepth
+    switchDepth -= 1
 
 def p_switch(p):
   '''switch : SWITCH'''
   p[0] = p[1]
+  global switchDepth
+  switchDepth += 1
 
 # remember : here statement added in grammar
 def p_iteration_statement_1(p):
@@ -1681,16 +1698,22 @@ def p_jump_statement(p):
         print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
+def p_jump_statement_1(p):
+  '''jump_statement : BREAK SEMICOLON'''
+  global loopingDepth
+  global switchDepth
+  p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
+  if(loopingDepth == 0 and switchDepth == 0):
+    print(p[0].lno, 'break not inside loop')
 
 def p_jump_statement_2(p):
-  '''jump_statement : BREAK SEMICOLON
-                    | CONTINUE SEMICOLON'''
+  '''jump_statement : CONTINUE SEMICOLON'''
   global loopingDepth
 
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
 
   if(loopingDepth == 0):
-    print(p[0].lno, 'break/continue not inside loop')
+    print(p[0].lno, 'continue not inside loop')
 
 def p_jump_statement_3(p):
   '''jump_statement : GOTO ID SEMICOLON'''
@@ -1785,7 +1808,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
