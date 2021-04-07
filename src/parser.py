@@ -248,6 +248,21 @@ def p_postfix_expression_3(p):
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
   
+# def compare_types(call_type,argument):
+#   if(call_type == '' or argument == ''):
+#     return -1
+#   if(call_type.endswith('*')):
+#     if(not argument.endswith('*')):
+#       return -1
+#     return 1
+#   if(call_type.startswith('const')):
+#     if(not argument.startswith('const')):
+#       return -1
+  
+#   type_1 = call_type.split()[-1]
+#   type_2 = argument.split()[-1]
+#   # if(type_1 == 'int'):
+
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -266,7 +281,8 @@ def p_postfix_expression_4(p):
       if(curVal not in symbol_table[currentScope].keys()):
         continue
       curType = symbol_table[currentScope][curVal]['type']
-      if(arguments.split()[-1] != curType.split()[-1]):
+      # temp = compare_types(curType,arguments)
+      if(curType.split()[-1] != arguments.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
   #check if function argument_list_expression matches with the actual one
@@ -1612,7 +1628,7 @@ def p_jump_statement(p):
     else:
       if(p[2].type != '' and curFuncReturnType != p[2].type):
         # print(curFuncReturnType)
-        print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
+        print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])    
 
 
