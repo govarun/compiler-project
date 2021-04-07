@@ -1189,6 +1189,7 @@ def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
+  global curFuncReturnType
   # print(p[1].children)
   # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
@@ -1203,7 +1204,7 @@ def p_declarator(p):
     # print(p[1].type)
     if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
       symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
-
+      curFuncReturnType = curFuncReturnType + ' ' + p[1].type
       # print(symbol_table[parent[currentScope]][p[2].val]['type'])
     p[0].val = p[2].val
     p[0].array = p[2].array
@@ -1626,6 +1627,7 @@ def p_jump_statement(p):
       if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
     else:
+      # print(p[2].type,curFuncReturnType)
       if(p[2].type != '' and curFuncReturnType != p[2].type):
         # print(curFuncReturnType)
         print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)

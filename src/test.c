@@ -1,9 +1,11 @@
-int f(int a){
-    int *b;
-    return b;
+int **f(int x)
+{
+    int * y;
+    return y ;
 }
 int main()
-{   
-    int* a;
-    f(a);
+{
+    int x ;
+    f(x) ;
+    return 0 ;
 }
