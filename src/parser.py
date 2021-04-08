@@ -22,10 +22,7 @@ symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
-# scopeName = {}
 parent[0] = 0
-# scopeName[0] = 0
-# curScopeName = 0
 loopingDepth = 0
 switchDepth = 0
 size={}
@@ -35,7 +32,7 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = '', level = 0):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = '', level = 0,ast = None):
     self.name = name
     self.val = val
     self.type = type
@@ -45,6 +42,7 @@ class Node:
     self.maxDepth = maxDepth
     self.isFunc = isFunc
     self.parentStruct = parentStruct
+    self.ast = ast
     self.level = level
     if children:
       self.children = children
@@ -834,6 +832,8 @@ def p_assignment_expression(p):
     #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+    if(p[1].level != 0 or p[3].level != 0):
+      print("COMPILATION ERROR at line ", str(p[1].lno), ", cannot assign array pointer")
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
