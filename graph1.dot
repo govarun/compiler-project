@@ -1,65 +1,25 @@
 digraph G {
-1[label="parameter_declaration"]
-2[label="x"]
+1[label="direct_declarator_3"]
+2[label="main"]
 1 -> 2
-3[label="parameter_declaration"]
-4[label="y"]
+3[label="init_declarator_list"]
+4[label="x"]
 3 -> 4
-5[label="parameter_list"]
-5 -> 1
-5 -> 3
-6[label="direct_declarator_1"]
-7[label="f"]
-6 -> 7
-6 -> 5
-8[label="assignment_expression"]
-9[label="x"]
-8 -> 9
-10[label="="]
-8 -> 10
-11[label="y"]
-8 -> 11
-12[label="expression_statement"]
-12 -> 8
-13[label="compound_statement"]
-13 -> 12
-14[label="jump_statement"]
-15[label="return"]
-14 -> 15
-16[label="0"]
-14 -> 16
-17[label="statement_list"]
-17 -> 13
-17 -> 14
-18[label="function_compound_statement"]
-18 -> 17
-19[label="function_definition_2"]
-19 -> 6
-19 -> 18
-20[label="direct_declarator_3"]
-21[label="main"]
-20 -> 21
-22[label="argument_expression_list"]
-23[label="postfix_expression_4"]
-24[label="f"]
-23 -> 24
-23 -> 22
-25[label="expression_statement"]
-25 -> 23
-26[label="jump_statement"]
-27[label="return"]
-26 -> 27
-28[label="0"]
-26 -> 28
-29[label="statement_list"]
-29 -> 25
-29 -> 26
-30[label="function_compound_statement"]
-30 -> 29
-31[label="function_definition_2"]
-31 -> 20
-31 -> 30
-32[label="translation_unit"]
-32 -> 19
-32 -> 31
+5[label="y"]
+3 -> 5
+6[label="declaration"]
+6 -> 3
+7[label="jump_statement"]
+8[label="return"]
+7 -> 8
+9[label="0"]
+7 -> 9
+10[label="compound_statement"]
+10 -> 7
+11[label="function_compound_statement"]
+11 -> 6
+11 -> 10
+12[label="function_definition_2"]
+12 -> 1
+12 -> 11
 }
