@@ -1185,6 +1185,8 @@ def p_struct_declaration(p):
     if len(child.type) > 0:
       child.type = p[1].type + ' ' + child.type
     else:
+      if('void' in p[1].type.split()):
+        print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
       child.type = p[1].type
   
 
@@ -1436,6 +1438,8 @@ def p_parameter_declaration(p):
         symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
         symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type+ ' ' + p[2].type)
       else:
+        if('void' in p[1].type.split()):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ", parameter " + p[2].val + " cannot have type void")
         symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type)
       if(len(p[2].array) > 0):
         symbol_table[currentScope][p[2].val]['array'] = p[2].array

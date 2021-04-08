@@ -1,4 +1,14 @@
+struct point{
+    int x ;
+    void y ;
+    void* z ;
+}
+int func(void w)
+{
+    void *ww ;
+}
 int main()
 {
-    void x, *y, z ;
+    struct point p ;
+    p.x = 5 ;
 }
