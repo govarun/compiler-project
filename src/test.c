@@ -1,11 +1,12 @@
-int funv(int a,int b){
-    int c = 1;
-    return 2;
+int f(int x , char y)
+{
+    {
+        x = y ;
+    }
+    return 0 ;
 }
 int main()
 {
-    int i = 0;
-    for(i = 0;i < 10;i++){
-        i++;
-    }
+    f(x , y) ; // giving traceback error
+    return 0 ;
 }
