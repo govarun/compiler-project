@@ -1,10 +1,11 @@
 union point{
     int x;
     char c;
-    long a[20];
-    int ad[4];
+    long a[2];
 }
 
 int main(){
+    union point p;
+    p.x = 4;
     return 0;
 }

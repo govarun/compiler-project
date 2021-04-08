@@ -91,7 +91,7 @@ def get_data_type_size(type_1):
   type_size['void'] = 0
   if(type_1.endswith('*')):
     return 8
-  if( type_1.startswith('struct')):
+  if( type_1.startswith('struct') or type_1.startswith('union')):
     curscp = currentScope
     while(parent[curscp] != curscp):
       if(type_1 in symbol_table[curscp].keys()):
