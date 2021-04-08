@@ -1,0 +1,4 @@
+"{'type': 'struct point', 'field_list': [['int', 'x', 4, 0], ['int', 'y', 4, 4], ['int', 'z', 40, 8, [10]]], 'size': 48}","{'type': 'struct point *', 'field_list': [['int', 'x', 4, 0], ['int', 'y', 4, 4], ['int', 'z', 40, 8, [10]]], 'size': 8}","{'type': 'struct list', 'field_list': [['struct point', 'p', 480, 0, [10]]], 'size': 480}","{'type': 'struct list *', 'field_list': [['struct point', 'p', 480, 0, [10]]], 'size': 8}","{'type': 'int', 'isFunc': 1, 'argumentList': []}",
+,,,,,
+,,,,,
+,,,,,"{'type': 'struct list', 'size': 480}"

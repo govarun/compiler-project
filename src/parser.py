@@ -4,6 +4,7 @@ import ply.yacc as yacc
 import sys
 import pydot
 import copy
+import json
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
@@ -329,6 +330,9 @@ def p_postfix_expression_5(p):
   struct_name = p[1].type
   if (struct_name.endswith('*') and p[2] == '.') or (not struct_name.endswith('*') and p[2] == '->') :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " + p[2] + " on " + struct_name)
+  if(not struct_name.startswith('struct')):
+    print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
+    return
   #print("here : ", struct_name)
   found_scope = find_scope(struct_name , p[1].lno) 
   flag = 0 
@@ -1843,3 +1847,5 @@ def visualize_symbol_table():
       print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
+      # json_object = json.dumps(symbol_table[i], indent = 4)
+      # print(json_object)
