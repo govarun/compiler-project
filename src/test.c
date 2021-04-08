@@ -1,11 +1,10 @@
-union point{
-    int x;
-    char c;
-    long a[2];
+
+int f(int x, int y){
+    return 0;
 }
 
-int main(){
-    union point p;
-    p.x = 4;
+int main()
+{
+    int x = f(1);
     return 0;
 }
