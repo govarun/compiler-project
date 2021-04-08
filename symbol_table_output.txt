@@ -1,0 +1,16 @@
+{
+    "main": {
+        "type": "int",
+        "isFunc": 1,
+        "argumentList": []
+    }
+}{
+    "x": {
+        "type": "int",
+        "size": 4
+    },
+    "y": {
+        "type": "int",
+        "size": 4
+    }
+}

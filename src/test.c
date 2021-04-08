@@ -1,7 +1,12 @@
+int f(int x , char y)
+{
+    {
+        x = y ;
+    }
+    return 0 ;
+}
 int main()
 {
-    int x, y;
-    {   
-        return 0 ;
-    }
+    f(x , y) ; // giving traceback error
+    return 0 ;
 }

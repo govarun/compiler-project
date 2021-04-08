@@ -1,0 +1,25 @@
+In "global"{
+    "f": {
+        "isFunc": 1,
+        "argumentList": [
+            "int",
+            "char"
+        ],
+        "type": "int"
+    },
+    "main": {
+        "type": "int",
+        "isFunc": 1,
+        "argumentList": []
+    }
+}
+In "f"{
+    "x": {
+        "type": "int",
+        "size": 4
+    },
+    "y": {
+        "type": "char",
+        "size": 1
+    }
+}

@@ -30,6 +30,8 @@ size={}
 size['int'] = 4
 size['char'] = 1
 size['float'] = 4
+scope_to_function = {}
+scope_to_function[0] = 'global'
 
 
 class Node:
@@ -1483,6 +1485,7 @@ def p_direct_declarator_1(p):
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
+    scope_to_function[currentScope] = p[1].val
     # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
   #p[0] = build_AST(p)
 
@@ -1512,6 +1515,7 @@ def p_direct_declarator_3(p):
     curFuncReturnType = copy.deepcopy(curType[-1])
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
+    scope_to_function[currentScope] = p[1].val
     # symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     # curFuncReturnType = copy.deepcopy(curType[-1])
     # if(len(p[3].children) > 0):
@@ -1822,7 +1826,7 @@ def p_statement_list(p):
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
-      print('here',p[0])
+      # print('here',p[0])
       # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
@@ -2036,6 +2040,7 @@ def p_openbrace(p):
   currentScope = nextScope
   symbol_table.append({})
   nextScope = nextScope + 1
+  scope_to_function[currentScope] = scope_to_function[parent[currentScope]]
   p[0] = p[1]
 
 def p_lopenparen(p):
@@ -2064,7 +2069,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -2075,10 +2080,19 @@ def runmain(code):
 
 def visualize_symbol_table():
   global scopeName
+  with open("symbol_table_output.json", "w") as outfile:
+    outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
-      print('\nIn Scope ' + str(i))
+      # print('\nIn Scope ' + str(i))
+      temp_list = {}
       for key in symbol_table[i].keys():
-        print(key, symbol_table[i][key])
-      # json_object = json.dumps(symbol_table[i], indent = 4)
+        # print(key, symbol_table[i][key])
+        if(not key.startswith('struct')):
+          temp_list[key] = symbol_table[i][key]
+      json_object = json.dumps(temp_list, indent = 4)
       # print(json_object)
+      with open("symbol_table_output.json", "a") as outfile:
+        outfile.write('In \"' + scope_to_function[i] + "\"")
+        outfile.write(json_object+"\n")
+
