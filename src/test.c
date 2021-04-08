@@ -1,5 +1,4 @@
 int main()
 {
-    int x = 5 ;
-    x.y ;
+    void x, *y, z ;
 }
