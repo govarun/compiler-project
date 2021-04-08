@@ -1,8 +1,8 @@
-
+int f(int a,int b){
+    a = b+2;
+    return 1;
+}
 int main(){
-    int f(int x){
-        return 1;
-    }
-    int x = f(3);
-    return 0;
+    int x, y = 3;
+    x = f(x,y);
 }
