@@ -164,14 +164,14 @@ def build_AST(p,nope = []):
   calling_func_name = sys._getframe(1).f_code.co_name
   calling_rule_name = calling_func_name[2:]
   length = len(p)
-  if(length-len(nope) == 2):
+  if(length == 2):
     if(type(p[1]) is Node):
       # print(p[1].ast,p[0].name)
       return p[1].ast
     else:
       # print(p[1],p[0].name)
       return p[1]
-  if (1):
+  else:
     cur_num += 1
     p_count = cur_num
     open('graph1.dot','a').write("\n" + str(p_count) + "[label=\"" + calling_rule_name.replace('"',"") + "\"]") ## make new vertex in dot file
@@ -1788,7 +1788,7 @@ def p_function_compound_statement(p):
       p[0] = p[2]
       p[0].name = 'CompoundStatement'
       p[0].ast = build_AST(p)
-      print('building')
+      # print('building')
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))
       p[0].ast = build_AST(p,[1,4])
@@ -1822,7 +1822,7 @@ def p_statement_list(p):
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
-      # print('here',p[0])
+      print('here',p[0])
       # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
@@ -2005,7 +2005,7 @@ def p_external_declaration(p):
     #p[0] = Node()
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement
+    '''function_definition : declaration_specifiers declarator declaration_list compound_statement
                            | declarator declaration_list function_compound_statement
                            | declarator function_compound_statement                                                                              
     ''' 
