@@ -32,7 +32,7 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = '',ast):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = '', level = 0,ast = None):
     self.name = name
     self.val = val
     self.type = type
@@ -43,6 +43,7 @@ class Node:
     self.isFunc = isFunc
     self.parentStruct = parentStruct
     self.ast = ast
+    self.level = level
     if children:
       self.children = children
     else:
@@ -187,6 +188,8 @@ def p_primary_expression_0(p):
   if(temp != -1):
     # if('type' in symbol_table[temp][p[1]]):
     p[0].type = symbol_table[temp][p[1]]['type']
+    if('array' in symbol_table[temp][p[1]].keys()):
+      p[0].level = len(symbol_table[temp][p[1]]['array'])
     if('isFunc' in symbol_table[temp][p[1]]):
       p[0].isFunc = 1
     # else:
@@ -236,18 +239,22 @@ def p_postfix_expression_2(p):
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
+  p[0].level = p[1].level - 1
   tempScope = find_scope(p[1].val, p.lineno(1))
-  if(len(p[0].array) > 0 and len(p[0].parentStruct) == 0 and (('array' not in symbol_table[tempScope][p[0].val].keys() and len(p[0].array) == 1) or len(symbol_table[tempScope][p[0].val]) == len(p[0].array) + 1)):
-      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val)
-  if(len(p[0].parentStruct) > 0):
-    found_scope = find_scope(p[0].parentStruct , p[1].lno)
-    for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
-      # print(curr_list)
-      if curr_list[1] == p[0].val:
-        if(len(curr_list) < 5 and len(p[0].array) == 0):
-          break
-        if(len(curr_list) < 5 or (len(curr_list[4]) == len(p[0].array) - 1)):
-          print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+  # if(len(p[0].array) > 0 and len(p[0].parentStruct) == 0 and (('array' not in symbol_table[tempScope][p[0].val].keys() and len(p[0].array) == 1) or len(symbol_table[tempScope][p[0].val]) == len(p[0].array) + 1)):
+  #     print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val)
+  # if(len(p[0].parentStruct) > 0):
+  #   found_scope = find_scope(p[0].parentStruct , p[1].lno)
+  #   for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
+  #     # print(curr_list)
+  #     if curr_list[1] == p[0].val:
+  #       if(len(curr_list) < 5 and len(p[0].array) == 0):
+  #         break
+  #       if(len(curr_list) < 5 or (len(curr_list[4]) == len(p[0].array) - 1)):
+  #         print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+  if(p[0].level == -1):
+    print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+
 
   curscp = currentScope
   if(p[3].type not in ['char', 'short', 'int', 'long']):
@@ -331,22 +338,26 @@ def p_postfix_expression_5(p):
       flag = 1 
       p[0].type = curr_list[0]
       p[0].parentStruct = struct_name
+      if(len(curr_list) == 5):
+        p[0].level = len(curr_list[4])
+  if(p[0].level == -1):
+    print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
  
-  if(len(p[1].parentStruct) > 0):
-    found_scope = find_scope(p[1].parentStruct , p[1].lno)
-    for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
-      # print(curr_list)
-      if curr_list[1] == p[1].val:
-        if(len(curr_list) < 5 and len(p[1].array) == 0):
-          break
-        if(len(curr_list) < 5 or (len(curr_list[4]) > len(p[1].array))):
-          print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions for " + p[1].val)
-  else:
-    tempScope = find_scope(p[1].val, p.lineno(1))
-    if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
-      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
-    elif(len(p[1].array) == 0 and 'array' in symbol_table[tempScope][p[1].val].keys()):
-      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
+  # if(len(p[1].parentStruct) > 0):
+  #   found_scope = find_scope(p[1].parentStruct , p[1].lno)
+  #   for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
+  #     # print(curr_list)
+  #     if curr_list[1] == p[1].val:
+  #       if(len(curr_list) < 5 and len(p[1].array) == 0):
+  #         break
+  #       if(len(curr_list) < 5 or (len(curr_list[4]) > len(p[1].array))):
+  #         print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions for " + p[1].val)
+  # else:
+  #   tempScope = find_scope(p[1].val, p.lineno(1))
+  #   if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
+  #     print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
+  #   elif(len(p[1].array) == 0 and 'array' in symbol_table[tempScope][p[1].val].keys()):
+      # print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
 
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + p[3] + " not declared in " + struct_name)
@@ -815,10 +826,14 @@ def p_assignment_expression(p):
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_scope(p[1].val, p.lineno(1))
-    if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
-      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
-    elif(len(p[1].array) == 0 and (len(p[1].parentStruct) == 0) and 'array' in symbol_table[tempScope][p[1].val].keys()):
-      print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
+    # if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
+    #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
+    # elif(len(p[1].array) == 0 and (len(p[1].parentStruct) == 0) and 'array' in symbol_table[tempScope][p[1].val].keys()):
+    #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
+    if(p[1].level != p[3].level):
+      print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+    if(p[1].level != 0 or p[3].level != 0):
+      print("COMPILATION ERROR at line ", str(p[1].lno), ", cannot assign array pointer")
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
@@ -840,7 +855,7 @@ def p_assignment_expression(p):
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
         print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
     
-    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [])
+    p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
@@ -1029,6 +1044,8 @@ def p_init_declarator(p):
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
     if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
+    if(p[1].level != p[3].level):
+      print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -1806,7 +1823,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
