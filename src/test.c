@@ -4,5 +4,8 @@ int funv(int a,int b){
 }
 int main()
 {
-    funv(1,2);
+    int i = 0;
+    for(i = 0;i < 10;i++){
+        i++;
+    }
 }

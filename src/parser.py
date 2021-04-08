@@ -1882,7 +1882,7 @@ def p_switch(p):
   p[0] = p[1]
   global switchDepth
   switchDepth += 1
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 # remember : here statement added in grammar
 def p_iteration_statement_1(p):
@@ -1891,14 +1891,14 @@ def p_iteration_statement_1(p):
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
-    p[0].ast = build_AST(p,[2,4])
+    p[0] = build_AST(p,[2,4])
   
 def p_while(p):
   '''while : WHILE'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_iteration_statement_2(p):
     '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
@@ -1912,7 +1912,7 @@ def p_do(p):
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_iteration_statement_3(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
@@ -1932,8 +1932,9 @@ def p_for(p):
   '''for : FOR'''
   global loopingDepth
   loopingDepth += 1
+  # p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1))
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_jump_statement(p):
     '''jump_statement : RETURN SEMICOLON
