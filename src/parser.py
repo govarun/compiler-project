@@ -1102,13 +1102,15 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0 
+    max_size = 0
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
-      curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
+      SZ = get_data_type_size(child.type)
+      curr_list = [child.type, child.val, SZ, curr_offset]
       totalEle = 1
       if(len(child.array) > 0):
         curr_list.append(child.array)
@@ -1116,7 +1118,14 @@ def p_struct_or_union_specifier(p):
           totalEle *= ele
       curr_offset = curr_offset + get_data_type_size(child.type)*totalEle
       curr_list[2] *= totalEle
+      SZ *= totalEle
+      max_size = max(max_size , SZ)
+      if p[1].type == 'union':
+        curr_list[3] = 0
       temp_list.append(curr_list)
+
+    if p[1].type == 'union':
+      curr_offset = max_size
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
@@ -1124,17 +1133,8 @@ def p_struct_or_union_specifier(p):
 
   if len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
-    # print(p[0].type)
-    flag = 0
-    curscp = currentScope
-    while(parent[curscp] != curscp):
-      if(p[0].type in symbol_table[curscp].keys()):
-        flag = 1
-      curscp = parent[curscp]
-    if (curscp == 0):
-      if(p[0].type in symbol_table[curscp].keys()):
-        flag = 1
-    if(flag == 0):
+    found_scope = find_scope(p[0].type, p[1].lno)
+    if(found_scope == -1):
       print("COMPILATION ERROR : at line " + str(p[1].lno) + ", " + p[0].type + " is not a type")
 
 
@@ -1145,7 +1145,11 @@ def p_struct_or_union(p):
   '''
 
   # p[0] = build_AST(p)
-  p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
+  # print(p[1])
+  if p[1] == 'struct':
+    p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
+  else:
+    p[0] = Node(name = 'StructOrUNion', val = '', type = 'union', lno = p.lineno(1), children = [])
 
 def p_struct_declaration_list(p):
   '''struct_declaration_list : struct_declaration
