@@ -1245,17 +1245,6 @@ def p_struct_or_union_specifier(p):
   elif len(p) == 3:
     p[0].type = p[1].type + ' ' + p[2]
     p[0].ast = build_AST(p)
-    # print(p[0].type)
-    flag = 0
-    curscp = currentScope
-    while(parent[curscp] != curscp):
-      if(p[0].type in symbol_table[curscp].keys()):
-        flag = 1
-      curscp = parent[curscp]
-    if (curscp == 0):
-      if(p[0].type in symbol_table[curscp].keys()):
-        flag = 1
-    if(flag == 0):
     found_scope = find_scope(p[0].type, p[1].lno)
     if(found_scope == -1):
       print("COMPILATION ERROR : at line " + str(p[1].lno) + ", " + p[0].type + " is not a type")
@@ -1269,8 +1258,6 @@ def p_struct_or_union(p):
   '''
 
   # p[0] = build_AST(p)
-  # p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
-  
   # print(p[1])
   if p[1] == 'struct':
     p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
