@@ -1491,7 +1491,7 @@ def p_direct_declarator_2(p):
   p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
   p[0].ast = build_AST(p)
   p[0].array = copy.deepcopy(p[1].array)
-  p[0].array.append(int(p[3]))
+  p[0].array.append(int(p[3][0]))
 
 def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
@@ -1734,7 +1734,8 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
-    p[0] = p[1]
+    # p[0] = p[1]
+    p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p)
     # print('here', p[0])
 def p_labeled_statement_1(p):
@@ -1868,7 +1869,7 @@ def p_selection_statement_2(p):
 def p_if(p):
   '''if : IF'''
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_selection_statement_3(p):
     '''selection_statement : switch LPAREN expression RPAREN statement'''
@@ -1882,7 +1883,7 @@ def p_switch(p):
   p[0] = p[1]
   global switchDepth
   switchDepth += 1
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 # remember : here statement added in grammar
 def p_iteration_statement_1(p):
@@ -1891,14 +1892,14 @@ def p_iteration_statement_1(p):
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
-    p[0].ast = build_AST(p,[2,4])
+    p[0] = build_AST(p,[2,4])
   
 def p_while(p):
   '''while : WHILE'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_iteration_statement_2(p):
     '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
@@ -1912,7 +1913,7 @@ def p_do(p):
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_iteration_statement_3(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
@@ -1932,8 +1933,9 @@ def p_for(p):
   '''for : FOR'''
   global loopingDepth
   loopingDepth += 1
+  # p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1))
   p[0] = p[1]
-  p[0].ast = build_AST(p)
+  p[0] = build_AST(p)
 
 def p_jump_statement(p):
     '''jump_statement : RETURN SEMICOLON
