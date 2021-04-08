@@ -834,6 +834,8 @@ def p_assignment_expression(p):
     #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+    if(p[1].level != 0 or p[3].level != 0):
+      print("COMPILATION ERROR at line ", str(p[1].lno), ", cannot assign array pointer")
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
