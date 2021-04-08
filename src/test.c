@@ -1,7 +1,6 @@
 int main()
 {
-    int x, y;
-    {   
-        return 0 ;
-    }
+    int *x;
+    int y = *x;
+    return 0;
 }

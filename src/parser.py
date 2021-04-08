@@ -1822,7 +1822,7 @@ def p_statement_list(p):
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
-      print('here',p[0])
+      # print('here',p[0])
       # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
