@@ -350,7 +350,6 @@ def p_postfix_expression_5(p):
   # TODO : p[3] should be a field of (get from symbol table - struct point)
   
 
-  # print("here : ", p[2])
   if (not p[1].name.startswith('Period')):
     struct_scope = find_scope(p[1].val , p[1].lno)
     if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
@@ -359,17 +358,17 @@ def p_postfix_expression_5(p):
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   p[0].ast = build_AST(p)
   struct_name = p[1].type
-  if (struct_name.endswith('*') and p[2] == '.') or (not struct_name.endswith('*') and p[2] == '->') :
-    print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " + p[2] + " on " + struct_name)
+  if (struct_name.endswith('*') and p[2][0] == '.') or (not struct_name.endswith('*') and p[2][0] == '->') :
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " +  " on " + struct_name)
   if(not struct_name.startswith('struct')):
     print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
     return
-  #print("here : ", struct_name)
+
   found_scope = find_scope(struct_name , p[1].lno) 
   flag = 0 
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
-    # print(curr_list)
-    if curr_list[1] == p[3]:
+
+    if curr_list[1] == p[3][0]:
       flag = 1 
       p[0].type = curr_list[0]
       p[0].parentStruct = struct_name
@@ -395,7 +394,7 @@ def p_postfix_expression_5(p):
       # print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
 
   if flag == 0 :
-    print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + p[3] + " not declared in " + struct_name)
+    print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + " not declared in " + struct_name)
   #print("p_postfix_Expression_5 : type = ", p[0].type, " id = " , p[3])
  
   # structure things , do later
@@ -429,8 +428,6 @@ def p_argument_expression_list(p):
     p[0] = p[1]
     p[0].children.append(p[3])
     p[0].ast = build_AST(p,[2])
-    # for child in p[0].children:
-    #   print(symbol_table[currentScope][child.val]['type'])
   #p[0] = Node()
   # p[0] = build_AST(p)
 
@@ -447,7 +444,6 @@ def p_unary_expression_1(p):
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
-    #print("p_unary_expression : ", p[1].type)
   else:
     #check lineno
     #also check if child should be added or not
@@ -550,7 +546,10 @@ def p_multipicative_expression(p):
 
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')
+      else:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -600,22 +599,34 @@ def p_additive_expression(p):
       return
     elif(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
       if(p[3].type == 'float'):
-        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+        if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+        else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
       if(p[1].type == 'float'):
-        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+        if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+        else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[1].type.endswith('*') and p[3].type.endswith('*')):
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     else :
       type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
       if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')  
+        if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+        else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
       p[0].ast = build_AST(p)
@@ -649,7 +660,10 @@ def p_shift_expression(p):
     # We know shift only possible in int(unsigned) type, so no need to pass for now
     type_list = ['short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -684,7 +698,10 @@ def p_relational_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -714,7 +731,10 @@ def p_equality_expresssion(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -776,7 +796,10 @@ def p_exclusive_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
@@ -804,7 +827,10 @@ def p_inclusive_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -832,7 +858,11 @@ def p_logical_and_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
       print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
@@ -859,7 +889,11 @@ def p_logical_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      if(p[2] is tuple):
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
+      else:
+          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+
 
     found_scope = find_scope(p[1].val, p[1].lno)
     if (found_scope != -1) and (p[1].isFunc == 1):
@@ -1000,13 +1034,11 @@ def p_declaration(p):
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p,[3])
-    #fill later
-    # print(p[1].type)
     flag = 1
     if('void' in p[1].type.split()):
       flag = 0
     for child in p[2].children:
-      # print(child.name)
+
       if(child.name == 'InitDeclarator'):
         if(p[1].type.startswith('typedef')):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")

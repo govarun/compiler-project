@@ -1,14 +1,8 @@
-struct point{
-    int x ;
-    void y ;
-    void* z ;
-}
-int func(void w)
-{
-    void *ww ;
+int funv(int a,int b){
+    int c = 1;
+    return 2;
 }
 int main()
 {
-    struct point p ;
-    p.x = 5 ;
+    funv(1,2);
 }
