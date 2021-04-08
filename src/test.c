@@ -5,6 +5,5 @@ int f(int x, int y){
 
 int main()
 {
-    int x = f(1);
-    return 0;
+    void x, *y, z ;
 }

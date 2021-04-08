@@ -912,6 +912,9 @@ def p_declaration(p):
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     #fill later
     # print(p[1].type)
+    flag = 1
+    if('void' in p[1].type.split()):
+      flag = 0
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -933,6 +936,8 @@ def p_declaration(p):
         if(len(child.children[0].type) > 0):
           symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
           symbol_table[currentScope][child.children[0].val]['size'] = 8
+        elif(flag == 0):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
         # print(p[1].type)
@@ -966,6 +971,8 @@ def p_declaration(p):
         if(len(child.type) > 0):
           symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
           symbol_table[currentScope][child.val]['size'] = 8
+        elif(flag == 0):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
         symbol_table[currentScope][child.val]['size'] *= totalEle
         # TODO : Confirm with others about two possible approaches
         # if(p[1].type.startswith('struct')):
