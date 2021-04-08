@@ -4,6 +4,7 @@ import ply.yacc as yacc
 import sys
 import pydot
 import copy
+import json
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens
@@ -91,7 +92,7 @@ def get_data_type_size(type_1):
   type_size['void'] = 0
   if(type_1.endswith('*')):
     return 8
-  if( type_1.startswith('struct')):
+  if( type_1.startswith('struct') or type_1.startswith('union')):
     curscp = currentScope
     while(parent[curscp] != curscp):
       if(type_1 in symbol_table[curscp].keys()):
@@ -295,7 +296,7 @@ def p_postfix_expression_3(p):
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
-    print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")  
+    print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call")  
   
 # def compare_types(call_type,argument):
 #   if(call_type == '' or argument == ''):
@@ -321,7 +322,7 @@ def p_postfix_expression_4(p):
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
   elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
-    print("Syntax Error at line " + p[1].lno + " Incorrect number of arguments for function call")
+    print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
   else:
     i = 0
     # curScope = symbol_table[0][p[1].val]['FunctionScope']
@@ -360,6 +361,9 @@ def p_postfix_expression_5(p):
   struct_name = p[1].type
   if (struct_name.endswith('*') and p[2] == '.') or (not struct_name.endswith('*') and p[2] == '->') :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " + p[2] + " on " + struct_name)
+  if(not struct_name.startswith('struct')):
+    print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
+    return
   #print("here : ", struct_name)
   found_scope = find_scope(struct_name , p[1].lno) 
   flag = 0 
@@ -998,6 +1002,9 @@ def p_declaration(p):
     p[0].ast = build_AST(p,[3])
     #fill later
     # print(p[1].type)
+    flag = 1
+    if('void' in p[1].type.split()):
+      flag = 0
     for child in p[2].children:
       # print(child.name)
       if(child.name == 'InitDeclarator'):
@@ -1019,6 +1026,8 @@ def p_declaration(p):
         if(len(child.children[0].type) > 0):
           symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
           symbol_table[currentScope][child.children[0].val]['size'] = 8
+        elif(flag == 0):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       else:
         # print(p[1].type)
@@ -1052,6 +1061,8 @@ def p_declaration(p):
         if(len(child.type) > 0):
           symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
           symbol_table[currentScope][child.val]['size'] = 8
+        elif(flag == 0):
+          print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
         symbol_table[currentScope][child.val]['size'] *= totalEle
         # TODO : Confirm with others about two possible approaches
         # if(p[1].type.startswith('struct')):
@@ -1202,13 +1213,15 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0 
+    max_size = 0
     for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
-      curr_list = [child.type, child.val, get_data_type_size(child.type), curr_offset]
+      SZ = get_data_type_size(child.type)
+      curr_list = [child.type, child.val, SZ, curr_offset]
       totalEle = 1
       if(len(child.array) > 0):
         curr_list.append(child.array)
@@ -1216,7 +1229,14 @@ def p_struct_or_union_specifier(p):
           totalEle *= ele
       curr_offset = curr_offset + get_data_type_size(child.type)*totalEle
       curr_list[2] *= totalEle
+      SZ *= totalEle
+      max_size = max(max_size , SZ)
+      if p[1].type == 'union':
+        curr_list[3] = 0
       temp_list.append(curr_list)
+
+    if p[1].type == 'union':
+      curr_offset = max_size
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
@@ -1236,6 +1256,8 @@ def p_struct_or_union_specifier(p):
       if(p[0].type in symbol_table[curscp].keys()):
         flag = 1
     if(flag == 0):
+    found_scope = find_scope(p[0].type, p[1].lno)
+    if(found_scope == -1):
       print("COMPILATION ERROR : at line " + str(p[1].lno) + ", " + p[0].type + " is not a type")
   else:
     p[0].ast = build_AST(p,[2,4])
@@ -1247,8 +1269,15 @@ def p_struct_or_union(p):
   '''
 
   # p[0] = build_AST(p)
-  p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
-  p[0].ast = build_AST(p)
+  # p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
+  
+  # print(p[1])
+  if p[1] == 'struct':
+    p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
+    p[0].ast = build_AST(p)
+  else:
+    p[0] = Node(name = 'StructOrUNion', val = '', type = 'union', lno = p.lineno(1), children = [])
+    p[0].ast = build_AST(p)
 
 def p_struct_declaration_list(p):
   '''struct_declaration_list : struct_declaration
@@ -2026,3 +2055,5 @@ def visualize_symbol_table():
       print('\nIn Scope ' + str(i))
       for key in symbol_table[i].keys():
         print(key, symbol_table[i][key])
+      # json_object = json.dumps(symbol_table[i], indent = 4)
+      # print(json_object)
