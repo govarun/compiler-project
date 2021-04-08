@@ -22,10 +22,7 @@ symbol_table.append({})
 currentScope = 0
 nextScope = 1
 parent = {}
-# scopeName = {}
 parent[0] = 0
-# scopeName[0] = 0
-# curScopeName = 0
 loopingDepth = 0
 switchDepth = 0
 size={}
@@ -35,7 +32,7 @@ size['float'] = 4
 
 
 class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = ''):
+  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0, parentStruct = '',ast):
     self.name = name
     self.val = val
     self.type = type
@@ -45,6 +42,7 @@ class Node:
     self.maxDepth = maxDepth
     self.isFunc = isFunc
     self.parentStruct = parentStruct
+    self.ast = ast
     if children:
       self.children = children
     else:
