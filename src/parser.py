@@ -159,6 +159,11 @@ def find_scope(id, lineno):
   return -1
 
 
+def check_invalid_operation_on_function(node):
+  found_scope = find_scope(node.val, node.lno)
+  if (found_scope != -1) and (node.isFunc == 1):
+    print("Compilation Error at line", str(node.lno), ":Invalid operation on", node.val)
+
 cur_num = 0
 
 def build_AST(p,nope = []):
@@ -553,13 +558,8 @@ def p_multipicative_expression(p):
       else:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)      
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])    
     
     if(p[2] == '%'):
       valid_type = ['char' , 'short' , 'int' , 'long']
@@ -633,13 +633,8 @@ def p_additive_expression(p):
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
       p[0].ast = build_AST(p)
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
 ##############
 
@@ -667,13 +662,8 @@ def p_shift_expression(p):
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
     higher_data_type = get_higher_data_type(p[1].type , p[3].type)
     p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = higher_data_type,children = [])
@@ -705,13 +695,8 @@ def p_relational_expression(p):
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
     p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
@@ -738,13 +723,8 @@ def p_equality_expresssion(p):
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)  
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
     p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
@@ -770,13 +750,8 @@ def p_and_expression(p):
     if p[1].type.split()[-1] not in valid or p[3].type.split()[-1] not in valid:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[3].type, 'for the AND operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
     
     p[0].type = 'int' # should not be char, even if the and was done for two chars
 
@@ -802,13 +777,8 @@ def p_exclusive_or_expression(p):
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
     p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
@@ -834,13 +804,9 @@ def p_inclusive_or_expression(p):
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
     
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
     p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
 
@@ -865,13 +831,8 @@ def p_logical_and_expression(p):
       else:
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
     p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
 
@@ -897,13 +858,8 @@ def p_logical_or_expression(p):
           print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
 
 
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and (p[1].isFunc == 1):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and (p[3].isFunc == 1):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
     p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
 
@@ -966,13 +922,8 @@ def p_assignment_expression(p):
             break
           if(len(curr_list) < 5 or (len(curr_list[4]) < len(p[1].array))):
             print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions")
-    found_scope = find_scope(p[1].val, p[1].lno)
-    if (found_scope != -1) and ((p[1].isFunc == 1)):
-      print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-    found_scope = find_scope(p[3].val, p[3].lno)
-    if (found_scope != -1) and ((p[3].isFunc == 1)):
-      print("Compilation Error at line", str(p[3].lno), ":Invalid operation on", p[3].val)
+    check_invalid_operation_on_function(p[1])
+    check_invalid_operation_on_function(p[3])
 
     if p[2].val != '=':
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
@@ -2084,10 +2035,10 @@ def visualize_symbol_table():
     outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0):
-      # print('\nIn Scope ' + str(i))
+      print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        # print(key, symbol_table[i][key])
+        print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
       json_object = json.dumps(temp_list, indent = 4)
