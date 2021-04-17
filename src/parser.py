@@ -78,6 +78,8 @@ def emit(s):
   # else if (s_tokens[0] == "goto"):
 
   # else if (s_tokens[]) 'param' or 'call'
+  global emit_array
+  global nextstat
   emit_array.append(s)
   nextstat += 1
 
@@ -99,7 +101,8 @@ def make_list(i = -1):
   return new_list
 
 def new_label():
-  s = "t" + str(label_cnt)
+  global label_cnt
+  s = "t_" + str(label_cnt)
   label_cnt += 1
   return s
 
@@ -256,7 +259,7 @@ def build_AST(p,nope = []):
 
 def p_primary_expression_0(p):
   '''primary_expression : ID'''
-  p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+  p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
   if(temp != -1):
     # if('type' in symbol_table[temp][p[1]]):
@@ -266,6 +269,7 @@ def p_primary_expression_0(p):
     if('isFunc' in symbol_table[temp][p[1]]):
       p[0].isFunc = 1
     p[0].ast = build_AST(p)
+
 
 def p_primary_expression_1(p):
   '''primary_expression : OCTAL_CONST
@@ -278,6 +282,7 @@ def p_primary_expression_1(p):
     p[0] = p[2]
     p[0].ast = build_AST(p,[1,3])
     # p[0].name = 'primaryExpression'
+    # place copied automatically
   else:
     p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
     
@@ -314,7 +319,7 @@ def p_postfix_expression_1(p):
 def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
-  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct)
+  p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct, place = p[1].place)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
   p[0].level = p[1].level - 1
@@ -341,7 +346,7 @@ def p_postfix_expression_2(p):
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
-  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]],isFunc=0)
+  p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]],isFunc=0, place = p[1].place)
   p[0].ast = build_AST(p,[2,3])
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
@@ -366,7 +371,7 @@ def p_postfix_expression_3(p):
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
-  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0)
+  p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0, place = p[1].place)
   # print(p[1].val)
   p[0].ast = build_AST(p,[2,4])
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
@@ -405,7 +410,7 @@ def p_postfix_expression_5(p):
     if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
       print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
-  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
+  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [], place = p[1].place)
   p[0].ast = build_AST(p)
   struct_name = p[1].type
   if (struct_name.endswith('*') and p[2][0] == '.') or (not struct_name.endswith('*') and p[2][0] == '->') :
@@ -454,13 +459,12 @@ def p_postfix_expression_5(p):
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
 	| postfix_expression DECREMENT'''
-  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [])
+  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [], place = p[1].place)
   p[0].ast = build_AST(p)
   found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and ((p[1].isFunc == 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-
-
+  emit(p[1].val + p[2])
 
 #################
 
