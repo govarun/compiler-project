@@ -25,6 +25,8 @@ currentScope = 0
 nextScope = 1
 parent = {}
 parent[0] = 0
+offset = {}
+offset[0] = 0
 loopingDepth = 0
 switchDepth = 0
 size={}
@@ -1050,6 +1052,7 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
         symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
+        symbol_table[currentScope][child.children[0].val]['offset'] = offset[currentScope]
         totalEle = 1
         if(len(child.children[0].array) > 0):
           symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
@@ -1061,30 +1064,15 @@ def p_declaration(p):
         elif(flag == 0):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
+        offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
       else:
-        # print(p[1].type)
-        # print("here : ", child.val)
-        # if(p[1].type.startswith('typedef')):
-        #   to_be_typedef = []
-        #   for i in p[1].type.split():
-        #     if(i != 'typedef'):
-        #       to_be_typedef.append(i)
-        #   # print(to_be_typedef)
-        #   for i in child.type:
-        #     to_be_typedef.append(i)
-        #   to_be_typedef_str = ' '.join([str(elem) for elem in to_be_typedef])
-        #   if(to_be_typedef_str not in typedef_list.keys()):
-        #     typedef_list[to_be_typedef_str] = [child.val]
-        #     all_typedef.append(child.val)
-        #   else:
-        #     typedef_list[to_be_typedef_str].append(child.val)
-        #     all_typedef.append(child.val)
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
         # print(p[1].type)
         symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
+        symbol_table[currentScope][child.val]['offset'] = offset[currentScope]
         totalEle = 1
         if(len(child.array) > 0):
           symbol_table[currentScope][child.val]['array'] = child.array
@@ -1096,6 +1084,7 @@ def p_declaration(p):
         elif(flag == 0):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
         symbol_table[currentScope][child.val]['size'] *= totalEle
+        offset[currentScope] += symbol_table[currentScope][child.val]['size']
         # TODO : Confirm with others about two possible approaches
         # if(p[1].type.startswith('struct')):
         #   found_scope = find_if_ID_is_declared(p[1].type, p.lineno(1))
@@ -1613,6 +1602,10 @@ def p_parameter_declaration(p):
       if(len(p[2].array) > 0):
         symbol_table[currentScope][p[2].val]['array'] = p[2].array
 
+      symbol_table[currentScope][p[2].val]['offset'] = offset[currentScope]
+      #have assumed that paramters of a function can be pointer or basics data types only
+      offset[currentScope] += symbol_table[currentScope][p[2].val]['size']
+
 
 def p_identifier_list(p):
     '''identifier_list : ID
@@ -2035,6 +2028,7 @@ def p_openbrace(p):
   global currentScope
   global nextScope
   parent[nextScope] = currentScope
+  offset[nextScope] = 0
   currentScope = nextScope
   symbol_table.append({})
   nextScope = nextScope + 1
@@ -2046,6 +2040,7 @@ def p_lopenparen(p):
   global currentScope
   global nextScope
   parent[nextScope] = currentScope
+  offset[nextScope] = 0
   currentScope = nextScope
   symbol_table.append({})
   nextScope = nextScope + 1

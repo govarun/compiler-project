@@ -1,17 +1,73 @@
 In "global"{
+    "x": {
+        "isFunc": 1,
+        "argumentList": [
+            "int"
+        ],
+        "type": "float"
+    },
     "main": {
         "type": "int",
         "isFunc": 1,
         "argumentList": []
     }
 }
-In "main"{
-    "x": {
-        "type": "int",
-        "size": 4
-    },
+In "x"{
     "y": {
         "type": "int",
-        "size": 4
+        "size": 4,
+        "offset": 0
+    },
+    "c": {
+        "type": "int",
+        "size": 16,
+        "offset": 4,
+        "array": [
+            4
+        ]
+    },
+    "z": {
+        "type": "int",
+        "size": 4,
+        "offset": 20
+    }
+}
+In "main"{
+    "y": {
+        "type": "int",
+        "size": 4,
+        "offset": 0
+    },
+    "a": {
+        "type": "int",
+        "size": 48,
+        "offset": 4,
+        "array": [
+            3,
+            4
+        ]
+    },
+    "z": {
+        "type": "int",
+        "size": 12,
+        "offset": 52,
+        "array": [
+            3
+        ]
+    },
+    "p1": {
+        "type": "struct point",
+        "size": 8,
+        "offset": 64
+    },
+    "m": {
+        "type": "char",
+        "size": 1,
+        "offset": 72
+    },
+    "n": {
+        "type": "char",
+        "size": 1,
+        "offset": 73
     }
 }
