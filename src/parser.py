@@ -36,8 +36,9 @@ size['float'] = 4
 scope_to_function = {}
 scope_to_function[0] = 'global'
 nextstat = 0 # next instruction pointer
-emit_array = [] #address code array
+emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
 label_cnt = 0
+CONST_SCOPE = -10
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
@@ -77,19 +78,20 @@ def emit(s):
   # s_tokens = s.split()
   # if (s_tokens[0] == "if"):
   #   # Pass s to iteration statement handling function
-  # else if (s_tokens[0] == "goto"):
+  # elif (s_tokens[0] == "goto"):
 
-  # else if (s_tokens[]) 'param' or 'call'
+  # elif (s_tokens[]) 'param' or 'call'
   global emit_array
   global nextstat
   emit_array.append(s)
   nextstat += 1
 
 def backpatch(to_patch, instr):
-  global emit_array
   # we are expecting to_patch to be a list of integers here
+  # when the operator is goto, the quad will be: [goto, instr number, , ]
+  global emit_array
   for i in range(len(to_patch)):
-    emit_array[to_patch[i]] = emit_array[to_patch[i]].replace("__", str(instr))
+    emit_array[to_patch[i]][1] = str(instr)
 
 def merge(list1, list2):
   return (list1 + list2)
@@ -104,9 +106,20 @@ def make_list(i = -1):
 
 def new_label():
   global label_cnt
-  s = "t_" + str(label_cnt)
+  s = "__t_" + str(label_cnt)
   label_cnt += 1
   return s
+
+def insert_in_sym_table(label, dtype):
+  # symbol_table[0][label]['value'] = 
+  symbol_table[0][label] = {}
+  symbol_table[0][label]['type'] = dtype
+  symbol_table[0][label]['size'] = get_data_type_size(dtype)
+
+def get_label(dtype):
+  label = new_label()
+  insert_in_sym_table(label, dtype)
+  return label
 
 def get_higher_data_type(type_1 , type_2):
   if(type_1.endswith('*')):
@@ -195,7 +208,7 @@ def find_if_ID_is_declared(id,lineno):
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
   return -1
 
-def find_scope(id, lineno):
+def find_scope(id, lineno = -1): #default value kept, because it is not needed, and has been passed in code at some places
   curscp = currentScope
   # print("here" + str(curscp))
   while(parent[curscp] != curscp):
@@ -207,6 +220,7 @@ def find_scope(id, lineno):
     if(id in symbol_table[curscp].keys()):
       return curscp
   return -1
+
 
 def check_invalid_operation_on_function(node):
   found_scope = find_scope(node.val, node.lno)
@@ -291,17 +305,17 @@ def p_primary_expression_1(p):
 
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const char',children = [])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
   '''primary_expression : INT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const int',children = [])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const float',children = [])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_5(p):
@@ -466,7 +480,7 @@ def p_postfix_expression_6(p):
   found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and ((p[1].isFunc == 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-  emit(p[1].val + p[2])
+  # emit(p[1].val + p[2])
 
 #################
 
@@ -1174,6 +1188,9 @@ def p_init_declarator(p):
       print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
+      
+    # print(p[3].name, "fn name:p_init_declarator")
+    # emit(["=",[p[3].place, ], [], [p[1].place], find_scope(p[1].val)]) # a = 5 ,  a = t1
 
 def p_storage_class_specifier(p):
   '''storage_class_specifier : TYPEDEF
@@ -1696,7 +1713,7 @@ def p_initializer(p):
       p[0].ast = build_AST(p)
     else:
       p[0] = p[2]
-    p[0].name = 'Initializer'
+      p[0].name = 'Initializer'
     if(len(p) == 4):
       p[0].maxDepth = p[2].maxDepth + 1
       p[0].ast = build_AST(p,[1,3])

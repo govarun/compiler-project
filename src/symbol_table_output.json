@@ -1,0 +1,15 @@
+In "global"{
+    "main": {
+        "type": "int",
+        "isFunc": 1,
+        "argumentList": []
+    }
+}
+In "main"{
+    "a": {
+        "type": "int",
+        "value": "",
+        "size": 4,
+        "offset": 0
+    }
+}
