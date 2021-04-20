@@ -135,6 +135,11 @@ def int_or_real(dtype):
   else:
     return 'real' 
 
+def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
+  emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
+  #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
+
+
 def get_higher_data_type(type_1 , type_2):
   if(type_1.endswith('*')):
     return type_1
@@ -319,17 +324,17 @@ def p_primary_expression_1(p):
 
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const char',children = [], place = p[1])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
   '''primary_expression : INT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const int',children = [], place = p[1])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const float',children = [], place = p[1])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_5(p):
@@ -497,7 +502,7 @@ def p_postfix_expression_6(p):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   # emit(p[1].val + p[2])
   emit('=', p[1].place, '', tmp)
-  emit(int_or_real(p[1].type) + '+',1,p[1].place, p[1].place)
+  emit(int_or_real(p[1].type) + '_' + '+',1,p[1].place, p[1].place)
 
 #################
 
@@ -541,7 +546,7 @@ def p_unary_expression_1(p):
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc == 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
-    emit(int_or_real(p[2].type) + '+' , 1, p[2].place, p[0].place)
+    emit(int_or_real(p[2].type) + '_' + '+' , 1, p[2].place, p[0].place)
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
@@ -560,7 +565,7 @@ def p_unary_expression_2(p):
     tmp = get_label(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
-    emit(int_or_real(p[2].type) + 'uminus', p[2].place, '', p[0].place)
+    emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
   else:
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = p[2].place)
     p[0].ast = build_AST(p)
@@ -613,8 +618,7 @@ def p_cast_expression(p):
     tmp = get_label(p[2].type)
     p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
     p[0].ast = build_AST(p,[1,3])
-    emit(int_or_real(p[2].type) + '_' + int_or_real(p[4].type) + '=', p[4].place, '', p[0].place)
-
+    change_data_type_emit(p[4].type, p[2].type, p[4].place, p[0].place)
 ################
 
 #No type should be passed in below cases since multiplication, division, add, sub work
@@ -641,7 +645,7 @@ def p_multipicative_expression(p):
 
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
-      if(p[2] is tuple):
+      if(type(p[2]) is tuple):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')
       else:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
@@ -670,6 +674,26 @@ def p_multipicative_expression(p):
       p[0] = Node(name = 'MulDiv',val = p[1].val,lno = p[1].lno,type = return_data_type,children = [])
       p[0].ast = build_AST(p)
 
+    # handling the emits
+    operator = ''
+    if (type(p[2]) is tuple):
+      operator = p[2][0]
+    else:
+      operator = p[2]
+    if (operator == '*' or operator == '/'):
+      higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+      return_tmp = get_label(higher_data_type)
+      p[0].place = return_tmp
+      if (p[1].type != higher_data_type):
+        tmp = get_label(higher_data_type)
+        change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+        emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
+      if (p[3].type != higher_data_type):
+        tmp = get_label(higher_data_type)
+        change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+    if (operator == '%'): #assuming mod only handles int
+      emit(int_or_real(p[1].type) + '_' + '%', p[1].place, p[3].place, p[0].place)
 ###############
 
 def p_additive_expression(p):
@@ -723,6 +747,25 @@ def p_additive_expression(p):
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
+    
+    # handling emits
+    operator = ''
+    if (type(p[2]) is tuple):
+      operator = str(p[2][0])
+    else:
+      operator = str(p[2])
+    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+    return_tmp = get_label(higher_data_type)
+    p[0].place = return_tmp
+    if (p[1].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
+    if (p[3].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+
 
 ##############
 
@@ -757,6 +800,25 @@ def p_shift_expression(p):
     p[0] = Node(name = 'Shift',val = '',lno = p[1].lno,type = higher_data_type,children = [])
     p[0].ast = build_AST(p)
 
+    # handling emits
+    operator = ''
+    if (type(p[2]) is tuple):
+      operator = str(p[2][0])
+    else:
+      operator = str(p[2])
+    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+    return_tmp = get_label(higher_data_type)
+    p[0].place = return_tmp
+    if (p[1].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
+    if (p[3].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+
+
 ##############
 
 def p_relational_expression(p):
@@ -789,6 +851,24 @@ def p_relational_expression(p):
     p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
 
+    # handling emits
+    operator = ''
+    if (type(p[2]) is tuple):
+      operator = str(p[2][0])
+    else:
+      operator = str(p[2])
+    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+    return_tmp = get_label(higher_data_type)
+    p[0].place = return_tmp
+    if (p[1].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
+    if (p[3].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
 	| equality_expression EQUAL relational_expression
@@ -816,6 +896,24 @@ def p_equality_expresssion(p):
 
     p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
+
+    # handling emits
+    operator = ''
+    if (type(p[2]) is tuple):
+      operator = str(p[2][0])
+    else:
+      operator = str(p[2])
+    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+    return_tmp = get_label(higher_data_type)
+    p[0].place = return_tmp
+    if (p[1].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
+    if (p[3].type != higher_data_type):
+      tmp = get_label(higher_data_type)
+      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
 
 def p_and_expression(p):
   '''and_expression : equality_expression
@@ -1186,7 +1284,7 @@ def p_init_declarator_list(p):
     p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
     p[0].ast = build_AST(p)
   else:
-    #check onceƒ
+    #check once
     p[0] = p[1]
     p[0].children.append(p[3])
     p[0].ast = build_AST(p,[2])
@@ -2104,7 +2202,8 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
+  print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -2112,6 +2211,13 @@ def runmain(code):
   # print(len(graphs))
   graph = graphs[0]
   graph.write_png('pydot_graph.png')
+
+def print_emit_array(debug = False):
+  global emit_array
+  if (debug == False):
+    return
+  for i in emit_array:
+    print(i)
 
 def visualize_symbol_table():
   global scopeName
