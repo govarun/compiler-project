@@ -97,7 +97,7 @@ def make_list(i = -1):
     new_list.append(int(i))
   return new_list
 
-def new_label():
+def _new_label():
   global label_cnt
   s = "__t_" + str(label_cnt)
   label_cnt += 1
@@ -110,7 +110,7 @@ def insert_in_sym_table(label, dtype, value=0):
   symbol_table[0][label]['value'] = value
 
 def get_label(dtype, value=0):
-  label = new_label()
+  label = _new_label()
   insert_in_sym_table(label, dtype, value)
   return label
 
@@ -119,23 +119,23 @@ def handle_pointer(arr):
 
 def int_or_real(dtype):
   arr = dtype.split()
-  if arr[-1] == '*':
+  if ('*' in arr):
     return handle_pointer(arr)
-  if arr[-1] == 'int' or arr[-1] == 'char' or arr[-1] == 'short' or arr[-1] == 'long':
+  if ( ('int' in arr) or ('char' in arr) or ('short' in arr) or ('long' in arr) ):
     return 'int'
   else:
-    return 'real' 
+    return 'real'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
   return_tmp = get_label(higher_data_type)
   p0.place = return_tmp
-  if (int_or_real(p1.type.split()[-1]) != higher_data_type):
+  if (int_or_real(p1.type) != higher_data_type):
     tmp = get_label(higher_data_type)
     change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
     emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
-  elif (int_or_real(p3.type.split()[-1]) != higher_data_type):
+  elif (int_or_real(p3.type) != higher_data_type):
     tmp = get_label(higher_data_type)
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
@@ -147,7 +147,7 @@ def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
 
-def extract_if_tuple(p2): 
+def extract_if_tuple(p2):
   if (type(p2) is tuple):
     return str(p2[0])
   else:
