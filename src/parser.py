@@ -135,6 +135,28 @@ def int_or_real(dtype):
   else:
     return 'real' 
 
+def handle_binary_emit(p0, p1, p2, p3):
+  operator = ''
+  if (type(p2) is tuple):
+    operator = str(p2[0])
+  else:
+    operator = str(p2)
+  higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
+  return_tmp = get_label(higher_data_type)
+  p0.place = return_tmp
+  # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
+  if (int_or_real(p1.type.split()[-1]) != higher_data_type):
+    tmp = get_label(higher_data_type)
+    change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
+    emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
+  elif (int_or_real(p3.type.split()[-1]) != higher_data_type):
+    tmp = get_label(higher_data_type)
+    change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
+    emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
+  else:
+    emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
+  return p0, p1, p2, p3
+
 def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
@@ -675,27 +697,7 @@ def p_multipicative_expression(p):
       p[0].ast = build_AST(p)
 
     # handling the emits
-    operator = ''
-    if (type(p[2]) is tuple):
-      operator = p[2][0]
-    else:
-      operator = p[2]
-    if (operator == '*' or operator == '/'):
-      higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-      return_tmp = get_label(higher_data_type)
-      p[0].place = return_tmp
-      if (p[1].type.split()[-1] != higher_data_type):
-        tmp = get_label(higher_data_type)
-        change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-        emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-      elif (p[3].type.split()[-1] != higher_data_type):
-        tmp = get_label(higher_data_type)
-        change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-      else:
-        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
-    if (operator == '%'): #assuming mod only handles int
-      emit(int_or_real(p[1].type) + '_' + '%', p[1].place, p[3].place, p[0].place)
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 ###############
 
 def p_additive_expression(p):
@@ -751,26 +753,8 @@ def p_additive_expression(p):
     check_invalid_operation_on_function(p[3])
     
     # handling emits
-    operator = ''
-    if (type(p[2]) is tuple):
-      operator = str(p[2][0])
-    else:
-      operator = str(p[2])
-    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-    return_tmp = get_label(higher_data_type)
-    p[0].place = return_tmp
-    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
-    if (p[1].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    elif (p[3].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-    else:
-      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
-
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
+    
 ##############
 
 
@@ -805,25 +789,7 @@ def p_shift_expression(p):
     p[0].ast = build_AST(p)
 
     # handling emits
-    operator = ''
-    if (type(p[2]) is tuple):
-      operator = str(p[2][0])
-    else:
-      operator = str(p[2])
-    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-    return_tmp = get_label(higher_data_type)
-    p[0].place = return_tmp
-    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
-    if (p[1].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    elif (p[3].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-    else:
-      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 ##############
 
@@ -858,25 +824,7 @@ def p_relational_expression(p):
     p[0].ast = build_AST(p)
 
     # handling emits
-    operator = ''
-    if (type(p[2]) is tuple):
-      operator = str(p[2][0])
-    else:
-      operator = str(p[2])
-    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-    return_tmp = get_label(higher_data_type)
-    p[0].place = return_tmp
-    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
-    if (p[1].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    elif (p[3].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-    else:
-      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
@@ -907,25 +855,7 @@ def p_equality_expresssion(p):
     p[0].ast = build_AST(p)
 
     # handling emits
-    operator = ''
-    if (type(p[2]) is tuple):
-      operator = str(p[2][0])
-    else:
-      operator = str(p[2])
-    higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-    return_tmp = get_label(higher_data_type)
-    p[0].place = return_tmp
-    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
-    if (p[1].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-      emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    elif (p[3].type.split()[-1] != higher_data_type):
-      tmp = get_label(higher_data_type)
-      change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-      emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-    else:
-      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 def p_and_expression(p):
   '''and_expression : equality_expression
