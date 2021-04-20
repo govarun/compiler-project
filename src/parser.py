@@ -684,14 +684,16 @@ def p_multipicative_expression(p):
       higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
       return_tmp = get_label(higher_data_type)
       p[0].place = return_tmp
-      if (p[1].type != higher_data_type):
+      if (p[1].type.split()[-1] != higher_data_type):
         tmp = get_label(higher_data_type)
         change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
         emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-      if (p[3].type != higher_data_type):
+      elif (p[3].type.split()[-1] != higher_data_type):
         tmp = get_label(higher_data_type)
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
         emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+      else:
+        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
     if (operator == '%'): #assuming mod only handles int
       emit(int_or_real(p[1].type) + '_' + '%', p[1].place, p[3].place, p[0].place)
 ###############
@@ -757,15 +759,17 @@ def p_additive_expression(p):
     higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
     return_tmp = get_label(higher_data_type)
     p[0].place = return_tmp
-    if (p[1].type != higher_data_type):
+    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
+    if (p[1].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
       emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    if (p[3].type != higher_data_type):
+    elif (p[3].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
       emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-
+    else:
+      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
 
 ##############
 
@@ -809,15 +813,17 @@ def p_shift_expression(p):
     higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
     return_tmp = get_label(higher_data_type)
     p[0].place = return_tmp
-    if (p[1].type != higher_data_type):
+    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
+    if (p[1].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
       emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    if (p[3].type != higher_data_type):
+    elif (p[3].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
       emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-
+    else:
+      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
 
 ##############
 
@@ -860,14 +866,17 @@ def p_relational_expression(p):
     higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
     return_tmp = get_label(higher_data_type)
     p[0].place = return_tmp
-    if (p[1].type != higher_data_type):
+    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
+    if (p[1].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
       emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    if (p[3].type != higher_data_type):
+    elif (p[3].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
       emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+    else:
+      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
 
 def p_equality_expresssion(p):
   '''equality_expression : relational_expression
@@ -906,14 +915,17 @@ def p_equality_expresssion(p):
     higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
     return_tmp = get_label(higher_data_type)
     p[0].place = return_tmp
-    if (p[1].type != higher_data_type):
+    # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
+    if (p[1].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
       emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-    if (p[3].type != higher_data_type):
+    elif (p[3].type.split()[-1] != higher_data_type):
       tmp = get_label(higher_data_type)
       change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
       emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
+    else:
+      emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
 
 def p_and_expression(p):
   '''and_expression : equality_expression
