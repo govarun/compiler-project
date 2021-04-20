@@ -71,17 +71,9 @@ class Node:
     # add more later
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
-# Address Code generation functions
+############ Address Code generation functions ############
 
 def emit(op, s1, s2, dest):
-  # TODO: division into different cases and conversion into 3 address codes in their functions
-  # s_tokens = s.split()
-  # if (s_tokens[0] == "if"):
-  #   # Pass s to iteration statement handling function
-  # elif (s_tokens[0] == "goto"):
-
-  # elif (s_tokens[]) 'param' or 'call'
-  # Input: op, s1, s2, dest
   global emit_array
   global nextstat
   emit_array.append([str(op), str(s1), str(s2), str(dest)])
@@ -112,7 +104,6 @@ def new_label():
   return s
 
 def insert_in_sym_table(label, dtype, value=0):
-  # symbol_table[0][label]['value'] = 
   symbol_table[0][label] = {}
   symbol_table[0][label]['type'] = dtype
   symbol_table[0][label]['size'] = get_data_type_size(dtype)
@@ -136,15 +127,10 @@ def int_or_real(dtype):
     return 'real' 
 
 def handle_binary_emit(p0, p1, p2, p3):
-  operator = ''
-  if (type(p2) is tuple):
-    operator = str(p2[0])
-  else:
-    operator = str(p2)
+  operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
   return_tmp = get_label(higher_data_type)
   p0.place = return_tmp
-  # print("Additive Type:", p[1].type, p[3].type, higher_data_type)
   if (int_or_real(p1.type.split()[-1]) != higher_data_type):
     tmp = get_label(higher_data_type)
     change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
@@ -161,6 +147,11 @@ def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
 
+def extract_if_tuple(p2): 
+  if (type(p2) is tuple):
+    return str(p2[0])
+  else:
+    return str(p2)
 
 def get_higher_data_type(type_1 , type_2):
   if(type_1.endswith('*')):
@@ -190,7 +181,6 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type_1):
-  # print(type_1)
   type_size = {}
   type_size['char'] = 1
   type_size['short'] = 2
@@ -237,9 +227,7 @@ def ignore_1(s):
 
 def find_if_ID_is_declared(id,lineno):
   curscp = currentScope
-  # print("here" + str(curscp))
   while(parent[curscp] != curscp):
-    # print("here" + str(curscp))
     if(id in symbol_table[curscp].keys()):
       return curscp
     curscp = parent[curscp]
@@ -251,9 +239,7 @@ def find_if_ID_is_declared(id,lineno):
 
 def find_scope(id, lineno = -1): #default value kept, because it is not needed, and has been passed in code at some places
   curscp = currentScope
-  # print("here" + str(curscp))
   while(parent[curscp] != curscp):
-    # print("here" + str(curscp))
     if(id in symbol_table[curscp].keys()):
       return curscp
     curscp = parent[curscp]
@@ -276,10 +262,8 @@ def build_AST(p,nope = []):
   length = len(p)
   if(length == 2):
     if(type(p[1]) is Node):
-      # print(p[1].ast,p[0].name)
       return p[1].ast
     else:
-      # print(p[1],p[0].name)
       return p[1]
   else:
     cur_num += 1
@@ -368,8 +352,6 @@ def p_primary_expression_5(p):
 
 def p_postfix_expression_1(p):
   '''postfix_expression : primary_expression'''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
@@ -382,17 +364,6 @@ def p_postfix_expression_2(p):
   p[0].level = p[1].level - 1
   tempScope = find_scope(p[1].val, p.lineno(1))
   p[0].ast = build_AST(p)
-  # if(len(p[0].array) > 0 and len(p[0].parentStruct) == 0 and (('array' not in symbol_table[tempScope][p[0].val].keys() and len(p[0].array) == 1) or len(symbol_table[tempScope][p[0].val]) == len(p[0].array) + 1)):
-  #     print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val)
-  # if(len(p[0].parentStruct) > 0):
-  #   found_scope = find_scope(p[0].parentStruct , p[1].lno)
-  #   for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
-  #     # print(curr_list)
-  #     if curr_list[1] == p[0].val:
-  #       if(len(curr_list) < 5 and len(p[0].array) == 0):
-  #         break
-  #       if(len(curr_list) < 5 or (len(curr_list[4]) == len(p[0].array) - 1)):
-  #         print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
 
@@ -409,21 +380,6 @@ def p_postfix_expression_3(p):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call")  
-  
-# def compare_types(call_type,argument):
-#   if(call_type == '' or argument == ''):
-#     return -1
-#   if(call_type.endswith('*')):
-#     if(not argument.endswith('*')):
-#       return -1
-#     return 1
-#   if(call_type.startswith('const')):
-#     if(not argument.startswith('const')):
-#       return -1
-  
-#   type_1 = call_type.split()[-1]
-#   type_2 = argument.split()[-1]
-#   # if(type_1 == 'int'):
 
 
 def p_postfix_expression_4(p):
@@ -437,14 +393,11 @@ def p_postfix_expression_4(p):
     print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
   else:
     i = 0
-    # curScope = symbol_table[0][p[1].val]['FunctionScope']
     for arguments in symbol_table[0][p[1].val]['argumentList']:
-      # print(p[3].children[i].val)
       curVal = p[3].children[i].val
       if(curVal not in symbol_table[currentScope].keys()):
         continue
       curType = symbol_table[currentScope][curVal]['type']
-      # temp = compare_types(curType,arguments)
       if(curType.split()[-1] != arguments.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
@@ -460,7 +413,6 @@ def p_postfix_expression_5(p):
   # TODO : This is the reduction of p1.x, where x is in ID, and postfix_expression stores p1
   # TODO : p[1].val should be defined in symbol table
   # TODO : p[3] should be a field of (get from symbol table - struct point)
-  
 
   if (not p[1].name.startswith('Period')):
     struct_scope = find_scope(p[1].val , p[1].lno)
@@ -488,30 +440,9 @@ def p_postfix_expression_5(p):
         p[0].level = len(curr_list[4])
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
- 
-  # if(len(p[1].parentStruct) > 0):
-  #   found_scope = find_scope(p[1].parentStruct , p[1].lno)
-  #   for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
-  #     # print(curr_list)
-  #     if curr_list[1] == p[1].val:
-  #       if(len(curr_list) < 5 and len(p[1].array) == 0):
-  #         break
-  #       if(len(curr_list) < 5 or (len(curr_list[4]) > len(p[1].array))):
-  #         print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions for " + p[1].val)
-  # else:
-  #   tempScope = find_scope(p[1].val, p.lineno(1))
-  #   if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
-  #     print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
-  #   elif(len(p[1].array) == 0 and 'array' in symbol_table[tempScope][p[1].val].keys()):
-      # print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
-
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + " not declared in " + struct_name)
-  #print("p_postfix_Expression_5 : type = ", p[0].type, " id = " , p[3])
- 
   # structure things , do later
-
-
 
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
@@ -542,8 +473,6 @@ def p_argument_expression_list(p):
     p[0] = p[1]
     p[0].children.append(p[3])
     p[0].ast = build_AST(p,[2])
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   # TODO: Handle emit
 ##################
 
@@ -553,8 +482,6 @@ def p_unary_expression_1(p):
                       | INCREMENT unary_expression
                       | DECREMENT unary_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -569,6 +496,7 @@ def p_unary_expression_1(p):
     if (found_scope != -1) and ((p[2].isFunc == 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
     emit(int_or_real(p[2].type) + '_' + '+' , 1, p[2].place, p[0].place)
+
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
@@ -618,9 +546,6 @@ def p_unary_operator(p):
                     | NOT
                     | LNOT
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
-  # p[0] = p[1]
   p[0] = Node(name = 'UnaryOperator',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
@@ -630,8 +555,6 @@ def p_cast_expression(p):
   '''cast_expression : unary_expression
                      | LPAREN type_name RPAREN cast_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -652,8 +575,6 @@ def p_multipicative_expression(p):
     | multiplicative_expression DIVIDE cast_expression
     | multiplicative_expression MOD cast_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -667,10 +588,7 @@ def p_multipicative_expression(p):
 
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
-      if(type(p[2]) is tuple):
-        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')
-      else:
-        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])    
@@ -705,8 +623,6 @@ def p_additive_expression(p):
 	| additive_expression PLUS multiplicative_expression
 	| additive_expression MINUS multiplicative_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -717,34 +633,22 @@ def p_additive_expression(p):
       return
     elif(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
       if(p[3].type == 'float'):
-        if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-        else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
       if(p[1].type == 'float'):
-        if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-        else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[1].type.endswith('*') and p[3].type.endswith('*')):
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     else :
       type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
       if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-        if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-        else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
       p[0].ast = build_AST(p)
@@ -776,10 +680,7 @@ def p_shift_expression(p):
     # We know shift only possible in int(unsigned) type, so no need to pass for now
     type_list = ['short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -812,10 +713,7 @@ def p_relational_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -831,8 +729,6 @@ def p_equality_expresssion(p):
 	| equality_expression EQUAL relational_expression
 	| equality_expression NOTEQUAL relational_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -843,10 +739,7 @@ def p_equality_expresssion(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -861,8 +754,6 @@ def p_and_expression(p):
   '''and_expression : equality_expression
 	| and_expression AND equality_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -889,8 +780,6 @@ def p_exclusive_or_expression(p):
   '''exclusive_or_expression : and_expression
 	| exclusive_or_expression XOR and_expression
 	'''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -901,10 +790,7 @@ def p_exclusive_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
 
@@ -915,8 +801,6 @@ def p_inclusive_or_expression(p):
   '''inclusive_or_expression : exclusive_or_expression
 	| inclusive_or_expression OR exclusive_or_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -927,10 +811,7 @@ def p_inclusive_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
     
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -942,8 +823,6 @@ def p_logical_and_expression(p):
   '''logical_and_expression : inclusive_or_expression 
   | logical_and_expression LAND inclusive_or_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -954,10 +833,7 @@ def p_logical_and_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -968,8 +844,6 @@ def p_logical_or_expression(p):
   '''logical_or_expression : logical_and_expression
 	| logical_or_expression LOR logical_and_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -980,11 +854,7 @@ def p_logical_or_expression(p):
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      if(p[2] is tuple):
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2][0] +  ' operator')  
-      else:
-          print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + p[2] +  ' operator')
-
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -996,13 +866,10 @@ def p_conditional_expression(p):
   '''conditional_expression : logical_or_expression
 	| logical_or_expression CONDOP expression COLON conditional_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    
     p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [])
     p[0].ast = build_AST(p)
 
@@ -1011,13 +878,10 @@ def p_assignment_expression(p):
   '''assignment_expression : conditional_expression 
                            | unary_expression assignment_operator assignment_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    # print(p[1].type, p[3].type)
     if(p[1].type == '' or p[3].type == ''):
       p[0] = Node(name = 'AssignmentOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
@@ -1033,10 +897,6 @@ def p_assignment_expression(p):
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_scope(p[1].val, p.lineno(1))
-    # if(len(p[1].array) > 0 and (len(p[1].parentStruct) == 0) and ('array' not in symbol_table[tempScope][p[1].val].keys() or len(symbol_table[tempScope][p[1].val]) > len(p[1].array))):
-    #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
-    # elif(len(p[1].array) == 0 and (len(p[1].parentStruct) == 0) and 'array' in symbol_table[tempScope][p[1].val].keys()):
-    #   print('COMPILATION ERROR at line ' + str(p[1].lno) + ' , dimensions not specified correctly for ' + p[1].val )
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
     if(p[1].level != 0 or p[3].level != 0):
@@ -1044,7 +904,6 @@ def p_assignment_expression(p):
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
-        # print(curr_list)
         if curr_list[1] == p[1].val:
           if(len(curr_list) < 5 and len(p[1].array) == 0):
             break
@@ -1073,9 +932,6 @@ def p_assignment_operator(p):
 	| XOREQUAL
 	| OREQUAL
 	'''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
-  # p[0] = p[1]
   p[0] = Node(name = 'AssignmentOperator',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
   p[0].ast = build_AST(p)
 
@@ -1083,8 +939,6 @@ def p_expression(p):
   '''expression : assignment_expression
 	| expression COMMA assignment_expression
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
@@ -1096,7 +950,6 @@ def p_expression(p):
 
 def p_constant_expression(p):
   '''constant_expression : conditional_expression'''
-  # p[0] = build_AST(p)
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
@@ -1104,10 +957,6 @@ def p_declaration(p):
   '''declaration : declaration_specifiers SEMICOLON
 	| declaration_specifiers init_declarator_list SEMICOLON
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
-  # global typedef_list
-  # global all_typedef
   if(len(p) == 3):
     p[0] = p[1]
     p[0].ast = build_AST(p,[2])
@@ -1126,7 +975,6 @@ def p_declaration(p):
           continue
         if(child.children[0].val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
-        # print(child.children[0].val,child.children[1].val)
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
         symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
@@ -1170,9 +1018,6 @@ def p_declaration(p):
         #   if found_scope != -1:
         #     symbol_table[currentScope][child.val]['field_list'] = symbol_table[found_scope][p[1].type]['field_list']
 
-        
-        
-        
 
 # TODO : change the below to support long, short etc.
 def p_declaration_specifiers(p):
@@ -1189,7 +1034,6 @@ def p_declaration_specifiers(p):
     p[0].ast = build_AST(p)
     # global curFuncReturnType
     curType.append(p[1].type)
-    # print('here',curType[-1],curFuncReturnType)
   elif(len(p) == 3):
     if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
@@ -1197,7 +1041,6 @@ def p_declaration_specifiers(p):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
-    # if(p[1].name == '')
     curType.pop()
     curType.append(p[1].type + ' ' + p[2].type)
     
@@ -1210,18 +1053,12 @@ def p_declaration_specifiers(p):
     # print(ty)
     p[0] = Node(name = p[1].name + p[2].name,val = p[1],type = ty, lno = p[1].lno, children = [])
     p[0].ast = build_AST(p)
-  #p[0] = Node()
-  # p[0] = build_AST(p)
-
-
 
 
 def p_init_declarator_list(p):
   '''init_declarator_list : init_declarator
 	| init_declarator_list COMMA init_declarator
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
     p[0].ast = build_AST(p)
@@ -1235,25 +1072,18 @@ def p_init_declarator(p):
   '''init_declarator : declarator
 	| declarator EQUALS initializer
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     # extra node might be needed for error checking
     #maybe make different function to do this
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    # tempNode = Node(name = '',val = p[2],type = '', lno = p[1].lno, children = [])
-    # print("here" + p[1].type)
-    # if(p[1].type.startswith('typedef')):
-    #   print("COMPILATION ERROR at line " + str(p[1].lno) + " typedef intialized")
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
     p[0].ast = build_AST(p)
     if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
-      
     # print(p[3].name, "fn name:p_init_declarator")
     # emit(["=",[p[3].place, ], [], [p[1].place], find_scope(p[1].val)]) # a = 5 ,  a = t1
 
@@ -1264,11 +1094,7 @@ def p_storage_class_specifier(p):
 	| AUTO
 	| REGISTER
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
-  # p[0] = p[1]
   p[0] = Node(name = 'StorageClassSpecifier',val = '',type = p[1], lno = p.lineno(1), children = [])
-  # p[0].ast = build_AST(p)
 
 
 def p_type_specifier_1(p):
@@ -1283,25 +1109,20 @@ def p_type_specifier_1(p):
                     | UNSIGNED
                     | TYPE_NAME
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   p[0] = Node(name = 'TypeSpecifier1',val = '',type = p[1], lno = p.lineno(1), children = [])
-  # p[0].ast = build_AST(p)
 
 def p_type_specifier_2(p):
   '''type_specifier : struct_or_union_specifier
                     | enum_specifier '''
   p[0] = p[1]
   p[0].ast = build_AST(p)
-  # p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
 
 def p_struct_or_union_specifier(p):
   '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
   | struct_or_union openbrace struct_declaration_list closebrace
   | struct_or_union ID
   '''
-  # p[0] = build_AST(p)
-  # TODO : check the semicolon thing after closebrace in gramamar
+  # TODO : check the semicolon thing after closebrace in grammar
   # TODO : Manage the size and offset of fields
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
   if len(p) == 6:
@@ -1315,7 +1136,7 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][valptr_name] = {}
     symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
-    curr_offset = 0 
+    curr_offset = 0
     max_size = 0
     for child in p[4].children:
       for prev_list in temp_list:
@@ -1359,9 +1180,6 @@ def p_struct_or_union(p):
   '''struct_or_union : STRUCT
 	| UNION
   '''
-
-  # p[0] = build_AST(p)
-  # print(p[1])
   if p[1] == 'struct':
     p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
@@ -1373,7 +1191,6 @@ def p_struct_declaration_list(p):
   '''struct_declaration_list : struct_declaration
 	| struct_declaration_list struct_declaration
   '''
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclarationList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].ast = build_AST(p)
   if(len(p) == 2):
@@ -1386,7 +1203,6 @@ def p_struct_declaration_list(p):
 def p_struct_declaration(p):
   '''struct_declaration : specifier_qualifier_list struct_declarator_list SEMICOLON
   '''
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclaration', val = '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].ast = build_AST(p,[3])
   p[0].children = p[2].children
@@ -1397,7 +1213,6 @@ def p_struct_declaration(p):
       if('void' in p[1].type.split()):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
       child.type = p[1].type
-  
 
 def p_specifier_qualifier_list(p):
   '''specifier_qualifier_list : type_specifier specifier_qualifier_list
@@ -1405,8 +1220,6 @@ def p_specifier_qualifier_list(p):
   | type_qualifier specifier_qualifier_list
   | type_qualifier
   '''
-  #p[0] = Node()
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'SpecifierQualifierList', val = '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].ast = build_AST(p)
 
@@ -1414,9 +1227,7 @@ def p_struct_declarator_list(p):
   '''struct_declarator_list : struct_declarator
 	| struct_declarator_list COMMA struct_declarator
   '''
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'StructDeclaratorList', val = '', type = p[1].type, lno = p[1].lno, children = [])
-  # print(p[1].type)
   if(len(p) == 2):
     p[0].children.append(p[1])
     p[0].ast = build_AST(p)
@@ -1424,28 +1235,24 @@ def p_struct_declarator_list(p):
     p[0].children = p[1].children 
     p[0].children.append(p[3])
     p[0].ast = build_AST(p,[2])
-    # print(p[3].type)
 
 def p_struct_declarator(p):  
   '''struct_declarator : declarator
 	| COLON constant_expression
 	| declarator COLON constant_expression
   '''
-  #p[0] = build_AST(p)
   if len(p) == 2 or len(p) == 4:
     p[0] = p[1] 
     p[0].ast = build_AST(p)
   if len(p) == 3:
     p[0] = p[2]
     p[0].ast = build_AST(p)
-  
 
 def p_enum_specifier(p):
   '''enum_specifier : ENUM openbrace enumerator_list closebrace
 	| ENUM ID openbrace enumerator_list closebrace
 	| ENUM ID
   '''
-  #p[0] = build_AST(p)
   if(len(p) == 5):
     p[0] = Node(name = 'EnumSpecifier', val = '', type = 'Enum_Specifier', lno = p[3].lno, children = [])
     p[0].ast = build_AST(p)
@@ -1460,7 +1267,6 @@ def p_enumerator_list(p):
   '''enumerator_list : enumerator
 	| enumerator_list COMMA enumerator
   '''
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'EnumeratorList', val= '', type = p[1].type, lno = p[1].lno, children = [])
   p[0].ast = build_AST(p)
   if(len(p) == 2):
@@ -1472,24 +1278,20 @@ def p_enumerator(p):
   '''enumerator : ID
 	| ID EQUALS constant_expression
 	'''
-  #p[0] = build_AST(p)
   p[0] = Node(name = 'Enumerator', val = '', type = '', lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
 
 def p_type_qualifier(p):
-    '''type_qualifier : CONST
-                      | VOLATILE
-    '''
-    p[0] = Node(name = 'TypeQualifier', val = '', type = p[1], lno = p.lineno(1), children = [])
-    #p[0] = build_AST(p)
+  '''type_qualifier : CONST
+                    | VOLATILE
+  '''
+  p[0] = Node(name = 'TypeQualifier', val = '', type = p[1], lno = p.lineno(1), children = [])
 
 def p_declarator(p):
   '''declarator : pointer direct_declarator
   | direct_declarator
   '''
   global curFuncReturnType
-  # print(p[1].children)
-  # p[0] = Node(name = 'Declarator', val = '', type = '', lno = p.lineno(1), children = [])
   if(len(p) == 2):
     p[0] = p[1]
     p[0].name = 'Declarator'
@@ -1501,34 +1303,22 @@ def p_declarator(p):
     p[0].name = 'Declarator'
     p[0].type = p[1].type
     p[0].ast = build_AST(p)
-    # print(p[1].type)
     if(p[2].val in symbol_table[parent[currentScope]] and 'isFunc' in symbol_table[parent[currentScope]][p[2].val].keys()):
       symbol_table[parent[currentScope]][p[2].val]['type'] = symbol_table[parent[currentScope]][p[2].val]['type'] + ' ' + p[1].type
       curFuncReturnType = curFuncReturnType + ' ' + p[1].type
-      # print(symbol_table[parent[currentScope]][p[2].val]['type'])
     p[0].val = p[2].val
     p[0].array = p[2].array
-  # print(p[0].children)
-  # if(p[1].name == 'ID'):
-  #     p[0].name = 'ID'
 
 def p_direct_declarator_1(p):
   '''direct_declarator : ID
                         | LPAREN declarator RPAREN
                         | direct_declarator lopenparen parameter_type_list RPAREN
                         | direct_declarator lopenparen identifier_list RPAREN
-  ''' 
-  # 
+  '''
   global curFuncReturnType
   if(len(p) == 2):
-    # curScopeName = 3
-    # find_if_ID_is_declared(p[1],p.lineno(1))
     p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
-    # p[0].val = p[1]
-    # # insert in symbol table here
-    # if(p[1] in symbol_table[currentScope].keys()):
-    #   print( 'COMPILATION ERROR at line : ' + p.lineno(1) + ", " + p[1] + ' already declared')
 
   elif(len(p) == 4):
     p[0] = p[2]
@@ -1540,8 +1330,6 @@ def p_direct_declarator_1(p):
   if(len (p) == 5 and p[3].name == 'ParameterList'):
     p[0].children = p[3].children
     p[0].type = curType[-1]
-    # print(p[0].type)
-    # print(p[0].children)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
@@ -1549,14 +1337,12 @@ def p_direct_declarator_1(p):
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
     tempList = []
     for child in p[3].children:
-      # print(child.type)
       tempList.append(child.type)
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
     scope_to_function[currentScope] = p[1].val
-    # symbol_table[parent[currentScope]][p[1].val]['FunctionScope'] = currentScope
-  #p[0] = build_AST(p)
+
 
 def p_direct_declarator_2(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
@@ -1575,8 +1361,6 @@ def p_direct_declarator_3(p):
     p[0].ast = build_AST(p)  
   global curFuncReturnType
   if(p[3] == ')'):
-    # p[0].type = curType[-1]
-    # print(p[0].type)
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
     symbol_table[parent[currentScope]][p[1].val] = {}
@@ -1585,14 +1369,6 @@ def p_direct_declarator_3(p):
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
     scope_to_function[currentScope] = p[1].val
-    # symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
-    # curFuncReturnType = copy.deepcopy(curType[-1])
-    # if(len(p[3].children) > 0):
-    #   tempList = []
-    # for child in p[3].children:
-    #   # print(child.type)
-    #   tempList.append(child.type)
-    # symbol_table[currentScope][p[1].val]['argumentList'] = tempList
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -1600,8 +1376,6 @@ def p_pointer(p):
               | MULTIPLY pointer
               | MULTIPLY type_qualifier_list pointer
   '''
-  #p[0] = Node()
-  # p[0] = build_AST(p)
   if(len(p) == 2):
     p[0] = Node(name = 'Pointer',val = '',type = '*', lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
@@ -1616,7 +1390,6 @@ def p_type_qualifier_list(p):
   '''type_qualifier_list : type_qualifier
                         | type_qualifier_list type_qualifier
   '''
-  #p[0] = Node()
   if(len(p) == 2):
     p[0] = p[1]
     p[0].name = 'TypeQualifierList'
@@ -1628,13 +1401,11 @@ def p_type_qualifier_list(p):
     p[0].type = p[1].type + " " + p[2].type
     p[0].name = 'TypeQualifierList'
     p[0].ast = build_AST(p)
-    # p[0] = Node(name = '',val = '',type = '', lno = p[1].lno, children = [])
 
 def p_parameter_type_list(p):
   '''parameter_type_list : parameter_list
                           | parameter_list COMMA ELLIPSIS
   '''
-  #p[0] = Node()
   p[0] = p[1]
   p[0].ast = build_AST(p)
   # TODO : see what to do in case of ellipsis
@@ -1643,7 +1414,6 @@ def p_parameter_list(p):
     '''parameter_list : parameter_declaration
                       | parameter_list COMMA parameter_declaration
     '''
-    #p[0] = Node()
     p[0] = Node(name = 'ParameterList', val = '', type = '', children = [], lno = p.lineno(1))
     if(len(p) == 2):
       p[0].ast = build_AST(p)
@@ -1658,7 +1428,6 @@ def p_parameter_declaration(p):
                              | declaration_specifiers abstract_declarator
                              | declaration_specifiers
     '''
-    #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
@@ -1673,7 +1442,7 @@ def p_parameter_declaration(p):
         print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
       symbol_table[currentScope][p[2].val] = {}
       symbol_table[currentScope][p[2].val]['type'] = p[1].type
-      
+
       if(len(p[2].type) > 0):
         symbol_table[currentScope][p[2].val]['type'] = p[1].type + ' ' + p[2].type
         symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type+ ' ' + p[2].type)
@@ -1693,8 +1462,6 @@ def p_identifier_list(p):
     '''identifier_list : ID
                        | identifier_list COMMA ID
     '''
-    #p[0] = Node()
-    # p[0] = build_AST(p)
     if(len(p) == 2):
       p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
       p[0].ast = build_AST(p)
@@ -1708,8 +1475,6 @@ def p_type_name(p):
     '''type_name : specifier_qualifier_list
                  | specifier_qualifier_list abstract_declarator
     '''
-    #p[0] = Node()
-    # p[0] = build_AST(p)
     if(len(p) == 2):
       p[0] = p[1]
       p[0].name = 'TypeName'
@@ -1723,7 +1488,6 @@ def p_abstract_declarator(p):
                            | direct_abstract_declarator
                            | pointer direct_abstract_declarator
     '''
-    #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
       p[0].name = 'AbstractDeclarator'
@@ -1741,25 +1505,15 @@ def p_direct_abstract_declarator_1(p):
                                   | LPAREN parameter_type_list RPAREN
                                   | direct_abstract_declarator LPAREN parameter_type_list RPAREN
     '''
-    #p[0] = Node()
     if(len(p) == 3):
       p[0] = Node(name = 'DirectAbstractDeclarator1',val = '',type = '', lno = p.lineno(1), children = [])
-      # p[0].ast = build_AST(p)
     elif(len(p) == 4):
       p[0] = p[2]
       p[0].name = 'DirectAbstractDeclarator1'
       p[0].ast = build_AST(p,[1,3])
-      # if(p[1] == '('):
-      #   p[0].ast = build_AST(p,[1,3])
-      # else:
-      #   p[0].ast = build_AST(p)
     else:
       p[0] = Node(name = 'DirectAbstractDeclarator1',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
       p[0].ast = build_AST(p,[2,4])
-      # if(p[2] == '('):
-      #   p[0].ast = build_AST(p)
-      # else:
-      #   p[0].ast = build_AST(p)
 
 def p_direct_abstract_declarator_2(p):
   '''direct_abstract_declarator : direct_abstract_declarator LPAREN RPAREN'''
@@ -1769,10 +1523,8 @@ def p_direct_abstract_declarator_2(p):
 def p_initializer(p):
     '''initializer : assignment_expression
                    | openbrace initializer_list closebrace
-                   | openbrace initializer_list COMMA closebrace                                   
+                   | openbrace initializer_list COMMA closebrace
     '''
-    #p[0] = Node()
-    # p[0] = build_AST(p)
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
@@ -1789,7 +1541,6 @@ def p_initializer_list(p):
   '''initializer_list : initializer
   | initializer_list COMMA initializer
   '''
-  #p[0] = Node()
   if(len(p) == 2):
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth)
     p[0].ast = build_AST(p)
@@ -1811,10 +1562,9 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
-    # p[0] = p[1]
     p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p)
-    # print('here', p[0])
+
 def p_labeled_statement_1(p):
     '''labeled_statement : ID COLON statement '''
     p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [], lno = p.lineno(1) )
@@ -1836,7 +1586,6 @@ def p_compound_statement(p):
                           | openbrace declaration_list closebrace
                           | openbrace declaration_list statement_list closebrace
     '''  
-    #p[0] = Node()
     #TODO : see what to do in in first case
     if(len(p) == 3):
       p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
@@ -1857,15 +1606,12 @@ def p_function_compound_statement(p):
                           | LCURLYBRACKET declaration_list closebrace
                           | LCURLYBRACKET declaration_list statement_list closebrace
     '''  
-    #p[0] = Node()
     if(len(p) == 3):
       p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
-      # p[0].ast = build_AST(p,[1,3])
     elif(len(p) == 4):
       p[0] = p[2]
       p[0].name = 'CompoundStatement'
       p[0].ast = build_AST(p)
-      # print('building')
     elif(len(p) == 4):
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))
       p[0].ast = build_AST(p,[1,4])
@@ -1878,7 +1624,6 @@ def p_declaration_list(p):
     '''declaration_list : declaration
                         | declaration_list declaration
     '''
-    #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
@@ -1895,18 +1640,12 @@ def p_statement_list(p):
     '''statement_list : statement
                       | statement_list statement
     '''
-    #p[0] = Node()
     if(len(p) == 2):
       p[0] = p[1]
       p[0].ast = build_AST(p)
-      # print('here',p[0])
-      # p[0].name = 'StatementList'
     else:
       p[0] = Node(name = 'StatementList', val='', type='', children = [], lno = p.lineno(1))
       p[0].ast = build_AST(p)
-      # print(p[2].lno)
-      # if(p[1] is None):
-      #   print('yes')
       if(p[1].name != 'StatmentList'):
         p[0].children.append(p[1])
       else:
@@ -1917,10 +1656,7 @@ def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
     '''
-    # p[0] = Node()
     p[0] = Node(name = 'ExpressionStatement', val='', type='', children = [], lno = p.lineno(1))
-    # print(p[])
-    # print(p[0],'here2')
     if(len(p) == 3):
       p[0].ast = build_AST(p,[2])
       p[0].val = p[1].val
@@ -1928,13 +1664,9 @@ def p_expression_statement(p):
       p[0].children = p[1].children
     p[0].name = 'ExpressionStatement'
     # TODO : see what to do in case of only semicolon in rhs
-    # else:
-    #   p[0] = Node(name = '',val = '',type = p[1], lno = p.lineno(1), children = [])
-    
 
 def p_selection_statement_1(p):
     '''selection_statement : if LPAREN expression RPAREN statement %prec IFX'''
-    #p[0] = Node()
     p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p,[2,4])
   
@@ -1965,7 +1697,6 @@ def p_switch(p):
 # remember : here statement added in grammar
 def p_iteration_statement_1(p):
     '''iteration_statement : while LPAREN expression RPAREN statement'''
-    #p[0] = Node()
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
@@ -2010,7 +1741,6 @@ def p_for(p):
   '''for : FOR'''
   global loopingDepth
   loopingDepth += 1
-  # p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1))
   p[0] = p[1]
   p[0] = build_AST(p)
 
@@ -2018,17 +1748,13 @@ def p_jump_statement(p):
     '''jump_statement : RETURN SEMICOLON
                       | RETURN expression SEMICOLON
     '''
-    #p[0] = Node()
-    # p[0] = build_AST(p)
     if(len(p) == 3):
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
       p[0].ast = build_AST(p,[2])
       if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
     else:
-      # print(p[2].type,curFuncReturnType)
       if(p[2].type != '' and curFuncReturnType != p[2].type):
-        # print(curFuncReturnType)
         print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p,[2]) 
@@ -2061,8 +1787,6 @@ def p_translation_unit(p):
     '''translation_unit : external_declaration
                         | translation_unit external_declaration
     '''
-    #p[0] = Node()
-    # p[0] = build_AST(p)
     p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
     if(len(p) == 2):
       p[0].children.append(p[1])
@@ -2079,7 +1803,6 @@ def p_external_declaration(p):
     p[0] = p[1]
     p[0].name = 'ExternalDeclaration'
     p[0].ast = build_AST(p)
-    #p[0] = Node()
 
 def p_function_definition_1(p):
     '''function_definition : declaration_specifiers declarator declaration_list compound_statement
@@ -2100,8 +1823,6 @@ def p_function_definition_1(p):
 
 def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
-
-
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
 
@@ -2136,10 +1857,8 @@ def p_closebrace(p):
 
 # Error rule for syntax errors
 def p_error(p):
-    # print(p)
     if(p):
       print("Syntax error in input at line " + str(p.lineno))
-    # p.lineno(1)
 
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
