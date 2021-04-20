@@ -73,7 +73,7 @@ ts_unit = Node('START',val = '',type ='' ,children = [])
 
 # Address Code generation functions
 
-def emit(s):
+def emit(op, s1, s2, dest):
   # TODO: division into different cases and conversion into 3 address codes in their functions
   # s_tokens = s.split()
   # if (s_tokens[0] == "if"):
@@ -81,9 +81,10 @@ def emit(s):
   # elif (s_tokens[0] == "goto"):
 
   # elif (s_tokens[]) 'param' or 'call'
+  # Input: op, s1, s2, dest
   global emit_array
   global nextstat
-  emit_array.append(s)
+  emit_array.append([str(op), str(s1), str(s2), str(dest)])
   nextstat += 1
 
 def backpatch(to_patch, instr):
@@ -110,16 +111,29 @@ def new_label():
   label_cnt += 1
   return s
 
-def insert_in_sym_table(label, dtype):
+def insert_in_sym_table(label, dtype, value=0):
   # symbol_table[0][label]['value'] = 
   symbol_table[0][label] = {}
   symbol_table[0][label]['type'] = dtype
   symbol_table[0][label]['size'] = get_data_type_size(dtype)
+  symbol_table[0][label]['value'] = value
 
-def get_label(dtype):
+def get_label(dtype, value=0):
   label = new_label()
-  insert_in_sym_table(label, dtype)
+  insert_in_sym_table(label, dtype, value)
   return label
+
+def handle_pointer(arr):
+  pass
+
+def int_or_real(dtype):
+  arr = dtype.split()
+  if arr[-1] == '*':
+    return handle_pointer(arr)
+  if arr[-1] == 'int' or arr[-1] == 'char' or arr[-1] == 'short' or arr[-1] == 'long':
+    return 'int'
+  else:
+    return 'real' 
 
 def get_higher_data_type(type_1 , type_2):
   if(type_1.endswith('*')):
@@ -300,27 +314,27 @@ def p_primary_expression_1(p):
     # p[0].name = 'primaryExpression'
     # place copied automatically
   else:
-    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [])
+    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
     
 
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const char',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const char',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
   '''primary_expression : INT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const int',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const int',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const float',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'const float',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'string',children = [])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'string',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 ########################
@@ -475,12 +489,15 @@ def p_postfix_expression_5(p):
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
 	| postfix_expression DECREMENT'''
-  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [], place = p[1].place)
+  tmp = get_label(p[1].type)
+  p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [], place = tmp)
   p[0].ast = build_AST(p)
   found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and ((p[1].isFunc == 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   # emit(p[1].val + p[2])
+  emit('=', p[1].place, '', tmp)
+  emit(int_or_real(p[1].type) + '+',1,p[1].place, p[1].place)
 
 #################
 
@@ -500,7 +517,7 @@ def p_argument_expression_list(p):
     p[0].ast = build_AST(p,[2])
   #p[0] = Node()
   # p[0] = build_AST(p)
-
+  # TODO: Handle emit
 ##################
 
 
@@ -518,17 +535,18 @@ def p_unary_expression_1(p):
     #check lineno
     #also check if child should be added or not
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
-    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]])
+    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]], place = p[2].place)
     p[0].ast = build_AST(p)
     #Can't think of a case where this is invalid
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc == 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
+    emit(int_or_real(p[2].type) + '+' , 1, p[2].place, p[0].place)
 
 def p_unary_expression_2(p):
   '''unary_expression : unary_operator cast_expression'''
   # p[1] can be &,*,+,-,~,!
-
+  # TODO: Handle pointers
   if(p[1].val == '&'):
     # no '&' child added, will deal in traversal
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
@@ -539,24 +557,29 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:len(p[2].type)-2],children = [p[2]])
     p[0].ast = build_AST(p)
   elif(p[1].val == '-'):
-    p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
+    tmp = get_label(p[2].type)
+    p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
+    emit(int_or_real(p[2].type) + 'uminus', p[2].place, '', p[0].place)
   else:
-    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
+    p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = p[2].place)
     p[0].ast = build_AST(p)
   # TODO: check if function can have these
+  # TODO: Handle '~' and '!' in 3ac
 
 def p_unary_expression_3(p):
   '''unary_expression : SIZEOF unary_expression'''
   # should I add SIZEOF in children
   p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   p[0].ast = build_AST(p)
+  # TODO: Handle 3ac
 
 def p_unary_expression_4(p):
   '''unary_expression : SIZEOF LPAREN type_name RPAREN'''
   # should I add SIZEOF in children
   p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = p[3].type,children = [p[3]])
   p[0].ast = build_AST(p,[2,4])
+  # TODO: Handle 3ac
 
 #########################
 
@@ -571,7 +594,7 @@ def p_unary_operator(p):
   #p[0] = Node()
   # p[0] = build_AST(p)
   # p[0] = p[1]
-  p[0] = Node(name = 'UnaryOperator',val = p[1],lno = p.lineno(1),type = '',children = [])
+  p[0] = Node(name = 'UnaryOperator',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 #################
@@ -587,8 +610,10 @@ def p_cast_expression(p):
     p[0].ast = build_AST(p)
   else:
     # confusion about val
-    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
+    tmp = get_label(p[2].type)
+    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
     p[0].ast = build_AST(p,[1,3])
+    emit(int_or_real(p[2].type) + '_' + int_or_real(p[4].type) + '=', p[4].place, '', p[0].place)
 
 ################
 
@@ -2079,7 +2104,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
