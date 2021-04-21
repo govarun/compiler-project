@@ -1578,7 +1578,11 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
-    p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1), label = p[1].label, expr = p[1].expr)
+    p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1))
+    # print(p[1])
+    if isinstance(p[1], Node):
+      p[0].label = p[1].label
+      p[0].expr = p[1].expr
     p[0].ast = build_AST(p)
 
 def p_labeled_statement_1(p):
@@ -1739,7 +1743,7 @@ def p_SwMark3(p):
     if tmp_exp == '':
       emit('goto', '', '', tmp_label)
     else:
-      emit('ifgoto', p[-4].place, 'eq_' + str(tmp_exp), tmp_label)
+      emit('ifgoto', p[-4].place, 'eq ' + str(tmp_exp), tmp_label)
   emit('label','','',p[-2][0])
   breakStack.pop()
 
@@ -1769,7 +1773,7 @@ def p_while(p):
 def p_WhMark1(p):
   '''WhMark1 : '''
   l1 = get_label()
-  l2 = get_label
+  l2 = get_label()
   l3 = get_label()
   continueStack.append(1)
   breakStack.append(2)
@@ -2008,7 +2012,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
