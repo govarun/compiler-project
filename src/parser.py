@@ -1681,11 +1681,14 @@ def p_if(p):
   p[0] = build_AST(p)
 
 def p_selection_statement_3(p):
-    '''selection_statement : switch LPAREN expression RPAREN statement'''
+    '''selection_statement : switch LPAREN expression RPAREN SwMark2 statement SwMark3'''
     p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global switchDepth
     switchDepth -= 1
     p[0].ast = build_AST(p,[2,4])
+    if not (p[3].type == 'int' or p[3].type == 'short' or p[3].type == 'long' or p[3].type == 'char'):
+      print("COMPILATION ERROR: Invalid data type used inside switch clause") 
+    
 
 def p_switch(p):
   '''switch : SWITCH'''
