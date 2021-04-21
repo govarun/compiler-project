@@ -270,7 +270,7 @@ def build_AST(p,nope = []):
   global cur_num
   calling_func_name = sys._getframe(1).f_code.co_name
   calling_rule_name = calling_func_name[2:]
-  length = len(p) - len(nope)
+  length = len(p)
   if(length == 2):
     if(type(p[1]) is Node):
       return p[1].ast
