@@ -46,7 +46,7 @@ CONST_SCOPE = -10
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
     parentStruct = '', level = 0,ast = None, place = None, trueList = [], falseList = [], continueList = [], breakList = [], nextList = [],
-    quad = None):
+    quad = None, expr = [], label = []):
     self.name = name
     self.val = val
     self.type = type
@@ -65,7 +65,8 @@ class Node:
     self.breakList = breakList
     self.nextList = nextList
     self.quad = quad
-
+    self.expr = expr
+    self.label = label
     if children:
       self.children = children
     else:
@@ -1572,7 +1573,7 @@ def p_statement(p):
                  | iteration_statement
                  | jump_statement
     '''
-    p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1))
+    p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1), label = p[1].label, expr = p[1].expr)
     p[0].ast = build_AST(p)
 
 def p_labeled_statement_1(p):
@@ -1581,14 +1582,25 @@ def p_labeled_statement_1(p):
     p[0].ast = build_AST(p,[2])
 
 def p_labeled_statement_2(p):
-    '''labeled_statement : CASE constant_expression COLON statement'''
+    '''labeled_statement : SwMark1 CASE constant_expression COLON statement'''
     p[0] = Node(name = 'CaseStatement', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p)
+    p[0].expr.append(p[3].place)
+    p[0].label.append(p[1])
+    # print(p[0].label)
 
 def p_labeled_statement_3(p):
-    '''labeled_statement : DEFAULT COLON statement'''
+    '''labeled_statement : SwMark1 DEFAULT COLON statement'''
     p[0] = Node(name = 'DefaultStatement', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p)
+    p[0].label.append(p[1])
+    p[0].expr.append('')
+
+def p_SwMark1(p):
+  ''' SwMark1 : '''
+  l = get_label()
+  emit('label', '', '', l)
+  p[0] = l
 
 def p_compound_statement(p):
     '''compound_statement : openbrace closebrace
@@ -1660,6 +1672,9 @@ def p_statement_list(p):
         p[0].children.append(p[1])
       else:
         p[0].children = p[1].children
+      
+      p[0].label = p[1].label
+      p[0].expr = p[1].expr
       p[0].children.append(p[2])
 
 def p_expression_statement(p):
@@ -1691,11 +1706,38 @@ def p_if(p):
   p[0] = build_AST(p)
 
 def p_selection_statement_3(p):
-    '''selection_statement : switch LPAREN expression RPAREN statement'''
+    '''selection_statement : switch LPAREN expression RPAREN SwMark2 statement SwMark3'''
     p[0] = Node(name = 'SwitchStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global switchDepth
     switchDepth -= 1
     p[0].ast = build_AST(p,[2,4])
+    if not (p[3].type == 'int' or p[3].type == 'short' or p[3].type == 'long' or p[3].type == 'char'):
+      print("COMPILATION ERROR: Invalid data type used inside switch clause") 
+
+
+def p_SwMark2(p):
+  ''' SwMark2 : '''
+  l1 = get_label()
+  l2 = get_label()
+  breakStack.append(l1)
+  emit('goto','','',l2)
+  p[0] = [l1, l2]
+
+
+def p_SwMark3(p):
+  ''' SwMark3 : '''
+  emit('goto','','',p[-2][0])
+  emit('label','','',p[-2][1])
+  for i in range(len(p[-1].label)):
+    tmp_label = p[-1].label[i]
+    tmp_exp = p[-1].expr[i]
+    if tmp_exp == '':
+      emit('goto', '', '', tmp_label)
+    else:
+      emit('ifgoto', p[-4].place, 'eq_' + str(tmp_exp), tmp_label)
+  emit('label','','',p[-2][0])
+  breakStack.pop()
+
 
 def p_switch(p):
   '''switch : SWITCH'''
@@ -1779,18 +1821,58 @@ def p_DoM2(p):
   breakStack.pop()
 
 def p_iteration_statement_3(p):
-    '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement forMark1 expression_statement forMark2 RPAREN statement forMark3'''
     p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
     p[0].ast = build_AST(p,[2,5])
 
 def p_iteration_statement_4(p):
-    '''iteration_statement : for LPAREN expression_statement expression_statement expression RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement forMark1 expression_statement forMark7 expression forMark4 RPAREN forMark5 statement forMark6'''
     p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
     global loopingDepth
     loopingDepth -= 1
     p[0].ast = build_AST(p,[2,6])
+
+def p_forMark1(p):
+    '''forMark1 : '''
+    l1 = get_label()
+    l2 = get_label()
+    l3 = get_label()
+    continueStack.append(l1)
+    breakStack.append(l2)
+    emit('label', '', '', l1)
+    p[0] = [l1, l2, l3]
+
+def p_forMark2(p):
+    '''forMark2 : '''
+    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+
+def p_forMark7(p):
+    '''forMark7 : '''
+    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+    emit('goto', '', '', p[-2][2])
+
+def p_forMark3(p):
+    '''forMark3 : '''
+    emit('label', '', '', p[-5][1])
+    breakStack.pop()
+    continueStack.pop()
+
+def p_forMark4(p):
+    '''forMark4 : '''
+    emit('goto' , '', '', p[-4][0])
+
+def p_forMark5(p):
+    '''forMark5 : '''
+    emit('label', '', '', p[-6][2])
+
+def p_forMark6(p):
+    '''forMark6 : '''
+    emit('label', '', '', p[-8][1])
+    breakStack.pop()
+    continueStack.pop()
+
 
 def p_for(p):
   '''for : FOR'''
@@ -1822,6 +1904,7 @@ def p_jump_statement_1(p):
   p[0].ast = build_AST(p,[2])
   if(loopingDepth == 0 and switchDepth == 0):
     print(p[0].lno, 'break not inside loop')
+  emit('goto','','',breakStack[-1])
 
 def p_jump_statement_2(p):
   '''jump_statement : CONTINUE SEMICOLON'''
