@@ -1,1 +1,10 @@
-python3: can't open file 'main.py': [Errno 2] No such file or directory
+WARNING: /home/jayeshaw/Acads/CS335/compiler-project/src/parser.py:1775: Function p_forMark3 redefined. Previously defined on line 1763
+ERROR: /home/jayeshaw/Acads/CS335/compiler-project/src/parser.py:1744: Symbol 'forMark6' used, but not defined as a token or a rule
+Traceback (most recent call last):
+  File "./src/main.py", line 40, in <module>
+    parser.runmain(code)
+  File "/home/jayeshaw/Acads/CS335/compiler-project/src/parser.py", line 1904, in runmain
+    parser = yacc.yacc(start = 'translation_unit')
+  File "/home/jayeshaw/.local/lib/python3.8/site-packages/ply/yacc.py", line 3432, in yacc
+    raise YaccError('Unable to build parser')
+ply.yacc.YaccError: Unable to build parser

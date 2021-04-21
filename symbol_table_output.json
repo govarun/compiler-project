@@ -3,6 +3,26 @@ In "global"{
         "type": "int",
         "isFunc": 1,
         "argumentList": []
+    },
+    "__t_0": {
+        "type": "int",
+        "size": 4,
+        "value": 0
+    },
+    "__t_1": {
+        "type": "int",
+        "size": 4,
+        "value": 0
+    },
+    "__t_2": {
+        "type": "int",
+        "size": 4,
+        "value": 0
+    },
+    "__t_3": {
+        "type": "int",
+        "size": 4,
+        "value": 0
     }
 }
 In "main"{

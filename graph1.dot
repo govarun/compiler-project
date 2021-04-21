@@ -11,9 +11,77 @@ digraph G {
 3 -> 6
 7[label="declaration"]
 7 -> 3
-8[label="function_compound_statement"]
-8 -> 7
-9[label="function_definition_2"]
-9 -> 1
-9 -> 8
+8[label="additive_expression"]
+9[label="4"]
+8 -> 9
+10[label="+"]
+8 -> 10
+11[label="4"]
+8 -> 11
+12[label="assignment_expression"]
+13[label="y"]
+12 -> 13
+14[label="="]
+12 -> 14
+12 -> 8
+15[label="expression_statement"]
+15 -> 12
+16[label="assignment_expression"]
+17[label="y"]
+16 -> 17
+18[label="="]
+16 -> 18
+19[label="0"]
+16 -> 19
+20[label="expression_statement"]
+20 -> 16
+21[label="relational_expression"]
+22[label="y"]
+21 -> 22
+23[label="<"]
+21 -> 23
+24[label="4"]
+21 -> 24
+25[label="expression_statement"]
+25 -> 21
+26[label="postfix_expression_6"]
+27[label="y"]
+26 -> 27
+28[label="++"]
+26 -> 28
+29[label="postfix_expression_6"]
+30[label="y"]
+29 -> 30
+31[label="++"]
+29 -> 31
+32[label="expression_statement"]
+32 -> 29
+33[label="compound_statement"]
+33 -> 32
+34[label="iteration_statement_4"]
+35[label="for"]
+34 -> 35
+34 -> 20
+36[label="['l0', 'l1', 'l2']"]
+34 -> 36
+34 -> 25
+37[label="None"]
+34 -> 37
+34 -> 26
+38[label="None"]
+34 -> 38
+39[label="None"]
+34 -> 39
+34 -> 33
+40[label="None"]
+34 -> 40
+41[label="statement_list"]
+41 -> 15
+41 -> 34
+42[label="function_compound_statement"]
+42 -> 7
+42 -> 41
+43[label="function_definition_2"]
+43 -> 1
+43 -> 42
 }

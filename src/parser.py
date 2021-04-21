@@ -1734,18 +1734,58 @@ def p_do(p):
   p[0] = build_AST(p)
 
 def p_iteration_statement_3(p):
-    '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement forMark1 expression_statement forMark2 RPAREN statement forMark3'''
     p[0] = Node(name = 'ForWithoutStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
     p[0].ast = build_AST(p,[2,5])
 
 def p_iteration_statement_4(p):
-    '''iteration_statement : for LPAREN expression_statement expression_statement expression RPAREN statement'''
+    '''iteration_statement : for LPAREN expression_statement forMark1 expression_statement forMark7 expression forMark4 RPAREN forMark5 statement forMark6'''
     p[0] = Node(name = 'ForWithStatement', val = '', type = '', children = [], lno = p.lineno(1)) 
     global loopingDepth
     loopingDepth -= 1
     p[0].ast = build_AST(p,[2,6])
+
+def p_forMark1(p):
+    '''forMark1 : '''
+    l1 = get_label()
+    l2 = get_label()
+    l3 = get_label()
+    continueStack.append(l1)
+    breakStack.append(l2)
+    emit('label', '', '', l1)
+    p[0] = [l1, l2, l3]
+
+def p_forMark2(p):
+    '''forMark2 : '''
+    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+
+def p_forMark7(p):
+    '''forMark7 : '''
+    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+    emit('goto', '', '', p[-2][2])
+
+def p_forMark3(p):
+    '''forMark3 : '''
+    emit('label', '', '', p[-5][1])
+    breakStack.pop()
+    continueStack.pop()
+
+def p_forMark4(p):
+    '''forMark4 : '''
+    emit('goto' , '', '', p[-4][0])
+
+def p_forMark5(p):
+    '''forMark5 : '''
+    emit('label', '', '', p[-6][2])
+
+def p_forMark6(p):
+    '''forMark6 : '''
+    emit('label', '', '', p[-8][1])
+    breakStack.pop()
+    continueStack.pop()
+
 
 def p_for(p):
   '''for : FOR'''
