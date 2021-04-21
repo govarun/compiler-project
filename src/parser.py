@@ -1700,42 +1700,28 @@ def p_expression_statement(p):
     # TODO : see what to do in case of only semicolon in rhs
 
 def p_selection_statement_1(p):
-    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement IfMark2 %prec IFX'''
+    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement %prec IFX'''
     p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p, [5, 7])
+    emit('label', '', '', p[5][0])
   
 def p_selection_statement_2(p):
-    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement ELSE IfMark3 statement IfMark4 %prec ELSE'''
+    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement ELSE IfMark2 statement'''
     p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p, [5, 8, 10])
+    emit('label', '', '', p[5][1])
 
 def p_IfMark1(p):
   '''IfMark1 : '''
   l1 = get_label()
   l2 = get_label()
-  emit('ifgoto', p[-2].place, 'eq 0', l2)
-  emit('goto', '', '', l1)
-  emit('label', '', '', l1)
+  emit('ifgoto', p[-2].place, 'eq 0', l1)
   p[0] = [l1, l2]
 
 def p_IfMark2(p):
   '''IfMark2 : '''
-  emit('label', '', '', p[-2][1])
-
-def p_IfMark3(p):
-  '''IfMark3 : '''
-  l3 = get_label()
-  emit('goto', '', '', l3)
-  emit('label', '', '', p[-3][1])
-  p[0] = [l3]
-
-def p_IfMark4(p):
-  '''IfMark4 : '''
-  emit('label', '', '', p[-2][0])
-
-# def p_IfMark5(p):
-#   '''IfMark5 : '''
-#   # emit('label', '', '', p[-2][0])
+  emit('goto', '', '', p[-3][1])
+  emit('label', '', '', p[-3][0])
 
 def p_if(p):
   '''if : IF'''
