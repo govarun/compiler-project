@@ -120,7 +120,7 @@ def get_new_tmp(dtype, value=0):
 
 def get_label():
   global label_cnt
-  s = "l" + str(label_cnt)
+  s = "__l" + str(label_cnt)
   label_cnt += 1
   return s
 
@@ -1700,14 +1700,42 @@ def p_expression_statement(p):
     # TODO : see what to do in case of only semicolon in rhs
 
 def p_selection_statement_1(p):
-    '''selection_statement : if LPAREN expression RPAREN statement %prec IFX'''
+    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement IfMark2 %prec IFX'''
     p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
-    p[0].ast = build_AST(p)
+    p[0].ast = build_AST(p, [5, 7])
   
 def p_selection_statement_2(p):
-    '''selection_statement : if LPAREN expression RPAREN statement ELSE statement'''
+    '''selection_statement : if LPAREN expression RPAREN IfMark1 statement ELSE IfMark3 statement IfMark4 %prec ELSE'''
     p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [], lno = p.lineno(1))
-    p[0].ast = build_AST(p)
+    p[0].ast = build_AST(p, [5, 8, 10])
+
+def p_IfMark1(p):
+  '''IfMark1 : '''
+  l1 = get_label()
+  l2 = get_label()
+  emit('ifgoto', p[-2].place, 'eq 0', l2)
+  emit('goto', '', '', l1)
+  emit('label', '', '', l1)
+  p[0] = [l1, l2]
+
+def p_IfMark2(p):
+  '''IfMark2 : '''
+  emit('label', '', '', p[-2][1])
+
+def p_IfMark3(p):
+  '''IfMark3 : '''
+  l3 = get_label()
+  emit('goto', '', '', l3)
+  emit('label', '', '', p[-3][1])
+  p[0] = [l3]
+
+def p_IfMark4(p):
+  '''IfMark4 : '''
+  emit('label', '', '', p[-2][0])
+
+# def p_IfMark5(p):
+#   '''IfMark5 : '''
+#   # emit('label', '', '', p[-2][0])
 
 def p_if(p):
   '''if : IF'''
@@ -2012,7 +2040,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
