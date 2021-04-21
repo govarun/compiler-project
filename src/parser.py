@@ -1706,21 +1706,44 @@ def p_switch(p):
 
 # remember : here statement added in grammar
 def p_iteration_statement_1(p):
-    '''iteration_statement : while LPAREN expression RPAREN statement'''
+    '''iteration_statement : while WhMark1 LPAREN expression RPAREN WhMark2 statement WhMark3 '''
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
-    p[0] = build_AST(p,[2,4])
+    #p[0] = build_AST(p,[4,7])
   
 def p_while(p):
   '''while : WHILE'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
-  p[0] = build_AST(p)
+  #p[0] = build_AST(p)
+
+def p_WhMark1(p):
+  '''WhMark1 : '''
+  l1 = get_label()
+  l2 = get_label
+  l3 = get_label()
+  continueStack.append(1)
+  breakStack.append(2)
+  emit('goto', '', '', l1)
+  p[0] = [l1 , l2 , l3]
+
+def p_WhMark2(p):
+  '''WhMark2 : '''
+  emit('ifgoto', p[-2].place , 'eq 0', p[-4][2])
+  emit('goto', '', '', p[-4][1])
+  emit('label', '', '', p[-4][1])
+
+def p_WhMark3(p):
+  '''WhMark3 : '''
+  emit('goto','','',p[-6][0])
+  emit('label','', '', p[-6][2])
+  continueStack.pop()
+  breakStack.pop()
 
 def p_iteration_statement_2(p):
-    '''iteration_statement : do statement WHILE LPAREN expression RPAREN SEMICOLON'''
+    '''iteration_statement : do DoM1 statement WHILE DoM2 LPAREN expression RPAREN DoM3 SEMICOLON'''
     p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
@@ -1732,6 +1755,28 @@ def p_do(p):
   loopingDepth += 1
   p[0] = p[1]
   p[0] = build_AST(p)
+
+def p_DoM1(p):
+  '''DoM1 : '''
+  l1 = get_label()
+  l2 = get_label()
+  l3 = get_label()
+  continueStack.append(l1)
+  breakStack.append(l3)
+  emit('label', '', '', l1)
+  p[0] = [l1 , l2, l3]
+
+def p_DoM3(p):
+  '''DoM3 : '''
+  emit('ifgoto', p[-2].place, 'eq 0', p[-7][2])
+  emit('goto', '', '', p[-7][0])
+  emit('label','','',p[-7][2])
+
+def p_DoM2(p): 
+  '''DoM2 : '''
+  emit('label', '', '', p[-3][1])
+  continueStack.pop()
+  breakStack.pop()
 
 def p_iteration_statement_3(p):
     '''iteration_statement : for LPAREN expression_statement expression_statement RPAREN statement'''
@@ -1783,10 +1828,12 @@ def p_jump_statement_2(p):
   global loopingDepth
 
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
-  p[0].ast = build_AST(p,[2])
+  #p[0].ast = build_AST(p,[2])
 
   if(loopingDepth == 0):
     print(p[0].lno, 'continue not inside loop')
+
+  emit('goto','','',continueStack[-1])
 
 def p_jump_statement_3(p):
   '''jump_statement : GOTO ID SEMICOLON'''
