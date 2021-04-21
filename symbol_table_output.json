@@ -3,13 +3,32 @@ In "global"{
         "type": "int",
         "isFunc": 1,
         "argumentList": []
+    },
+    "__t_0": {
+        "type": "int",
+        "size": 4,
+        "value": 0
+    },
+    "__t_1": {
+        "type": "int",
+        "size": 4,
+        "value": 0
     }
 }
 In "main"{
-    "y": {
+    "x": {
         "type": "int",
-        "value": "5",
         "size": 4,
         "offset": 0
+    },
+    "y": {
+        "type": "int",
+        "size": 4,
+        "offset": 4
+    },
+    "z": {
+        "type": "int",
+        "size": 4,
+        "offset": 8
     }
 }

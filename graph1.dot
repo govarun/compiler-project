@@ -2,18 +2,100 @@ digraph G {
 1[label="direct_declarator_3"]
 2[label="main"]
 1 -> 2
-3[label="init_declarator"]
-4[label="y"]
+3[label="declaration"]
+4[label="x"]
 3 -> 4
-5[label="="]
-3 -> 5
-6[label="5"]
-3 -> 6
-7[label="declaration"]
-7 -> 3
-8[label="function_compound_statement"]
-8 -> 7
-9[label="function_definition_2"]
-9 -> 1
+5[label="init_declarator_list"]
+6[label="y"]
+5 -> 6
+7[label="z"]
+5 -> 7
+8[label="declaration"]
+8 -> 5
+9[label="declaration_list"]
+9 -> 3
 9 -> 8
+10[label="additive_expression"]
+11[label="5"]
+10 -> 11
+12[label="+"]
+10 -> 12
+13[label="6"]
+10 -> 13
+14[label="assignment_expression"]
+15[label="y"]
+14 -> 15
+16[label="="]
+14 -> 16
+14 -> 10
+17[label="expression_statement"]
+17 -> 14
+18[label="labeled_statement_2"]
+19[label="l2"]
+18 -> 19
+20[label="case"]
+18 -> 20
+21[label="1"]
+18 -> 21
+22[label=":"]
+18 -> 22
+18 -> 17
+23[label="jump_statement_1"]
+24[label="break"]
+23 -> 24
+25[label="statement_list"]
+25 -> 18
+25 -> 23
+26[label="additive_expression"]
+27[label="1"]
+26 -> 27
+28[label="+"]
+26 -> 28
+29[label="5"]
+26 -> 29
+30[label="assignment_expression"]
+31[label="z"]
+30 -> 31
+32[label="="]
+30 -> 32
+30 -> 26
+33[label="expression_statement"]
+33 -> 30
+34[label="labeled_statement_2"]
+35[label="l3"]
+34 -> 35
+36[label="case"]
+34 -> 36
+37[label="2"]
+34 -> 37
+38[label=":"]
+34 -> 38
+34 -> 33
+39[label="statement_list"]
+39 -> 25
+39 -> 34
+40[label="jump_statement_1"]
+41[label="break"]
+40 -> 41
+42[label="statement_list"]
+42 -> 39
+42 -> 40
+43[label="compound_statement"]
+43 -> 42
+44[label="selection_statement_3"]
+45[label="switch"]
+44 -> 45
+46[label="x"]
+44 -> 46
+47[label="['l0', 'l1']"]
+44 -> 47
+44 -> 43
+48[label="None"]
+44 -> 48
+49[label="function_compound_statement"]
+49 -> 9
+49 -> 44
+50[label="function_definition_2"]
+50 -> 1
+50 -> 49
 }
