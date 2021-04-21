@@ -934,6 +934,35 @@ def p_assignment_expression(p):
     
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
+    
+    if p[2].val == '=':
+      operator = '='
+      data_type = int_or_real(p[1].type)
+      if (int_or_real(p[3].type) != data_type):
+        tmp = get_new_tmp(data_type)
+        change_data_type_emit(p[3].type, data_type, p[3].place, tmp)
+        emit(data_type + '_' + operator, tmp, '', p[1].place)
+      else:
+        emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
+    else:
+      operator = p[2].val[:-1]
+      higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
+      new_tmp = get_new_tmp(higher_data_type)
+      if (int_or_real(p[1].type) != higher_data_type):
+        tmp = get_new_tmp(higher_data_type)
+        change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
+        emit(higher_data_type + '_' + operator, tmp, p[3].place, new_tmp)
+        # change_data_type_emit(higher_data_type, p[1].type, new_tmp, p[1].place)
+      elif (int_or_real(p[3].type) != higher_data_type):
+        tmp = get_new_tmp(higher_data_type)
+        change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
+        emit(higher_data_type + '_' + operator, p[1].place, tmp, new_tmp)
+        # emit(int_or_real(p[1].type) + '_' + int_or_real(higher_data_type) + '_=', new_tmp, '', p[1].place)
+      else:
+        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, new_tmp)
+      emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '', p[1].place)
+
+
 
 def p_assignment_operator(p):
   '''assignment_operator : EQUALS
@@ -1008,12 +1037,22 @@ def p_declaration(p):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
         offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
+        # 3AC Code 
+        child.children[0].place = child.children[0].val
+        # print(child.children[1].val)
+        operator = '='
+        data_type = int_or_real(p[1].type)
+        if (int_or_real(child.children[1].type) != data_type):
+          tmp = get_new_tmp(data_type)
+          change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
+          emit(data_type + '_' + operator, tmp, '', child.children[0].place)
+        else:
+          emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
       else:
         if(child.val in symbol_table[currentScope].keys()):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
-        # print(p[1].type)
         symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
         symbol_table[currentScope][child.val]['offset'] = offset[currentScope]
         totalEle = 1
