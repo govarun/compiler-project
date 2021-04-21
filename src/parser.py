@@ -40,6 +40,7 @@ scope_to_function[0] = 'global'
 nextstat = 0 # next instruction pointer
 emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
 label_cnt = 0
+var_cnt = 0
 CONST_SCOPE = -10
 
 class Node:
@@ -99,22 +100,29 @@ def make_list(i = -1):
     new_list.append(int(i))
   return new_list
 
-def _new_label():
+def _new_var():
+  global var_cnt
+  s = "__t_" + str(var_cnt)
+  var_cnt += 1
+  return s
+
+def insert_in_sym_table(tmp_name, dtype, value=0):
+  symbol_table[0][tmp_name] = {}
+  symbol_table[0][tmp_name]['type'] = dtype
+  symbol_table[0][tmp_name]['size'] = get_data_type_size(dtype)
+  symbol_table[0][tmp_name]['value'] = value
+
+def get_new_tmp(dtype, value=0):
+  tmp_name = _new_var()
+  insert_in_sym_table(tmp_name, dtype, value)
+  return tmp_name
+
+def get_label():
   global label_cnt
-  s = "__t_" + str(label_cnt)
+  s = "l" + str(label_cnt)
   label_cnt += 1
   return s
 
-def insert_in_sym_table(label, dtype, value=0):
-  symbol_table[0][label] = {}
-  symbol_table[0][label]['type'] = dtype
-  symbol_table[0][label]['size'] = get_data_type_size(dtype)
-  symbol_table[0][label]['value'] = value
-
-def get_label(dtype, value=0):
-  label = _new_label()
-  insert_in_sym_table(label, dtype, value)
-  return label
 
 def handle_pointer(arr):
   pass
@@ -131,14 +139,14 @@ def int_or_real(dtype):
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
-  return_tmp = get_label(higher_data_type)
+  return_tmp = get_new_tmp(higher_data_type)
   p0.place = return_tmp
   if (int_or_real(p1.type) != higher_data_type):
-    tmp = get_label(higher_data_type)
+    tmp = get_new_tmp(higher_data_type)
     change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
     emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
   elif (int_or_real(p3.type) != higher_data_type):
-    tmp = get_label(higher_data_type)
+    tmp = get_new_tmp(higher_data_type)
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
   else:
@@ -449,7 +457,7 @@ def p_postfix_expression_5(p):
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
 	| postfix_expression DECREMENT'''
-  tmp = get_label(p[1].type)
+  tmp = get_new_tmp(p[1].type)
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [], place = tmp)
   p[0].ast = build_AST(p)
   found_scope = find_scope(p[1].val, p[1].lno)
@@ -514,7 +522,7 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:len(p[2].type)-2],children = [p[2]])
     p[0].ast = build_AST(p)
   elif(p[1].val == '-'):
-    tmp = get_label(p[2].type)
+    tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
     emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
@@ -562,7 +570,7 @@ def p_cast_expression(p):
     p[0].ast = build_AST(p)
   else:
     # confusion about val
-    tmp = get_label(p[2].type)
+    tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
     p[0].ast = build_AST(p,[1,3])
     change_data_type_emit(p[4].type, p[2].type, p[4].place, p[0].place)
