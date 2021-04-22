@@ -2064,13 +2064,13 @@ def p_jump_statement(p):
       p[0].ast = build_AST(p)
       if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
-      emit('ret', '', '', p[2].place)
+      emit('ret', '', '', '')
     else:
       if(p[2].type != '' and curFuncReturnType != p[2].type):
         print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
-      emit('ret', '', '', '')
+      emit('ret', '', '', p[2].place)
 
 def p_jump_statement_1(p):
   '''jump_statement : BREAK SEMICOLON'''
