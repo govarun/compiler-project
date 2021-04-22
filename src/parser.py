@@ -46,7 +46,7 @@ CONST_SCOPE = -10
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
     parentStruct = '', level = 0,ast = None, place = None, trueList = [], falseList = [], continueList = [], breakList = [], nextList = [],
-    quad = None, expr = [], label = []):
+    quad = None, expr = [], label = [], tind = ''):
     self.name = name
     self.val = val
     self.type = type
@@ -67,6 +67,7 @@ class Node:
     self.quad = quad
     self.expr = expr
     self.label = label
+    self.tind = tind
     if children:
       self.children = children
     else:
@@ -382,6 +383,30 @@ def p_postfix_expression_2(p):
   p[0].ast = build_AST(p)
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+
+  temp_ind = get_new_tmp('int')
+
+  if(tempScope != -1):
+    d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
+    if d == 0:
+      emit('int_=', p[3].place, '', temp_ind)
+    else:
+      v1 = get_new_tmp('int')
+      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
+      emit('int_+', v1, p[3].place, temp_ind)
+
+  if(p[0].level == 0 and len(p[0].array) > 0):
+    v1 = get_new_tmp('int')
+    emit('int_*', temp_ind, get_data_type_size(p[1].type), v1)
+    v2 = get_new_tmp('int')
+    emit('addr', p[0].val, '', v2)
+    v3 = get_new_tmp('int')
+    emit('int_+', v2, v1, v3)
+    v4 = get_new_tmp('int')
+    emit('*', v3, '', v4)
+    p[0].place = v4
+  elif(len(p[0].array) > 0):
+    p[0].tind = temp_ind
 
 
   curscp = currentScope
