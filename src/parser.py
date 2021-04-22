@@ -126,14 +126,16 @@ def get_label():
   return s
 
 
-def handle_pointer(arr):
-  pass
+# def handle_pointer(arr):
+#   return 'int'
 
 def int_or_real(dtype):
   arr = dtype.split()
   if ('*' in arr):
-    return handle_pointer(arr)
-  if ( ('int' in arr) or ('char' in arr) or ('short' in arr) or ('long' in arr) ):
+    return 'pointer'
+  if 'long' in arr:
+    return 'long' 
+  elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
     return 'real'
@@ -460,11 +462,12 @@ def p_postfix_expression_5(p):
     if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
       print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
 
-  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [], place = p[1].place)
+  p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   p[0].ast = build_AST(p)
   struct_name = p[1].type
   if (struct_name.endswith('*') and p[2][0] == '.') or (not struct_name.endswith('*') and p[2][0] == '->') :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " +  " on " + struct_name)
+    return
   if(not struct_name.startswith('struct')):
     print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
     return
@@ -481,9 +484,27 @@ def p_postfix_expression_5(p):
         p[0].level = len(curr_list[4])
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+    return
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + " not declared in " + struct_name)
+    return
   # structure things , do later
+
+  # 3AC Code Handling
+  for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+    if curr_list[1] == p[3][0]:
+      tmp = get_new_tmp('long')
+      emit('addr',p[1].place, '', tmp)
+      if curr_list[3] > 0:
+        emit('long_+',tmp, curr_list[3], tmp)
+      tmp2 = get_new_tmp(curr_list[0])
+      emit('*',tmp,'',tmp2)
+      p[0].place = tmp2
+      break
+      
+
+
+
 
 def p_postfix_expression_6(p):
   '''postfix_expression : postfix_expression INCREMENT
@@ -547,11 +568,17 @@ def p_unary_expression_2(p):
     # no '&' child added, will deal in traversal
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
+    tmp = get_new_tmp(p[2].type + ' *')
+    emit('addr',p[2].place,'',tmp)
+    p[0].place = tmp
   elif(p[1].val == '*'):
     if(not p[2].type.endswith('*')):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:len(p[2].type)-2],children = [p[2]])
     p[0].ast = build_AST(p)
+    tmp = get_new_tmp(p[2].type[:-2])
+    emit('*',p[2].place,'',tmp)
+    p[0].place = tmp
   elif(p[1].val == '-'):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
