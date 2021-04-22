@@ -895,7 +895,7 @@ def p_logical_or_expression(p):
 def p_OrMark1(p):
   '''OrMark1 : '''
   l1 = get_label()
-  emit('ifgoto', p[-1].place, 'eq 1', l1)
+  emit('ifgoto', p[-1].place, 'neq 0', l1)
   p[0] = [l1]
 
 def p_OrMark2(p):
@@ -914,20 +914,20 @@ def p_conditional_expression(p):
     p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [])
     p[0].ast = build_AST(p)
 
-def CondMark1(p):
+def p_CondMark1(p):
   '''CondMark1 : '''
   l1 = get_label()
   emit('ifgoto', p[-1].place, 'eq 0', l1)
   p[0] = [l1]
 
-def CondMark2(p):
+def p_CondMark2(p):
   '''CondMark2 : '''
   l2 = get_label()
   emit('goto', '', '', l2)
   emit('label', '', '', p[-4][0])
   p[0] = [l2]
 
-def CondMark3(p):
+def p_CondMark3(p):
   '''CondMark3 : '''
   emit('label', '', '', p[-2][0])
 
