@@ -632,8 +632,7 @@ def p_multipicative_expression(p):
 
     # handling the emits
     p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
-###############
-
+########
 def p_additive_expression(p):
   '''additive_expression : multiplicative_expression
 	| additive_expression PLUS multiplicative_expression
@@ -789,6 +788,8 @@ def p_and_expression(p):
     check_invalid_operation_on_function(p[3])
     
     p[0].type = 'int' # should not be char, even if the and was done for two chars
+    # handling emits
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 # TODO: do the above expression things below as well
 
@@ -812,6 +813,8 @@ def p_exclusive_or_expression(p):
 
     p[0] = Node(name = 'XorOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
+    # handling emits
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 def p_inclusive_or_expression(p):
   '''inclusive_or_expression : exclusive_or_expression
@@ -834,53 +837,75 @@ def p_inclusive_or_expression(p):
 
     p[0] = Node(name = 'OrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
+    # handling emits
+    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
 
 def p_logical_and_expression(p):
   '''logical_and_expression : inclusive_or_expression 
-  | logical_and_expression LAND inclusive_or_expression
+  | logical_and_expression AndMark1 LAND  inclusive_or_expression AndMark2
   '''
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    if(p[1].type == '' or p[3].type == ''):
+    if(p[1].type == '' or p[4].type == ''):
       p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+    if p[1].type.split()[-1] not in type_list or p[4].type.split()[-1] not in type_list:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[3]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
-    check_invalid_operation_on_function(p[3])
+    check_invalid_operation_on_function(p[4])
     p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
 
+def p_AndMark1(p):
+  '''AndMark1 : '''
+  l1 = get_label()
+  emit('ifgoto', p[-1].place, 'eq 0', l1)
+  p[0] = [l1]
+
+def p_AndMark2(p):
+  '''AndMark2 : '''
+  emit('label', '', '', p[-3][0])
+
 def p_logical_or_expression(p):
   '''logical_or_expression : logical_and_expression
-	| logical_or_expression LOR logical_and_expression
+	| logical_or_expression OrMark1 LOR logical_and_expression OrMark2
   '''
   if(len(p) == 2):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    if(p[1].type == '' or p[3].type == ''):
+    if(p[1].type == '' or p[4].type == ''):
       p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
       return
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+    if p[1].type.split()[-1] not in type_list or p[4].type.split()[-1] not in type_list:
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[3]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
-    check_invalid_operation_on_function(p[3])
+    check_invalid_operation_on_function(p[4])
     p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
     p[0].ast = build_AST(p)
+
+def p_OrMark1(p):
+  '''OrMark1 : '''
+  l1 = get_label()
+  emit('ifgoto', p[-1].place, 'eq 1', l1)
+  p[0] = [l1]
+
+def p_OrMark2(p):
+  '''OrMark2 : '''
+  emit('label', '', '', p[-3][0])
 
 # TODO: everything for conditional_expression
 def p_conditional_expression(p):
   '''conditional_expression : logical_or_expression
-	| logical_or_expression CONDOP expression COLON conditional_expression
+	| logical_or_expression CondMark1 CONDOP expression COLON CondMark2 conditional_expression CondMark3
   '''
   if(len(p) == 2):
     p[0] = p[1]
@@ -889,6 +914,22 @@ def p_conditional_expression(p):
     p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [])
     p[0].ast = build_AST(p)
 
+def CondMark1(p):
+  '''CondMark1 : '''
+  l1 = get_label()
+  emit('ifgoto', p[-1].place, 'eq 0', l1)
+  p[0] = [l1]
+
+def CondMark2(p):
+  '''CondMark2 : '''
+  l2 = get_label()
+  emit('goto', '', '', l2)
+  emit('label', '', '', p[-4][0])
+  p[0] = [l2]
+
+def CondMark3(p):
+  '''CondMark3 : '''
+  emit('label', '', '', p[-2][0])
 
 def p_assignment_expression(p):
   '''assignment_expression : conditional_expression 
