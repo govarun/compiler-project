@@ -266,7 +266,7 @@ def find_scope(id, lineno = -1): #default value kept, because it is not needed, 
 
 def check_invalid_operation_on_function(node):
   found_scope = find_scope(node.val, node.lno)
-  if (found_scope != -1) and (node.isFunc == 1):
+  if (found_scope != -1) and (node.isFunc >= 1):
     print("Compilation Error at line", str(node.lno), ":Invalid operation on", node.val)
 
 
@@ -520,7 +520,7 @@ def p_postfix_expression_6(p):
   p[0] = Node(name = 'IncrementOrDecrementExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [], place = tmp)
   p[0].ast = build_AST(p)
   found_scope = find_scope(p[1].val, p[1].lno)
-  if (found_scope != -1) and ((p[1].isFunc == 1) or ('struct' in p[1].type.split())):
+  if (found_scope != -1) and ((p[1].isFunc >= 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   # emit(p[1].val + p[2])
   emit('=', p[1].place, '', tmp)
@@ -562,7 +562,7 @@ def p_unary_expression_1(p):
     p[0].ast = build_AST(p)
     #Can't think of a case where this is invalid
     found_scope = find_scope(p[2].val, p[2].lno)
-    if (found_scope != -1) and ((p[2].isFunc == 1) or ('struct' in p[2].type.split())):
+    if (found_scope != -1) and ((p[2].isFunc >= 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
     emit(int_or_real(p[2].type) + '_' + p[1][0][:-1] , 1, p[2].place, p[0].place)
 
@@ -1112,10 +1112,20 @@ def p_declaration(p):
   '''declaration : declaration_specifiers SEMICOLON
 	| declaration_specifiers init_declarator_list SEMICOLON
   '''
+  global currentScope
+  
   if(len(p) == 3):
+    
+    # if(p[2].isFunc > 0):
+    #   currentScope = parent[currentScope]
+    #   print(currentScope)
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
+    print('here')
+    if(p[2].isFunc > 0):
+      currentScope = parent[currentScope]
+      print(currentScope)
     # a = 1
     p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
@@ -1129,6 +1139,7 @@ def p_declaration(p):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
           continue
         if(child.children[0].val in symbol_table[currentScope].keys()):
+          print('here1')
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
         symbol_table[currentScope][child.children[0].val] = {}
         symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
@@ -1159,7 +1170,9 @@ def p_declaration(p):
         else:
           emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
       else:
-        if(child.val in symbol_table[currentScope].keys()):
+        if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
+          continue
+        if(child.val in symbol_table[currentScope].keys() and 'isFunc' not in symbol_table[currentScope][child.val]):
           print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
         symbol_table[currentScope][child.val] = {}
         symbol_table[currentScope][child.val]['type'] = p[1].type
@@ -1225,7 +1238,7 @@ def p_init_declarator_list(p):
 	| init_declarator_list COMMA init_declarator
   '''
   if(len(p) == 2):
-    p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]])
+    p[0] = Node(name = 'InitDeclaratorList', val = '', type = '', lno = p.lineno(1), children = [p[1]],isFunc=p[1].isFunc)
     p[0].ast = build_AST(p)
   else:
     #check once
@@ -1243,7 +1256,7 @@ def p_init_declarator(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array)
+    p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array,isFunc=p[1].isFunc)
     p[0].ast = build_AST(p)
     if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
@@ -1496,10 +1509,17 @@ def p_direct_declarator_1(p):
     p[0].children = p[3].children
     p[0].type = curType[-1]
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
-      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+      if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
+        # print(symbol_table[parent[currentScope]][p[1].val]['isFunc'])
+        # print(symbol_table[parent[currentScope]][p[1].val])
+        print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+      else:
+        scope_to_function[currentScope] = p[1].val
+      return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     
-    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
+    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 2
+    p[0].isFunc = 2
     tempList = []
     for child in p[3].children:
       tempList.append(child.type)
@@ -1528,13 +1548,20 @@ def p_direct_declarator_3(p):
   global curFuncReturnType
   if(p[3] == ')'):
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
-      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+      # print('check')
+      if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
+        print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+      else:
+        scope_to_function[currentScope] = p[1].val
+      return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
     curFuncReturnType = copy.deepcopy(curType[-1])
-    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 1
+    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 2
+    p[0].isFunc = 2
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
     scope_to_function[currentScope] = p[1].val
+    print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
     emit('func', '', '', p[1].val)
 
 def p_pointer(p):
@@ -1604,7 +1631,7 @@ def p_parameter_declaration(p):
       p[0].ast = build_AST(p)
       if(len(p[2].type) > 0):
         p[0].type = p[1].type + ' ' + p[2].type
-    if(p[2].name == 'Declarator'):
+    if(len(p) > 2 and p[2].name == 'Declarator'):
       if(p[2].val in symbol_table[currentScope].keys()):
         print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
       symbol_table[currentScope][p[2].val] = {}
@@ -2132,7 +2159,7 @@ def p_external_declaration(p):
     p[0].ast = build_AST(p)
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list compound_statement 
+    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement 
                            | declarator declaration_list function_compound_statement
                            | declarator function_compound_statement                                                                              
     ''' 
@@ -2145,6 +2172,7 @@ def p_function_definition_1(p):
     else:
       # no need to keep type in AST
       p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
+      symbol_table[0][p[2].val]['isFunc'] = 1
     p[0].ast = build_AST(p)
     emit('funcEnd', '', '', '')
 
@@ -2153,6 +2181,8 @@ def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator function_compound_statement'''
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
+  # print(p[2].val)
+  symbol_table[0][p[2].val]['isFunc'] = 1
   emit('funcEnd', '', '', '')
 
 def p_openbrace(p):
