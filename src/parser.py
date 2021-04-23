@@ -42,6 +42,12 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
+pre_append_in_symbol_table_list = ['printf']
+
+def pre_append_in_symbol_table():
+  for symbol in pre_append_in_symbol_table_list:
+    symbol_table[0][symbol] = {}
+    symbol_table[0][symbol]['isFunc'] = 1
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
@@ -2159,10 +2165,11 @@ def p_external_declaration(p):
     p[0].ast = build_AST(p)
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator FuncMark1 declaration_list function_compound_statement 
-                           | declarator declaration_list function_compound_statement
-                           | declarator function_compound_statement                                                                              
+    '''function_definition : declaration_specifiers declarator FuncMark1 declaration_list function_compound_statement                                                                            
     ''' 
+    # removed from grammar
+    # | declarator declaration_list function_compound_statement
+    #                        | declarator function_compound_statement   
     #p[0] = Node()
     # p[0] = build_AST(p)  
     if(len(p) == 3):
