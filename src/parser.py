@@ -1902,13 +1902,18 @@ def p_SwMark3(p):
   ''' SwMark3 : '''
   emit('goto','','',p[-2][0])
   emit('label','','',p[-2][1])
+  flag=0;
+  lazy_label = ''
   for i in range(len(p[-1].label)):
     tmp_label = p[-1].label[i]
     tmp_exp = p[-1].expr[i]
     if tmp_exp == '':
-      emit('goto', '', '', tmp_label)
+      lazy_label = tmp_label
+      flag=1
     else:
       emit('ifgoto', p[-4].place, 'eq ' + str(tmp_exp), tmp_label)
+  if flag:
+    emit('goto', '', '', lazy_label)
   emit('label','','',p[-2][0])
   breakStack.pop()
 
@@ -2181,7 +2186,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
