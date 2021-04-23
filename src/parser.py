@@ -501,11 +501,12 @@ def p_postfix_expression_5(p):
     if curr_list[1] == p[3][0]:
       tmp = get_new_tmp('long')
       emit('addr',p[1].place, '', tmp)
-      if curr_list[3] > 0:
-        emit('long_+',tmp, curr_list[3], tmp)
       tmp2 = get_new_tmp(curr_list[0])
-      emit('*',tmp,'',tmp2)
-      p[0].place = tmp2
+      emit('long_+',tmp, curr_list[3], tmp2)
+      tmp3 = get_new_tmp(curr_list[0])
+      emit('*',tmp2,'',tmp3)
+      p[0].place = tmp3
+      p[0].addr = tmp2
       break
       
 
@@ -580,11 +581,12 @@ def p_unary_expression_2(p):
   elif(p[1].val == '*'):
     if(not p[2].type.endswith('*')):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
-    p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:len(p[2].type)-2],children = [p[2]])
+    p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:-2],children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[2].type[:-2])
     emit('*',p[2].place,'',tmp)
     p[0].place = tmp
+    p[0].addr = p[2].place
   elif(p[1].val == '-'):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
@@ -1035,9 +1037,6 @@ def p_assignment_expression(p):
     p[0].ast = build_AST(p)
     
     if p[2].val == '=':
-      # var = p[1].place
-      # if(len(p[1].array) > 0):
-      #   var = p[1]
       operator = '='
       data_type = int_or_real(p[1].type)
       if (int_or_real(p[3].type) != data_type):
@@ -1048,7 +1047,7 @@ def p_assignment_expression(p):
         else:
           emit(data_type + '_' + operator, tmp, '*', p[1].addr)
       else:
-        if(len(p[1].array) == 0):
+        if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
         else:
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '*', p[1].addr)
@@ -1068,10 +1067,11 @@ def p_assignment_expression(p):
         # emit(int_or_real(p[1].type) + '_' + int_or_real(higher_data_type) + '_=', new_tmp, '', p[1].place)
       else:
         emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, new_tmp)
-      if(len(p[1].array) == 0):
+      if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
         emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '', p[1].place)
       else:
         emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '*', p[1].addr)
+    
 
 
 def p_assignment_operator(p):
