@@ -1971,22 +1971,19 @@ def p_WhMark1(p):
   '''WhMark1 : '''
   l1 = get_label()
   l2 = get_label()
-  l3 = get_label()
   continueStack.append(1)
   breakStack.append(2)
-  emit('goto', '', '', l1)
-  p[0] = [l1 , l2 , l3]
+  emit('label', '', '', l1)
+  p[0] = [l1 , l2]
 
 def p_WhMark2(p):
   '''WhMark2 : '''
-  emit('ifgoto', p[-2].place , 'eq 0', p[-4][2])
-  emit('goto', '', '', p[-4][1])
-  emit('label', '', '', p[-4][1])
+  emit('ifgoto', p[-2].place , 'eq 0', p[-4][1])
 
 def p_WhMark3(p):
   '''WhMark3 : '''
   emit('goto','','',p[-6][0])
-  emit('label','', '', p[-6][2])
+  emit('label','', '', p[-6][1])
   continueStack.pop()
   breakStack.pop()
 
@@ -2007,22 +2004,20 @@ def p_do(p):
 def p_DoM1(p):
   '''DoM1 : '''
   l1 = get_label()
-  l2 = get_label()
   l3 = get_label()
   continueStack.append(l1)
   breakStack.append(l3)
   emit('label', '', '', l1)
-  p[0] = [l1 , l2, l3]
+  p[0] = [l1 , l3]
 
 def p_DoM3(p):
   '''DoM3 : '''
-  emit('ifgoto', p[-2].place, 'eq 0', p[-7][2])
+  emit('ifgoto', p[-2].place, 'eq 0', p[-7][1])
   emit('goto', '', '', p[-7][0])
-  emit('label','','',p[-7][2])
+  emit('label','','',p[-7][1])
 
 def p_DoM2(p): 
   '''DoM2 : '''
-  emit('label', '', '', p[-3][1])
   continueStack.pop()
   breakStack.pop()
 
