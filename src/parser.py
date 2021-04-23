@@ -524,7 +524,7 @@ def p_postfix_expression_6(p):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   # emit(p[1].val + p[2])
   emit('=', p[1].place, '', tmp)
-  emit(int_or_real(p[1].type) + '_' + '+',1,p[1].place, p[1].place)
+  emit(int_or_real(p[1].type) + '_' + p[2][0][:-1],1,p[1].place, p[1].place)
 
 #################
 
@@ -564,7 +564,7 @@ def p_unary_expression_1(p):
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc >= 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
-    emit(int_or_real(p[2].type) + '_' + '+' , 1, p[2].place, p[0].place)
+    emit(int_or_real(p[2].type) + '_' + p[1][0][:-1] , 1, p[2].place, p[0].place)
 
 
 def p_unary_expression_2(p):
@@ -2045,22 +2045,27 @@ def p_forMark1(p):
     l1 = get_label()
     l2 = get_label()
     l3 = get_label()
+    l4 = get_label()
     continueStack.append(l1)
     breakStack.append(l2)
     emit('label', '', '', l1)
-    p[0] = [l1, l2, l3]
+    p[0] = [l1, l2, l3, l4]
 
 def p_forMark2(p):
     '''forMark2 : '''
-    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+    if p[-1].place:
+      emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
 
 def p_forMark7(p):
     '''forMark7 : '''
-    emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
+    if p[-1].place:
+      emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
     emit('goto', '', '', p[-2][2])
+    emit('label', '', '', p[-2][3])
 
 def p_forMark3(p):
     '''forMark3 : '''
+    emit('goto', '', '', p[-5][0])
     emit('label', '', '', p[-5][1])
     breakStack.pop()
     continueStack.pop()
@@ -2075,6 +2080,7 @@ def p_forMark5(p):
 
 def p_forMark6(p):
     '''forMark6 : '''
+    emit('goto','','',p[-8][3])
     emit('label', '', '', p[-8][1])
     breakStack.pop()
     continueStack.pop()
