@@ -1527,7 +1527,7 @@ def p_direct_declarator_1(p):
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
     scope_to_function[currentScope] = p[1].val
-    emit('func', '', '', p[1].val)
+    # emit('func', '', '', p[1].val)
 
 
 def p_direct_declarator_2(p):
@@ -1562,7 +1562,7 @@ def p_direct_declarator_3(p):
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
     scope_to_function[currentScope] = p[1].val
     print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
-    emit('func', '', '', p[1].val)
+    # emit('func', '', '', p[1].val)
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -2154,7 +2154,7 @@ def p_external_declaration(p):
     p[0].ast = build_AST(p)
 
 def p_function_definition_1(p):
-    '''function_definition : declaration_specifiers declarator declaration_list function_compound_statement 
+    '''function_definition : declaration_specifiers declarator FuncMark1 declaration_list function_compound_statement 
                            | declarator declaration_list function_compound_statement
                            | declarator function_compound_statement                                                                              
     ''' 
@@ -2173,12 +2173,16 @@ def p_function_definition_1(p):
 
 
 def p_function_definition_2(p):
-  '''function_definition : declaration_specifiers declarator function_compound_statement'''
+  '''function_definition : declaration_specifiers declarator FuncMark1 function_compound_statement'''
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
   # print(p[2].val)
   symbol_table[0][p[2].val]['isFunc'] = 1
   emit('funcEnd', '', '', '')
+
+def p_FuncMark1(p):
+  '''FuncMark1 : '''
+  emit('func', '', '', p[-1].val)
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
@@ -2217,7 +2221,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
