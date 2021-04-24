@@ -169,6 +169,8 @@ def extract_if_tuple(p2):
     return str(p2)
 
 def get_higher_data_type(type_1 , type_2):
+  if (type_1 == '' or type_2 == ''):
+    return ''
   if(type_1.endswith('*')):
     return type_1
   if(type_2.endswith('*')):
@@ -177,12 +179,12 @@ def get_higher_data_type(type_1 , type_2):
   to_num['char'] = 0
   to_num['short'] = 1
   to_num['int'] = 2
-  to_num['long'] = 3 
+  to_num['long'] = 3
   to_num['float'] = 4
   to_num['double'] = 5
   to_str = {}
   to_str[0] = 'char'
-  to_str[1] = 'short' 
+  to_str[1] = 'short'
   to_str[2] = 'int'
   to_str[3] = 'long'
   to_str[4] = 'float'
@@ -196,6 +198,8 @@ def get_higher_data_type(type_1 , type_2):
   return to_str[max(num_type_1 , num_type_2)]
 
 def get_data_type_size(type_1):
+  if (type_1 == ''):
+    return 0
   type_size = {}
   type_size['char'] = 1
   type_size['short'] = 2
@@ -902,7 +906,7 @@ def p_inclusive_or_expression(p):
 
 def p_logical_and_expression(p):
   '''logical_and_expression : inclusive_or_expression 
-  | logical_and_expression AndMark1 LAND  inclusive_or_expression AndMark2
+  | logical_and_expression AndMark1 LAND inclusive_or_expression AndMark2
   '''
   if(len(p) == 2):
     p[0] = p[1]
@@ -918,17 +922,31 @@ def p_logical_and_expression(p):
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[4])
-    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+    
+    
+    # print(tmp)
+    p[0] = Node(name = 'LogicalAndOperation',val = '',lno = p[1].lno,type = 'int',children = [], place = p[2][1])
     p[0].ast = build_AST(p)
 
 def p_AndMark1(p):
   '''AndMark1 : '''
   l1 = get_label()
-  emit('ifgoto', p[-1].place, 'eq 0', l1)
-  p[0] = [l1]
+  l2 = get_label()
+  tmp = get_new_tmp('int')
+  emit('ifgoto', p[-1].place, 'neq 0', l2)
+  emit('int_=', '0', '', tmp)
+  emit('goto', '', '', l1)
+  emit('label', '', '', l2)
+  p[0] = [l1, tmp]
 
 def p_AndMark2(p):
   '''AndMark2 : '''
+  l3 = get_label()
+  emit('ifgoto', p[-1].place, 'neq 0', l3)
+  emit('int_=', '0', '', p[-3][1])
+  emit('goto', '', '', p[-3][0])
+  emit('label', '', '', l3)
+  emit('int_=', '1', '', p[-3][1])
   emit('label', '', '', p[-3][0])
 
 def p_logical_or_expression(p):
@@ -949,17 +967,40 @@ def p_logical_or_expression(p):
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[4])
-    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [])
+
+
+    p[0] = Node(name = 'LogicalOrOperation',val = '',lno = p[1].lno,type = 'int',children = [], place = p[2][1])
     p[0].ast = build_AST(p)
+
+# def p_OrMark1(p):
+#   '''OrMark1 : '''
+#   l1 = get_label()
+#   emit('ifgoto', p[-1].place, 'neq 0', l1)
+#   p[0] = [l1]
+
+# def p_OrMark2(p):
+#   '''OrMark2 : '''
+#   emit('label', '', '', p[-3][0])
 
 def p_OrMark1(p):
   '''OrMark1 : '''
   l1 = get_label()
-  emit('ifgoto', p[-1].place, 'neq 0', l1)
-  p[0] = [l1]
+  l2 = get_label()
+  tmp = get_new_tmp('int')
+  emit('ifgoto', p[-1].place, 'eq 0', l2)
+  emit('int_=', '1', '', tmp)
+  emit('goto', '', '', l1)
+  emit('label', '', '', l2)
+  p[0] = [l1, tmp]
 
 def p_OrMark2(p):
   '''OrMark2 : '''
+  l3 = get_label()
+  emit('ifgoto', p[-1].place, 'eq 0', l3)
+  emit('int_=', '1', '', p[-3][1])
+  emit('goto', '', '', p[-3][0])
+  emit('label', '', '', l3)
+  emit('int_=', '0', '', p[-3][1])
   emit('label', '', '', p[-3][0])
 
 # TODO: everything for conditional_expression
@@ -971,28 +1012,36 @@ def p_conditional_expression(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [])
+    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [], place = p[2][1])
     p[0].ast = build_AST(p)
 
 def p_CondMark1(p):
   '''CondMark1 : '''
   l1 = get_label()
+  tmp = get_new_tmp('')
   emit('ifgoto', p[-1].place, 'eq 0', l1)
-  p[0] = [l1]
+  p[0] = [l1, tmp]
 
 def p_CondMark2(p):
   '''CondMark2 : '''
   l2 = get_label()
+  # p[-4][1].type = int_or_real(p[-2].type)
+  symbol_table[0][p[-4][1]]['type'] = int_or_real(p[-2].type)
+  symbol_table[0][p[-4][1]]['size'] = get_data_type_size(int_or_real(p[-2].type))
+  emit(int_or_real(p[-2].type) + '_=', p[-2].place, '', p[-4][1])
   emit('goto', '', '', l2)
   emit('label', '', '', p[-4][0])
   p[0] = [l2]
 
 def p_CondMark3(p):
   '''CondMark3 : '''
+  symbol_table[0][p[-6][1]]['type'] = int_or_real(p[-1].type)
+  symbol_table[0][p[-6][1]]['size'] = get_data_type_size(int_or_real(p[-1].type))
+  emit(int_or_real(p[-1].type) + '_=', p[-1].place, '', p[-6][1])
   emit('label', '', '', p[-2][0])
 
 def p_assignment_expression(p):
-  '''assignment_expression : conditional_expression 
+  '''assignment_expression : conditional_expression
                            | unary_expression assignment_operator assignment_expression
   '''
   if(len(p) == 2):
@@ -1055,18 +1104,19 @@ def p_assignment_expression(p):
       operator = p[2].val[:-1]
       higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
       new_tmp = get_new_tmp(higher_data_type)
+      p[0].place = new_tmp
       if (int_or_real(p[1].type) != higher_data_type):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-        emit(higher_data_type + '_' + operator, tmp, p[3].place, new_tmp)
+        emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
         # change_data_type_emit(higher_data_type, p[1].type, new_tmp, p[1].place)
       elif (int_or_real(p[3].type) != higher_data_type):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-        emit(higher_data_type + '_' + operator, p[1].place, tmp, new_tmp)
+        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
         # emit(int_or_real(p[1].type) + '_' + int_or_real(higher_data_type) + '_=', new_tmp, '', p[1].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, new_tmp)
+        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
       if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
         emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '', p[1].place)
       else:
