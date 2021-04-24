@@ -1,9 +1,5 @@
 	.file	"test.c"
 	.text
-	.section	.rodata
-.LC0:
-	.string	"%d"
-	.text
 	.globl	main
 	.type	main, @function
 main:
@@ -15,24 +11,12 @@ main:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$16, %rsp
-	movq	%fs:40, %rax
-	movq	%rax, -8(%rbp)
-	xorl	%eax, %eax
-	movl	$4, -12(%rbp)
-	movl	-12(%rbp), %eax
-	cvtsi2sdl	%eax, %xmm0
-	call	sqrt@PLT
-	leaq	.LC0(%rip), %rdi
-	movl	$1, %eax
-	call	printf@PLT
+	movl	$2, -8(%rbp)
+	movl	$5, -4(%rbp)
+	movl	-4(%rbp), %eax
+	addl	%eax, -8(%rbp)
 	movl	$0, %eax
-	movq	-8(%rbp), %rdx
-	xorq	%fs:40, %rdx
-	je	.L3
-	call	__stack_chk_fail@PLT
-.L3:
-	leave
+	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
