@@ -1020,6 +1020,7 @@ def p_conditional_expression(p):
   else:
     p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [], place = p[2][1])
     p[0].ast = build_AST(p)
+  
 
 def p_CondMark1(p):
   '''CondMark1 : '''
@@ -1127,7 +1128,7 @@ def p_assignment_expression(p):
         emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '', p[1].place)
       else:
         emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '*', p[1].addr)
-    
+    p[0].place = p[1].place
 
 
 def p_assignment_operator(p):
