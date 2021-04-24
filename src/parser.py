@@ -334,6 +334,7 @@ def p_primary_expression_0(p):
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
   if(temp != -1):
     # if('type' in symbol_table[temp][p[1]]):
+    p[0].place = p[0].place + '_' + str(temp)
     p[0].type = symbol_table[temp][p[1]]['type']
     if('array' in symbol_table[temp][p[1]].keys()):
       p[0].level = len(symbol_table[temp][p[1]]['array'])
@@ -1215,7 +1216,7 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
         offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
         # 3AC Code 
-        child.children[0].place = child.children[0].val
+        child.children[0].place = child.children[0].val + '_' + str(currentScope)
         # print(child.children[1].val)
         operator = '='
         data_type = int_or_real(p[1].type)
@@ -2278,7 +2279,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
