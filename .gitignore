@@ -11,6 +11,7 @@ src/a.out
 *.dot
 *.out
 *.png
+*.o
 src/debug.txt
 symbol_table_output.json
 src/symbol_table_output.json
