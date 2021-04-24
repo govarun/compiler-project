@@ -1,6 +1,7 @@
 import parser
 import sys
 import lexer
+import codegen
 s = str(sys.argv)
 if(len(sys.argv) <= 1):
 	print("Incorrect Usage")
@@ -38,3 +39,4 @@ file = open(sys.argv[1])
 code = file.read()
 if __name__ == '__main__':
 	parser.runmain(code)
+	codegen.runmain()

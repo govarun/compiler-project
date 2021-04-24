@@ -1,5 +1,15 @@
+from parser import symbol_table
 class CodeGen:
     def gen_top_headers(self):
         print("section .text")
         print("\tglobal main")
-        
+
+    def data_section(self):
+        print("section\t.data\n")
+        for vars in symbol_table[0].keys():
+            print(vars + "\tdd\t0")
+
+def runmain():
+    codegen = CodeGen()
+    codegen.gen_top_headers()
+    codegen.data_section()
