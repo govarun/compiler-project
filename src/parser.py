@@ -1018,7 +1018,7 @@ def p_conditional_expression(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = '',children = [], place = p[2][1])
+    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = p[4].type,children = [], place = p[2][1])
     p[0].ast = build_AST(p)
   
 
@@ -1091,7 +1091,6 @@ def p_assignment_expression(p):
     
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
-    
     if p[2].val == '=':
       operator = '='
       data_type = int_or_real(p[1].type)
@@ -2279,7 +2278,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
-  result = parser.parse(code,debug=False)
+  result = parser.parse(code,debug=True)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
