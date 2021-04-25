@@ -104,7 +104,6 @@ def gen_next_use_and_live():
 
         for j in range(block_end, block_start - 1, -1): # reverse pass to set next use and live
             cur_instr = instruction_array[j]
-            # prev_instr = instruction_array[j - 1] # previous instr will store the instr info that we get x = y op z
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
                 continue
