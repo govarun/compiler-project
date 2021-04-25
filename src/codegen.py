@@ -10,8 +10,6 @@ class CodeGen:
         for vars in symbol_table[0].keys():
             print(vars + "\tdd\t0")
 
-    def add(self,quad):
-        reg1, flag = 
 
 def runmain():
     codegen = CodeGen()
