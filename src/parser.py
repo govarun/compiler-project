@@ -1107,7 +1107,7 @@ def p_assignment_expression(p):
       if (int_or_real(p[3].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(p[3].type, data_type, p[3].place, tmp)
-        if(len(p[1].array) == 0):
+        if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
           emit(data_type + '_' + operator, tmp, '', p[1].place)
         else:
           emit(data_type + '_' + operator, tmp, '*', p[1].addr)
@@ -1119,24 +1119,18 @@ def p_assignment_expression(p):
     else:
       operator = p[2].val[:-1]
       higher_data_type = int_or_real(get_higher_data_type(p[1].type , p[3].type))
-      new_tmp = get_new_tmp(higher_data_type)
-      p[0].place = new_tmp
       if (int_or_real(p[1].type) != higher_data_type):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
-        emit(higher_data_type + '_' + operator, tmp, p[3].place, p[0].place)
-        # change_data_type_emit(higher_data_type, p[1].type, new_tmp, p[1].place)
+        emit(higher_data_type + '_' + operator, tmp, p[3].place, tmp)
+        change_data_type_emit(higher_data_type, p[1].type, tmp, p[1].place)
       elif (int_or_real(p[3].type) != higher_data_type):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[0].place)
-        # emit(int_or_real(p[1].type) + '_' + int_or_real(higher_data_type) + '_=', new_tmp, '', p[1].place)
+        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[0].place)
-      if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
-        emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '', p[1].place)
-      else:
-        emit(int_or_real(higher_data_type) + '_' + int_or_real(p[1].type) + '_=', new_tmp, '*', p[1].addr)
+        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[1].place)
+        
     p[0].place = p[1].place
 
 
