@@ -334,7 +334,6 @@ def p_primary_expression_0(p):
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
   if(temp != -1):
     # if('type' in symbol_table[temp][p[1]]):
-    p[0].place = p[0].place + '_' + str(temp)
     p[0].type = symbol_table[temp][p[1]]['type']
     if('array' in symbol_table[temp][p[1]].keys()):
       p[0].level = len(symbol_table[temp][p[1]]['array'])
@@ -535,10 +534,7 @@ def p_postfix_expression_6(p):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
   # emit(p[1].val + p[2])
   emit('=', p[1].place, '', tmp)
-  if p[2][0] == '++':
-    emit('inc','','',p[1].place)
-  else:
-    emit('dec','','',p[1].place)
+  emit(int_or_real(p[1].type) + '_' + p[2][0][:-1],1,p[1].place, p[1].place)
 
 #################
 
@@ -578,11 +574,7 @@ def p_unary_expression_1(p):
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc >= 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
-    emit('=', p[1].place, '', tmp)
-    if p[2][0] == '++':
-      emit('inc','','',p[2].place)
-    else:
-      emit('dec','','',p[2].place)
+    emit(int_or_real(p[2].type) + '_' + p[1][0][:-1] , 1, p[2].place, p[0].place)
 
 
 def p_unary_expression_2(p):
@@ -1026,7 +1018,7 @@ def p_conditional_expression(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = p[1].type,children = [], place = p[2][1])
+    p[0] = Node(name = 'ConditionalOperation',val = '',lno = p[1].lno,type = p[4].type,children = [], place = p[2][1])
     p[0].ast = build_AST(p)
   
 
@@ -1223,7 +1215,7 @@ def p_declaration(p):
         symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
         offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
         # 3AC Code 
-        child.children[0].place = child.children[0].val + '_' + str(currentScope)
+        child.children[0].place = child.children[0].val
         # print(child.children[1].val)
         operator = '='
         data_type = int_or_real(p[1].type)

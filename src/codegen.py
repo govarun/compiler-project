@@ -5,9 +5,11 @@ class CodeGen:
         print("\tglobal main")
 
     def data_section(self):
+        print('extern printf')
         print("section\t.data\n")
         for vars in symbol_table[0].keys():
             print(vars + "\tdd\t0")
+
 
 def runmain():
     codegen = CodeGen()
