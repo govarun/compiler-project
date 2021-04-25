@@ -22,8 +22,14 @@ class Instruction:
         elif(self.op == "goto"):
             self.dest = quad[3]
         
-        elif(self.op == "inc" or self.op == "dec"): # exists?
-            pass
+        elif(self.op == "inc" or self.op == "dec"):
+            self.dest = quad[3]
+
+        elif(self.op == 'bitwisenot'):
+            self.dest = quad[3]
+        
+        elif(self.op == 'unot'):
+            self.dest = quad[3]
         
         elif(self.op == "param"):
             self.dest = quad[3]
@@ -38,6 +44,8 @@ class Instruction:
         elif(self.op == "int_="):
             self.dest = quad[3]
             self.src1 = quad[1]
+            if (quad[2] != ''):
+                self.src2 = quad[2]
         
         elif(self.op == "label"):
             self.dest = quad[3]

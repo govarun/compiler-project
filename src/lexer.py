@@ -153,6 +153,9 @@ def t_STRING_LITERAL(t):
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = keywords.get(t.value,'ID')    # Check for reserved words
+    # print(t.type, t.value)
+    if t.type != 'ID':
+        t.value = t.type.lower()
     return t
 
 

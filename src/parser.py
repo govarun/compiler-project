@@ -7,7 +7,7 @@ import copy
 import json
 
 # Get the token map from the lexer.  This is required.
-from lexer import tokens
+from lexer import tokens, keywords
 precedence = (
      ('nonassoc', 'IFX'),
      ('nonassoc', 'ELSE')
@@ -602,6 +602,16 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
     emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
+  elif(p[1].val == '~'):
+    tmp = get_new_tmp(p[2].type)
+    p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
+    p[0].ast = build_AST(p)
+    emit(int_or_real(p[2].type) + '_' + 'bitwisenot', p[2].place, '', p[0].place)
+  elif(p[1].val == '!'):
+    tmp = get_new_tmp(p[2].type)
+    p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
+    p[0].ast = build_AST(p)
+    emit(int_or_real(p[2].type) + '_' + 'unot', p[2].place, '', p[0].place)
   else:
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = p[2].place)
     p[0].ast = build_AST(p)
@@ -1164,6 +1174,12 @@ def p_constant_expression(p):
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
+# def p_declaration2(p):
+#   '''declaration : declaration_specifiers init_declarator_list'''
+#   if p[1].type.startswith('typedef'):
+#     keywords[p[2].children[0].val] = keywords[p[1].type.split()[-1]]
+#     print(p[2].children[0].val, p[1].type.split()[-1])
+
 def p_declaration(p):
   '''declaration : declaration_specifiers SEMICOLON
 	| declaration_specifiers init_declarator_list SEMICOLON
@@ -1178,7 +1194,9 @@ def p_declaration(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
-    print('here')
+    if p[1].type.startswith('typedef'):
+      keywords[p[2].children[0].val] = keywords[p[1].type.split()[-1]]
+    # print('here')
     if(p[2].isFunc > 0):
       currentScope = parent[currentScope]
       print(currentScope)
