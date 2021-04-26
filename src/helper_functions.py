@@ -1,5 +1,5 @@
 import pprint
-from parser import emit_array
+from parser import emit_array, global_symbol_table
 instruction_array = []
 leaders = [0]
 nextuse = {}
@@ -79,8 +79,6 @@ class Instruction:
             self.dest = quad[3]
             self.src1 = quad[1]
 
-
-
 def find_basic_blocks():
     i = 1
     for quads in emit_array:
@@ -96,6 +94,13 @@ def find_basic_blocks():
     leaders.append(len(emit_array))
     # print(leaders)
     # print(instruction_array)
+
+def is_symbol(var):
+    if(var in global_symbol_table.keys()):
+        return True
+    else:
+        return False
+
 
 def gen_next_use_and_live():
     for i in range(len(leaders) - 1):
@@ -116,21 +121,21 @@ def gen_next_use_and_live():
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
                 continue
-            if (dest != None and not dest.isnumeric()):
+            if (dest != None and not dest.isnumeric() and is_symbol(dest)):
                 if(dest not in symbols.keys()):
                     symbols[dest] = symbol_info()
                 cur_instr.instr_info['live'][dest] = live[dest]
                 cur_instr.instr_info['nextuse'][dest] = nextuse[dest]
                 live[dest] = False
                 nextuse[dest] = None
-            if (src2 != None and not src2.isnumeric()):
+            if (src2 != None and not src2.isnumeric() and is_symbol(src2)):
                 if(src2 not in symbols.keys()):
                     symbols[src2] = symbol_info()
                 cur_instr.instr_info['live'][src2] = live[src2]
                 cur_instr.instr_info['nextuse'][src2] = nextuse[src2]
                 live[src2] = True
                 nextuse[src2] = j
-            if (src1 != None and not src1.isnumeric()):
+            if (src1 != None and not src1.isnumeric() and is_symbol(src1)):
                 if(src1 not in symbols.keys()):
                     symbols[src1] = symbol_info()
                 cur_instr.instr_info['live'][src1] = live[src1]
@@ -138,7 +143,7 @@ def gen_next_use_and_live():
                 live[src1] = True
                 nextuse[src1] = j
             # print("Instruction: " + str(emit_array[j]))
-            # pprint.pprint(cur_instr.instr_info)
+            pprint.pprint(cur_instr.instr_info)
 
 
 
@@ -146,9 +151,6 @@ def print_basic_blocks(debug = False):
     print("\n###### LEADERS ######")
     print(leaders)
     # print(instruction_array)
-    for key in symbols.keys():
-        print(key)
-
 
 def runmain():
     find_basic_blocks()
