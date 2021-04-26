@@ -42,6 +42,7 @@ label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
 pre_append_in_symbol_table_list = ['printf']
+local_vars = {}
 
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
@@ -457,7 +458,7 @@ def p_postfix_expression_4(p):
       if(curType.split()[-1] != arguments.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
-    for param in p[3].children:
+    for param in reversed(p[3].children):
       emit('param', '', '', param.place)
   emit('call', len(p[3].children), '', p[1].val)
   #check if function argument_list_expression matches with the actual one
@@ -1664,6 +1665,7 @@ def p_direct_declarator_1(p):
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
       else:
         scope_to_function[currentScope] = p[1].val
+        local_vars[p[1].val] = []
       return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     
@@ -1676,6 +1678,7 @@ def p_direct_declarator_1(p):
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
     scope_to_function[currentScope] = p[1].val
+    local_vars[p[1].val] = []
     # emit('func', '', '', p[1].val)
 
 
@@ -1702,6 +1705,7 @@ def p_direct_declarator_3(p):
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
       else:
         scope_to_function[currentScope] = p[1].val
+        local_vars[p[1].val] = []
       return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
@@ -1710,6 +1714,7 @@ def p_direct_declarator_3(p):
     p[0].isFunc = 2
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
     scope_to_function[currentScope] = p[1].val
+    local_vars[p[1].val] = []
     print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
     # emit('func', '', '', p[1].val)
 
@@ -2406,6 +2411,7 @@ def visualize_symbol_table():
           newkey = key + "_" + str(i)
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           print(newkey, global_symbol_table[newkey])
+          local_vars[scope_to_function[i]].append(newkey)
         elif key.startswith('__'):
           global_symbol_table[key] = symbol_table[i][key]
           print(key, global_symbol_table[key])
@@ -2414,4 +2420,5 @@ def visualize_symbol_table():
       with open("symbol_table_output.json", "a") as outfile:
         outfile.write('In \"' + scope_to_function[i] + "\"")
         outfile.write(json_object+"\n")
+      print(local_vars)
 
