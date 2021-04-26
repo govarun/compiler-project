@@ -87,9 +87,11 @@ def find_basic_blocks():
         instruction = Instruction(i,quads)
         instruction_array.append(instruction)
         op = quads[0] # assuming 0 is always instruction name
+        extra = 0
         if(op in ["label","goto","ifgoto","ret","call","func","funcEnd"]):
-            # cannot understand fully
-            leaders.append(i - 1)
+            if(op != "label" and op != "func"):
+                extra += 1
+            leaders.append(i - 1 + extra)
         i += 1
     leaders.append(len(emit_array))
     # print(leaders)
@@ -100,7 +102,7 @@ def gen_next_use_and_live():
         ignore_instr_list = ['param']
         block_start = leaders[i] + 1 # just the instruction next to the leader
         block_end = leaders[i + 1] - 1 # instruction previous to the next leader
-        print(block_start, block_end)
+        # print(block_start, block_end)
         for j in range(block_start, block_end + 1):
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
@@ -135,8 +137,8 @@ def gen_next_use_and_live():
                 cur_instr.instr_info['nextuse'][src1] = nextuse[src1]
                 live[src1] = True
                 nextuse[src1] = j
-            print("Instruction: " + str(emit_array[j]))
-            pprint.pprint(cur_instr.instr_info)
+            # print("Instruction: " + str(emit_array[j]))
+            # pprint.pprint(cur_instr.instr_info)
 
 
 
@@ -150,8 +152,8 @@ def print_basic_blocks(debug = False):
 
 def runmain():
     find_basic_blocks()
-    print_basic_blocks(debug = True)
     gen_next_use_and_live()
+    print_basic_blocks(debug = True)
 
 
 
