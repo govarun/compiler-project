@@ -38,10 +38,10 @@ def get_register(instr, compulsory = True, exclude_reg = []):
         R = None
         for reg in reg_desc.keys():
             if(reg not in exclude_reg):
-            if(R == None):
-                R = reg   
-            elif(len(reg_desc[reg]) < len(reg_desc[R])):
-                R = reg
+                if(R == None):
+                    R = reg   
+                elif(len(reg_desc[reg]) < len(reg_desc[R])):
+                    R = reg
         return R
 
     else:
@@ -56,6 +56,18 @@ def save_reg_to_mem(reg):
                 saved_loc.add(location)
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
+
+def get_location_in_memory(symbol):
+    for(location in symbols[symbol].address_desc_mem):
+        prefix_string = "["
+        if(type(location) is int):
+            prefix_string = "[ebp"
+            if(location >= 0):
+                prefix_string = "[ebp+"
+        return prefix_string+str(location)+"]"
+        
+
+
 
 def get_location_mem():
     
