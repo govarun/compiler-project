@@ -38,7 +38,7 @@ def get_register(instr, compulsory = True, exclude_reg = []):
             if(len(reg_desc[reg]) == 0):
                 return reg
     
-    if(instr.instr_info['nextuse'][instr.dest] != None or compulsory = True):
+    if(instr.instr_info['nextuse'][instr.dest] != None or compulsory == True):
         '''
         This part returns the register which contains the value
         of minimum number of symbols
@@ -62,7 +62,7 @@ def save_reg_to_mem(reg):
     '''
     saved_loc = set()
     for symbol in reg_desc[reg]:
-        for(location in symbols[symbol].address_desc_mem):
+        for location in symbols[symbol].address_desc_mem:
             if location not in saved_loc:
                 print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
                 saved_loc.add(location)
@@ -73,7 +73,7 @@ def get_location_in_memory(symbol):
     '''
     Function to get the location of a symbol in memory
     '''
-    for(location in symbols[symbol].address_desc_mem):
+    for location in symbols[symbol].address_desc_mem:
         prefix_string = "["
         if(location.isnumeric()):   # changed this from type(location) is int to .isnumeric
             prefix_string = "[ebp"

@@ -1,5 +1,5 @@
 import pprint
-from parser import emit_array, global_symbol_table, local_vars
+from parser import emit_array, global_symbol_table, local_vars, func_arguments
 instruction_array = []
 leaders = [0]
 nextuse = {}
@@ -22,6 +22,7 @@ class Instruction:
         self.instr_info = {}
         self.instr_info['nextuse'] = {}
         self.instr_info['live'] = {}
+        self.argument_list = []
         self.fill_info(quad)
 
     def fill_info(self,quad):
@@ -157,7 +158,7 @@ def print_basic_blocks(debug = False):
 def runmain():
     find_basic_blocks()
     gen_next_use_and_live()
-    print_basic_blocks(debug = True)
+    # print_basic_blocks(debug = True)
 
 
 

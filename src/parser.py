@@ -43,7 +43,8 @@ var_cnt = 0
 CONST_SCOPE = -10
 pre_append_in_symbol_table_list = ['printf']
 local_vars = {}
-
+func_arguments = {}
+local_vars['global'] = []
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
@@ -1656,6 +1657,10 @@ def p_direct_declarator_1(p):
     p[0].ast = build_AST(p)
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
+    func_arguments[p[1].val] = []
+    for child in p[3].children:
+      func_arguments[p[1].val].append(child.val)
+      # print(child.val)
     p[0].children = p[3].children
     p[0].type = curType[-1]
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
@@ -1756,7 +1761,7 @@ def p_parameter_type_list(p):
   '''
   p[0] = p[1]
   p[0].ast = build_AST(p)
-  # TODO : see what to do in case of ellipsis
+
 
 def p_parameter_list(p):
     '''parameter_list : parameter_declaration
