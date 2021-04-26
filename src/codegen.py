@@ -15,6 +15,7 @@ class CodeGen:
         #check where moved back into memory
         reg1 = get_register(quad)
         if(not reg1.startswith("[")):
+            upd_reg_desc(reg1, quad.src1)
             print("\tmov " + reg1 + ", " + get_best_location(quad.src1))
         reg2 = get_best_location(quad.src2)
         print("\tadd " + reg1 + ", " + reg2)

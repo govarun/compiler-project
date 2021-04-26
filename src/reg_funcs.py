@@ -103,7 +103,7 @@ def upd_reg_desc(reg, symbol):
     '''
         Stores the symbol exclusively in one register, and removes it from other registers
     '''
-    reg_desc[reg].clear()
+    save_reg_to_mem(reg)
     if not is_symbol(symbol):
         return
     for register in symbols[symbol].address_desc_reg:
