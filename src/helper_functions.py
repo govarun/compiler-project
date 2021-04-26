@@ -4,6 +4,13 @@ instruction_array = []
 leaders = [0]
 nextuse = {}
 live = {}
+symbols = {}
+
+class symbol_info:
+    def __init__(self):
+        self.address_desc_mem = set()
+        self.address_desc_reg = set()
+
 class Instruction:
     def __init__(self,lno,quad):
         self.lno = lno
@@ -108,16 +115,22 @@ def gen_next_use_and_live():
             if cur_instr.op in ignore_instr_list:
                 continue
             if (dest != None and not dest.isnumeric()):
+                if(dest not in symbols.keys()):
+                    symbols[dest] = symbol_info()
                 cur_instr.instr_info['live'][dest] = live[dest]
                 cur_instr.instr_info['nextuse'][dest] = nextuse[dest]
                 live[dest] = False
                 nextuse[dest] = None
             if (src2 != None and not src2.isnumeric()):
+                if(src2 not in symbols.keys()):
+                    symbols[src2] = symbol_info()
                 cur_instr.instr_info['live'][src2] = live[src2]
                 cur_instr.instr_info['nextuse'][src2] = nextuse[src2]
                 live[src2] = True
                 nextuse[src2] = j
             if (src1 != None and not src1.isnumeric()):
+                if(src1 not in symbols.keys()):
+                    symbols[src1] = symbol_info()
                 cur_instr.instr_info['live'][src1] = live[src1]
                 cur_instr.instr_info['nextuse'][src1] = nextuse[src1]
                 live[src1] = True
@@ -131,6 +144,8 @@ def print_basic_blocks(debug = False):
     print("\n###### LEADERS ######")
     print(leaders)
     # print(instruction_array)
+    for key in symbols.keys():
+        print(key)
 
 
 def runmain():
