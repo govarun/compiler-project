@@ -8,7 +8,7 @@ symbols = {}
 
 class symbol_info:
     def __init__(self):
-        self.address_desc_mem = set()
+        self.address_desc_mem = []
         self.address_desc_reg = set()
 
 class Instruction:
@@ -53,6 +53,10 @@ class Instruction:
 
         elif(self.op == "func"):
             self.src1 = quad[3]
+
+        elif(self.op == "call"):
+            self.src1 = quad[3]
+            self.src2 = quad[2]
 
         elif(self.op == "int_="):
             self.dest = quad[3]

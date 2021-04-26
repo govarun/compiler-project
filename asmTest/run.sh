@@ -1,5 +1,5 @@
-nasm -f elf64 $1
+nasm -f elf32 $1
 filename=$(echo $1 | sed 's/.asm$/.o/g')
-gcc -m64 -no-pie $filename
+gcc -m32 -no-pie $filename
 ./a.out
 echo $?
