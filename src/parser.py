@@ -2023,6 +2023,8 @@ def p_expression_statement(p):
       p[0].val = p[1].val
       p[0].type = p[1].type
       p[0].children = p[1].children
+      p[0].place = p[1].place
+
     p[0].name = 'ExpressionStatement'
     # TODO : see what to do in case of only semicolon in rhs
 
