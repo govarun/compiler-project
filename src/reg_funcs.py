@@ -14,14 +14,7 @@ def free_all_regs(instr):
     # src1
     pass
 
-<<<<<<< HEAD
-def get_register(instr_3ac, compulsory = True, exclude_reg = []):
-    src1 = instr_3ac[1]
-    src2 = instr_3ac[2]
-    dest = instr_3ac[3]
-=======
 def get_register(instr, compulsory = True, exclude_reg = []):
->>>>>>> e1db890cc1fe302afa47eabb26b85ae3abf98956
     
     for reg in symbol_info[instr.src1].address_desc_reg:
         if reg not in exclude_reg:
