@@ -102,6 +102,13 @@ def is_symbol(var):
     else:
         return False
 
+def is_number(number):
+    number = str(number)
+    if (number.startswith('-')):
+        return True
+    if number[0] == '.' or number[0].isnumeric():
+        return True
+    return False
 
 def gen_next_use_and_live():
     for i in range(len(leaders) - 1):

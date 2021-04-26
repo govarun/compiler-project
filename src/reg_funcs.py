@@ -98,6 +98,19 @@ def get_best_location(symbol, exclude_reg = []):
                 return reg
     return get_location_in_memory(symbol)
 
+def check_type_location(location):
+    if (location.startswith('[')):
+        return "memory"
+    elif(location.startswith("dword")):
+        return "data"
+    else:
+        return "register"
+
+def del_symbol_reg_exclude(symbol, exclude = []):
+    for reg in symbols[symbol].address_desc_reg:
+        if reg not in exclude:
+            reg_desc[reg].remove(symbol)
+            symbols[symbol].address_desc_reg.remove(reg)
 
 def upd_reg_desc(reg, symbol):
     '''
