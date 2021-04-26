@@ -2,10 +2,10 @@
 section .text
 	global main
 main:
-	mov rdx, 0
-	mov rax, 512
-	not byte [x]
-	mov al, byte [x]
+	mov edx, 0
+	mov eax, 52
+	push eax
+	add esp, 4
 	ret
 
 section .data

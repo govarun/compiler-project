@@ -437,7 +437,11 @@ def p_postfix_expression_3(p):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call") 
-  emit('call', 0, '', p[1].val) 
+  retVal = ''
+  if(p[1].type != 'void'):
+    retVal = get_new_tmp(p[1].type)
+  emit('call', 0, retVal, p[1].val)
+  p[0].place = retVal
 
 
 def p_postfix_expression_4(p):
@@ -461,7 +465,11 @@ def p_postfix_expression_4(p):
       i += 1
     for param in reversed(p[3].children):
       emit('param', '', '', param.place)
-  emit('call', len(p[3].children), '', p[1].val)
+  retVal = ''
+  if(p[1].type != 'void'):
+    retVal = get_new_tmp(p[1].type)
+  emit('call', len(p[3].children), retVal, p[1].val)
+  p[0].place = retVal
   #check if function argument_list_expression matches with the actual one
   
 
