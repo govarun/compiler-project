@@ -42,17 +42,18 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                     R = reg   
                 elif(len(reg_desc[reg]) < len(reg_desc[R])):
                     R = reg
+        save_reg_to_mem(R)
         return R
 
     else:
-        return get_location_mem(instr.dest)
+        return get_location_in_memory(instr.dest)
     
 def save_reg_to_mem(reg):
     saved_loc = set()
     for symbol in reg_desc[reg]:
         for(location in symbols[symbol].address_desc_mem):
             if location not in saved_loc:
-                print("\tmov " + get_location_mem(symbol) + ", " + reg)
+                print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
                 saved_loc.add(location)
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
@@ -66,13 +67,6 @@ def get_location_in_memory(symbol):
                 prefix_string = "[ebp+"
         return prefix_string+str(location)+"]"
         
-
-
-
-def get_location_mem():
-    
-    pass
-
 def get_best_location():
     pass
 
