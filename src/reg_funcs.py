@@ -12,6 +12,9 @@ reg_desc["edi"] = set()
 
 
 def free_all_regs(instr):
+    '''
+        Frees the  src1, src2 registers of an instruction based on whether they are used ahead or not
+    '''
     to_free = [instr.src1, instr.src2] # the dest is not to be freed
     for operand in to_free:
         if (is_symbol(operand) and operand != None and instr.instr_info['nextuse'][operand] == None \
@@ -23,8 +26,7 @@ def free_all_regs(instr):
 
 def get_register(instr, compulsory = True, exclude_reg = []):
     '''
-    function to get the best register for instr.dest, using nextuse 
-    liveness of the symbols
+        Function to get the best register for instr.dest, using nextuse and live status of the symbols
     '''
     for reg in symbols[instr.src1].address_desc_reg:
         if reg not in exclude_reg:
@@ -82,6 +84,12 @@ def get_location_in_memory(symbol):
         return prefix_string+str(location)+"]"
 
 def get_best_location(symbol, exclude_reg = []):
+    '''
+        Gives the best location for a symbol:
+        - for global symbols it gives it in data section
+        - for symbols in register it gives the register name
+        - for remaining symbols it gives the memory location
+    '''
     if (symbol.startswith('__')):
         return "dword [" + str(symbol) + "]"
     if is_symbol(symbol):
@@ -92,6 +100,9 @@ def get_best_location(symbol, exclude_reg = []):
 
 
 def upd_reg_desc(reg, symbol):
+    '''
+        Stores the symbol exclusively in one register, and removes it from other registers
+    '''
     reg_desc[reg].clear()
     if not is_symbol(symbol):
         return
