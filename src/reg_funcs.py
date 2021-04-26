@@ -70,6 +70,15 @@ def get_location_in_memory(symbol):
 def get_best_location():
     pass
 
-
+def upd_reg_desc(reg, symbol):
+    reg_desc[reg].clear()
+    if not is_symbol(symbol):
+        return
+    for register in symbols[symbol].address_desc_reg:
+        if register != reg:
+            reg_desc[register].remove(symbol)
+    symbols[symbol].address_desc_reg.clear()
+    symbols[symbol].address_desc_reg.add(reg)
+    reg_desc[reg].add(symbol)
 
 
