@@ -151,7 +151,9 @@ def print_basic_blocks(debug = False):
     print("\n###### LEADERS ######")
     print(leaders)
     # print(instruction_array)
-
+    for keys in symbols.keys():
+        print(keys)
+        
 def runmain():
     find_basic_blocks()
     gen_next_use_and_live()
