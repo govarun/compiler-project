@@ -14,7 +14,7 @@ def free_all_regs(instr):
     to_free = [instr.src1, instr.src2] # the dest is not to be freed
     for operand in to_free:
         if (operand != None and instr.instr_info['nextuse'][operand] == None \
-            instr.instr_info['live'][operand] == False):
+            and instr.instr_info['live'][operand] == False):
             for reg in symbol_info[operand].address_desc_reg:
                 reg_desc[reg].remove(operand)
             symbol_info[operand].address_desc_reg.clear()
