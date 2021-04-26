@@ -13,7 +13,7 @@ reg_desc["edi"] = set()
 def free_all_regs(instr):
     to_free = [instr.src1, instr.src2] # the dest is not to be freed
     for operand in to_free:
-        if (operand != None and instr.instr_info['nextuse'][operand] == None \
+        if (is_symbol(operand) and operand != None and instr.instr_info['nextuse'][operand] == None \
             and instr.instr_info['live'][operand] == False):
             for reg in symbol_info[operand].address_desc_reg:
                 reg_desc[reg].remove(operand)
@@ -67,8 +67,15 @@ def get_location_in_memory(symbol):
                 prefix_string = "[ebp+"
         return prefix_string+str(location)+"]"
 
-def get_best_location():
-    pass
+def get_best_location(symbol, exclude_reg = []):
+    if (symbol.startswith('__')):
+        return "dword [" + str(symbol) + "]"
+    if is_symbol(symbol):
+        for reg in symbols[symbol].address_desc_reg:
+            if (reg not in exclude_reg):
+                return reg
+    return get_location_in_memory(symbol)
+
 
 
 
