@@ -40,18 +40,19 @@ def get_register(instr, compulsory = True, exclude_reg = []):
 
     else:
         return get_location_mem(instr.dest)
-
-        
-
     
 def save_reg_to_mem(reg):
     saved_loc = set()
     for symbol in reg_desc[reg]:
         for(location in symbols[symbol].address_desc_mem):
-
-    pass
+            if location not in saved_loc:
+                print("\tmov " + get_location_mem(symbol) + ", " + reg)
+                saved_loc.add(location)
+        symbols[symbol].address_desc_reg.remove(reg)
+    reg_desc[reg].clear()
 
 def get_location_mem():
+    
     pass
 
 def get_best_location():
