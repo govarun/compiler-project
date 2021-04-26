@@ -1,5 +1,5 @@
 import pprint
-from parser import emit_array, global_symbol_table
+from parser import emit_array, global_symbol_table, local_vars
 instruction_array = []
 leaders = [0]
 nextuse = {}

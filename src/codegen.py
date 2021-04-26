@@ -1,5 +1,5 @@
-from parser import symbol_table
 from reg_funcs import *
+from parser import symbol_table, local_vars
 class CodeGen:
     def gen_top_headers(self):
         print("section .text")

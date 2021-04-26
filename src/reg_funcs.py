@@ -1,4 +1,5 @@
 from helper_functions import *
+from parser import local_vars
 
 # 32 bit register descriptors
 reg_desc = {}
@@ -15,18 +16,21 @@ def free_all_regs(instr):
     for operand in to_free:
         if (operand != None and instr.instr_info['nextuse'][operand] == None \
             and instr.instr_info['live'][operand] == False):
-            for reg in symbol_info[operand].address_desc_reg:
+            for reg in symbols[operand].address_desc_reg:
                 reg_desc[reg].remove(operand)
-            symbol_info[operand].address_desc_reg.clear()
+            symbols[operand].address_desc_reg.clear()
 
 
 def get_register(instr, compulsory = True, exclude_reg = []):
-    
-    for reg in symbol_info[instr.src1].address_desc_reg:
+    '''
+    function to get the best register for instr.dest, using nextuse 
+    liveness of the symbols
+    '''
+    for reg in symbols[instr.src1].address_desc_reg:
         if reg not in exclude_reg:
             if(len(reg_desc[reg]) == 1 and instr.instr_info['nextuse'][instr.src1] == None\
              and not instr.instr_info['live'][instr.src1]):
-                symbol_info[instr.src1].address_desc_reg.remove(reg)
+                symbols[instr.src1].address_desc_reg.remove(reg)
                 return reg
 
     for reg in reg_desc.keys():
@@ -35,11 +39,15 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                 return reg
     
     if(instr.instr_info['nextuse'][instr.dest] != None or compulsory = True):
+        '''
+        This part returns the register which contains the value
+        of minimum number of symbols
+        '''
         R = None
         for reg in reg_desc.keys():
             if(reg not in exclude_reg):
                 if(R == None):
-                    R = reg   
+                    R = reg
                 elif(len(reg_desc[reg]) < len(reg_desc[R])):
                     R = reg
         save_reg_to_mem(R)
@@ -47,8 +55,11 @@ def get_register(instr, compulsory = True, exclude_reg = []):
 
     else:
         return get_location_in_memory(instr.dest)
-    
+
 def save_reg_to_mem(reg):
+    '''
+    Function to save the contents of a register to memory
+    '''
     saved_loc = set()
     for symbol in reg_desc[reg]:
         for(location in symbols[symbol].address_desc_mem):
@@ -59,15 +70,16 @@ def save_reg_to_mem(reg):
     reg_desc[reg].clear()
 
 def get_location_in_memory(symbol):
+    '''
+    Function to get the location of a symbol in memory
+    '''
     for(location in symbols[symbol].address_desc_mem):
         prefix_string = "["
-        if(type(location) is int):
+        if(location.isnumeric()):   # changed this from type(location) is int to .isnumeric
             prefix_string = "[ebp"
             if(location >= 0):
                 prefix_string = "[ebp+"
         return prefix_string+str(location)+"]"
-        
-
 
 def get_best_location():
     pass
