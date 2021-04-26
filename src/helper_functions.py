@@ -107,8 +107,8 @@ def gen_next_use_and_live():
         ignore_instr_list = ['param']
         block_start = leaders[i] + 1 # just the instruction next to the leader
         block_end = leaders[i + 1] - 1 # instruction previous to the next leader
-        # print(block_start, block_end)
-        for j in range(block_start, block_end + 1):
+
+        for j in range(block_start, block_end + 1): # doing forwards pass and filling default values
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             for operand in [src1, src2, dest]:
@@ -116,7 +116,7 @@ def gen_next_use_and_live():
                     live[operand] = False
                     nextuse[operand] = None
 
-        for j in range(block_end, block_start - 1, -1): # reverse pass to set next use and live
+        for j in range(block_end, block_start - 1, -1): # backward pass to set next use and live
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
