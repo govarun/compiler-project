@@ -34,14 +34,14 @@ class CodeGen:
         #check where moved back into memory
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
-        # upd_reg_desc(reg1, quad.src1)
+        save_reg_to_mem(reg1)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
         print("\t" + op + ' ' + reg1 + ", " + reg2)
+        upd_reg_desc(reg1, quad.dest)
         for sym in reg_desc[reg1]:
             dprint(reg1 + ", " + sym)
-        # upd_reg_desc(reg1, quad.dest)
         free_all_regs(quad)
 
     def add(self,quad):
@@ -54,27 +54,47 @@ class CodeGen:
         self.bin_operations(quad, 'imul')
     
     def div(self, quad):
+        best_location = get_best_location(quad.src1)
         save_reg_to_mem('eax')
         save_reg_to_mem('edx')
-        print("\tmov " + 'eax' + ", " + get_best_location(quad.src1))
+        if best_location != 'eax':
+            print("\tmov " + 'eax' + ", " + best_location)
         reg = get_register(quad, exclude_reg=['eax','edx'])
-        print("\tmov " + reg + ", " + get_best_location(quad.src2))
-        print('\tidiv dword ' + reg)
+        best_location = get_best_location(quad.src2)
+        upd_reg_desc(reg, quad.src2)
+        if best_location != reg:
+            print("\tmov " + reg + ", " + best_location)
+        print("\tcdq")
+        print('\tidiv ' + reg)
         upd_reg_desc('eax', quad.dest)
+
+        for sym in reg_desc['eax']:
+            dprint('eax' + ", " + sym)
+
         free_all_regs(quad)
 
     def mod(self, quad):
+        best_location = get_best_location(quad.src1)
         save_reg_to_mem('eax')
         save_reg_to_mem('edx')
-        print("\tmov " + 'eax' + ", " + get_best_location(quad.src1))
+        if best_location != 'eax':
+            print("\tmov " + 'eax' + ", " + best_location)
         reg = get_register(quad, exclude_reg=['eax', 'edx'])
-        print("\tmov " + reg + ", " + get_best_location(quad.src2))
-        print('\tidiv dword ' + reg)
+        best_location = get_best_location(quad.src2)
+        upd_reg_desc(reg, quad.src2)
+        if best_location != reg:
+            print("\tmov " + reg + ", " + best_location)
+        print("\tcdq")
+        print('\tidiv ' + reg)
         upd_reg_desc('edx', quad.dest)
+
+        for sym in reg_desc['edx']:
+            dprint('edx' + ", " + sym)
+
         free_all_regs(quad)
     
     def lshift(self, quad):
-        self.bin_operations(quad, 'imul')
+        pass
 
     def assign(self, quad):
         if (quad.src2 is not None): # case for pointer
@@ -163,12 +183,14 @@ class CodeGen:
             self.function_return(quad)
         elif(quad.op.endswith("+")):
             self.add(quad)
+        elif(quad.op.endswith("-")):
+            self.sub(quad)
         elif(quad.op.endswith("*")):
             self.mul(quad)
         elif(quad.op.endswith("/")):
             self.div(quad)
-        elif(quad.op.endswith("-")):
-            self.sub(quad)
+        elif(quad.op.endswith("%")):
+            self.mod(quad)
 
 def runmain():
     sys.stdout = open('out.asm', 'w')
