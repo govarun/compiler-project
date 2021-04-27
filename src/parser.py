@@ -2433,6 +2433,9 @@ def visualize_symbol_table():
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           print(newkey, global_symbol_table[newkey])
           local_vars[scope_to_function[i]].append(newkey)
+          if key in func_arguments[scope_to_function[i]]:
+            func_arguments[scope_to_function[i]].append(newkey)
+            func_arguments[scope_to_function[i]].remove(key)
         elif key.startswith('__'):
           global_symbol_table[key] = symbol_table[i][key]
           print(key, global_symbol_table[key])

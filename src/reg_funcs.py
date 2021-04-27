@@ -1,5 +1,6 @@
 from helper_functions import *
 from parser import local_vars, strings
+import copy
 
 # 32 bit register descriptors
 reg_desc = {}
@@ -88,7 +89,7 @@ def get_location_in_memory(symbol):
         return "dword [" + str(symbol) + "]"
     location = symbols[symbol].address_desc_mem[-1]
     prefix_string = "["
-    if(location.isnumeric()):   # changed this from type(location) is int to .isnumeric
+    if(is_number(location)):   # changed this from type(location) is int to .isnumeric
         prefix_string = "[ebp"
         if(location >= 0):
             prefix_string = "[ebp+"
@@ -143,10 +144,14 @@ def del_symbol_reg_exclude(symbol, exclude = []):
     '''
         Delete symbol from all registers excule the ones in the list
     '''
+    to_keep = set()
     for reg in symbols[symbol].address_desc_reg:
         if reg not in exclude:
             reg_desc[reg].remove(symbol)
-            symbols[symbol].address_desc_reg.remove(reg)
+        else:
+            to_keep.add(reg)
+    symbols[symbol].address_desc_reg.clear()
+    symbols[symbol].address_desc_reg = copy.deepcopy(to_keep)
 
 def upd_reg_desc(reg, symbol):
     '''

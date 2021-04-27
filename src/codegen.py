@@ -85,7 +85,7 @@ class CodeGen:
 
 
     def param(self, quad):
-        print("\tpush " + get_best_location(quad.src1))
+        print("\tpush " + str(get_best_location(quad.src1)))
         pass
 
     def function_call(self, quad):
@@ -114,7 +114,7 @@ class CodeGen:
 
         counter = 0
         for var in func_arguments[quad.src1]:
-            symbols[var].address_desc_reg.append(4*counter + 8)
+            symbols[var].address_desc_mem.append(4*counter + 8)
             counter += 1
 
     def function_return(self, quad):

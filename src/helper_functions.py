@@ -117,8 +117,9 @@ def is_number(number):
 def gen_next_use_and_live():
     for i in range(len(leaders) - 1):
         ignore_instr_list = ['param']
-        block_start = leaders[i] + 1 # just the instruction next to the leader
+        block_start = leaders[i] # just the instruction next to the leader
         block_end = leaders[i + 1] - 1 # instruction previous to the next leader
+
 
         for j in range(block_start, block_end + 1): # doing forwards pass and filling default values
             cur_instr = instruction_array[j]
@@ -129,6 +130,7 @@ def gen_next_use_and_live():
                     nextuse[operand] = None
 
         for j in range(block_end, block_start - 1, -1): # backward pass to set next use and live
+            print(block_end, block_start, j)
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
@@ -155,7 +157,7 @@ def gen_next_use_and_live():
                 live[src1] = True
                 nextuse[src1] = j
             # print("Instruction: " + str(emit_array[j]))
-            pprint.pprint(cur_instr.instr_info)
+            # pprint.pprint(cur_instr.instr_info)
 
 
 
@@ -163,13 +165,14 @@ def print_basic_blocks(debug = False):
     print("\n###### LEADERS ######")
     print(leaders)
     # print(instruction_array)
-    for keys in symbols.keys():
-        print(keys)
         
 def runmain():
     find_basic_blocks()
     gen_next_use_and_live()
-    # print_basic_blocks(debug = True)
+    for key in global_symbol_table.keys():
+        if key not in symbols.keys():
+            symbols[key] = symbol_info()
+    print_basic_blocks(debug = True)
 
 
 
