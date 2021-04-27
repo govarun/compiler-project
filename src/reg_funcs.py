@@ -17,11 +17,17 @@ def free_all_regs(instr):
     '''
     to_free = [instr.src1, instr.src2] # the dest is not to be freed
     for operand in to_free:
-        if (is_symbol(operand) and operand != None and instr.instr_info['nextuse'][operand] == None \
+        if (operand != None and is_symbol(operand) and instr.instr_info['nextuse'][operand] == None
             and instr.instr_info['live'][operand] == False):
+            temp_reg=''
             for reg in symbols[operand].address_desc_reg:
                 reg_desc[reg].remove(operand)
+                temp_reg = reg
             symbols[operand].address_desc_reg.clear()
+            if temp_reg != '':
+                print("\tmov " + get_location_in_memory(operand) + ", " + temp_reg)
+
+
 
 
 def get_register(instr, compulsory = True, exclude_reg = []):
@@ -33,12 +39,14 @@ def get_register(instr, compulsory = True, exclude_reg = []):
         if reg not in exclude_reg:
             if(len(reg_desc[reg]) == 1 and instr.instr_info['nextuse'][instr.src1] == None\
              and not instr.instr_info['live'][instr.src1]):
-                symbols[instr.src1].address_desc_reg.remove(reg)
+                # symbols[instr.src1].address_desc_reg.remove(reg)
+                upd_reg_desc(reg, instr.dest)
                 return reg
 
     for reg in reg_desc.keys():
         if(reg not in exclude_reg):
             if(len(reg_desc[reg]) == 0):
+                upd_reg_desc(reg, instr.dest)
                 return reg
     
     if(instr.instr_info['nextuse'][instr.dest] != None or compulsory == True):
@@ -53,7 +61,7 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                     R = reg
                 elif(len(reg_desc[reg]) < len(reg_desc[R])):
                     R = reg
-        save_reg_to_mem(R)
+        upd_reg_desc(R,instr.dest)
         return R
 
     else:
@@ -107,6 +115,8 @@ def get_best_location(symbol, exclude_reg = []):
         - for symbols in register it gives the register name
         - for remaining symbols it gives the memory location
     '''
+    if is_number(symbol):
+        return int(symbol)
     if (symbol.startswith('__')):
         return "dword [" + str(symbol) + "]"
     if is_symbol(symbol):
@@ -116,7 +126,9 @@ def get_best_location(symbol, exclude_reg = []):
     return get_location_in_memory(symbol)
 
 def check_type_location(location):
-    if (location.startswith('[')):
+    if is_number(location):
+        return 'number'
+    elif (location.startswith('[')):
         return "memory"
     elif(location.startswith("dword")):
         return "data"
