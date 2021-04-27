@@ -3,6 +3,7 @@ from helper_functions import *
 from parser import symbol_table, local_vars, strings
 import sys
 
+param_count = 0
 def dprint(str):
     '''
     Function for debugging
@@ -24,9 +25,10 @@ class CodeGen:
         for vars in symbol_table[0].keys():
             if 'isFunc' not in symbol_table[0][vars].keys() and vars not in strings.keys():
                 print("\t" + vars + "\tdd\t0")
-        print("\tgetInt:\tdb\t\"%d\"\t")
+        # print("\tgetInt:\tdb\t\"%d\"\t")
         for name in strings.keys():
-            print("\t" + name + ":\tdb\t" + strings[name] + ", 0")
+            temp_string = (strings[name])[1:-1]
+            print("\t" + name + ":\tdb\t`" + temp_string + "`, 0")
 
     def bin_operations(self, quad, op):
         #check where moved back into memory
@@ -99,17 +101,20 @@ class CodeGen:
 
 
     def param(self, quad):
+        global param_count
+        param_count += 1
         print("\tpush " + str(get_best_location(quad.src1)))
-        pass
 
     def function_call(self, quad):
+        global param_count
         save_caller_status()
         print("\tcall " + quad.src1)
         if(len(quad.src2)):
             print("\tmov " + get_best_location(quad.src2) + ", eax")
         for var in local_vars[quad.src1]:
             symbols[var].address_desc_mem.pop()
-        print("\tadd esp, " + str(4*len(func_arguments[quad.src1])))
+        print("\tadd esp, " + str(4*param_count))
+        param_count = 0
 
     def alloc_stack(self,quad):
         '''
@@ -162,6 +167,8 @@ class CodeGen:
             self.mul(quad)
         elif(quad.op.endswith("/")):
             self.div(quad)
+        elif(quad.op.endswith("-")):
+            self.sub(quad)
 
 def runmain():
     sys.stdout = open('out.asm', 'w')

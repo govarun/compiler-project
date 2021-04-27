@@ -1,40 +1,22 @@
 extern printf
 section .text
         global main
-f:
-        push ebp
-        mov ebp, esp
-        sub esp, 0
-        mov eax, [ebp+8]
-        add eax, [ebp+8]
-        mov dword [__t_0], eax
-        mov eax, dword [__t_0]
-        mov esp, ebp
-        pop ebp
-        ret
 main:
         push ebp
         mov ebp, esp
-        sub esp, 4
-        push 5
-        call f
-        mov dword [__t_1], eax
-        add esp, 4
-        mov [ebp-4], eax
-        mov eax, dword [__t_1]
-        push eax
-        push __t_2
-        mov eax, [ebp-4]
+        sub esp, 8
+        mov dword [ebp-4], 1000000000
+        mov eax, dword [ebp-4]
+        sub eax, 1
+        mov [ebp-8], eax
         call printf
-        mov dword [__t_3], eax
-        add esp, 8
-        mov eax, 0
+        mov dword [__t_2], eax
+        add esp, 0
+        mov eax, 1
         mov esp, ebp
         pop ebp
         ret
 section .data
         __t_0   dd      0
-        __t_1   dd      0
-        __t_3   dd      0
-        getInt: db      "%d"
-        __t_2:  db      "%d", 0
+        __t_2   dd      0
+        __t_1:  db      "%d %d", 0
