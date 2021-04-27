@@ -1,9 +1,11 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings
+from parser import symbol_table, local_vars, strings, get_label, label_cnt
 import sys
-
+diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
+relational_op_list = ["<",">","<=",">=","==","!="] 
+
 def dprint(str):
     '''
     Function for debugging
@@ -95,6 +97,40 @@ class CodeGen:
     
     def lshift(self, quad):
         pass
+    
+    def relational_op(self,quad):
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True)
+        save_reg_to_mem(reg1)
+        op = quad.op.split("_")[-1]
+        dprint(op)
+        if best_location != reg1:
+            print("\tmov " + reg1 + ", " + best_location)
+        reg2 = get_best_location(quad.src2)
+        print("\t" + "cmp" + ' ' + reg1 + ", " + reg2)
+        lbl = get_label()
+        if(op == "<"):
+            print("\tjl " + lbl)
+        elif(op == ">"):
+            print("\tjg " + lbl)
+        elif(op == "=="):
+            print("\tje " + lbl)
+        elif(op == "!="):
+            print("\tjne " + lbl)
+        elif(op == "<="):
+            print("\tjle " + lbl)
+        elif(op == ">="):
+            print("\tjge " + lbl)
+        print("\tmov " + reg1 + ", 0")
+        lbl2 = get_label()
+        print("\tjmp " + lbl2)
+        print(lbl + ":") 
+        print("\tmov " + reg1 + ", 1")
+        print(lbl2 + ":")
+        upd_reg_desc(reg1, quad.dest)
+        for sym in reg_desc[reg1]:
+            dprint(reg1 + ", " + sym)
+        free_all_regs(quad)
 
     def assign(self, quad):
         if (quad.src2 is not None): # case for pointer
@@ -167,6 +203,32 @@ class CodeGen:
         print("\tpop ebp")
         print("\tret")
 
+    def ifgoto(self,quad):
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True)
+        save_reg_to_mem(reg1)
+        if best_location != reg1:
+            print("\tmov " + reg1 + ", " + best_location)
+        print("\tcmp " + reg1 + ", 0")
+        if(quad.src2.startswith("n")):
+            print("\tjne " + quad.dest)
+        else:
+            print("\tje " + quad.dest)
+        
+        # reg2 = get_best_location(quad.src2)
+        # print("\t" + op + ' ' + reg1 + ", " + reg2)
+        # upd_reg_desc(reg1, quad.dest)
+        # for sym in reg_desc[reg1]:
+        #     dprint(reg1 + ", " + sym)
+        # free_all_regs(quad)
+        # print("\t")
+
+    def goto(self,quad):
+        print("\tjmp " + quad.dest)
+
+    def label(self,quad):
+        print(quad.src1 + ":")
+
     def generate_asm(self, quad):
         '''
         Function to generate final asm code
@@ -177,7 +239,7 @@ class CodeGen:
             self.param(quad)
         elif(quad.op == "call"):
             self.function_call(quad)
-        elif(quad.op.endswith("=")):
+        elif(quad.op.endswith("_=")):
             self.assign(quad)
         elif(quad.op == "ret"):
             self.function_return(quad)
@@ -191,7 +253,14 @@ class CodeGen:
             self.div(quad)
         elif(quad.op.endswith("%")):
             self.mod(quad)
-
+        elif(quad.op.split("_")[-1] in relational_op_list):
+            self.relational_op(quad)
+        elif(quad.op == "ifgoto"):
+            self.ifgoto(quad)
+        elif(quad.op == "label"):
+            self.label(quad)
+        elif(quad.op == "goto"):
+            self.goto(quad)
 def runmain():
     sys.stdout = open('out.asm', 'w')
     codegen = CodeGen()

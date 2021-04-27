@@ -6,6 +6,7 @@ nextuse = {}
 live = {}
 symbols = {}
 
+
 class symbol_info:
     def __init__(self):
         self.address_desc_mem = []
@@ -31,6 +32,11 @@ class Instruction:
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2] # should change?
+
+        # elif(self.op.split("_")[-1] in relational_op_list):
+        #     self.dest = quad[3]
+        #     self.src1 = quad[1]
+        #     self.src2 = quad[2]
 
         elif(self.op == "goto"):
             self.dest = quad[3]
