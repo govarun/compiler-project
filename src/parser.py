@@ -45,12 +45,15 @@ pre_append_in_symbol_table_list = ['printf']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
+strings = {}
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
     symbol_table[0][symbol]['isFunc'] = 1
     symbol_table[0][symbol]['argumentList'] = ['char *','int']
     symbol_table[0][symbol]['type'] = 'int'
+    func_arguments[symbol] = ['char *','int']
+    local_vars[symbol] = []
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
@@ -379,7 +382,8 @@ def p_primary_expression_4(p):
 
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = p[1])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char'))
+  strings[p[0].place] = p[1]
   p[0].ast = build_AST(p)
 
 ########################

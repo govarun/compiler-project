@@ -1,16 +1,20 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars
+from parser import symbol_table, local_vars, strings
 class CodeGen:
     def gen_top_headers(self):
+        print('extern printf')
         print("section .text")
         print("\tglobal main")
 
     def data_section(self):
-        print('extern printf')
-        print("section\t.data\n")
+        print("section\t.data")
         for vars in symbol_table[0].keys():
-            print(vars + "\tdd\t0")
+            if 'isFunc' not in symbol_table[0][vars].keys() and vars not in strings.keys():
+                print("\t" + vars + "\tdd\t0")
+        print("\tgetInt:\tdb\t\"%d\"\t")
+        for name in strings.keys():
+            print("\t" + name + ":\tdb\t" + strings[name] + ", 0")
 
     def bin_operations(self, quad, op):
         #check where moved back into memory
@@ -87,14 +91,17 @@ class CodeGen:
     def function_call(self, quad):
         save_caller_status()
         print("\tcall " + quad.src1)
-        print("\tmov " + get_best_location(quad.src2) + ", eax")
+        if(len(quad.src2)):
+            print("\tmov " + get_best_location(quad.src2) + ", eax")
+        for var in local_vars[quad.src1]:
+            symbols[var].address_desc_mem.pop()
         print("\tadd esp, " + str(4*len(func_arguments[quad.src1])))
 
     def alloc_stack(self,quad):
         '''
         Allocate stack space for function local variables
         '''
-        print(quad.src1)
+        print(quad.src1 + ":")
         counter = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
@@ -116,15 +123,30 @@ class CodeGen:
             save_reg_to_mem("eax")
             if(location != "eax"):
                 print("\tmov eax, " + str(location))
-
-        for var in local_vars[quad.src1]:
-            symbols[var].address_desc_mem.pop()
         
         print("\tmov esp, ebp")
         print("\tpop ebp")
         print("\tret")
 
+    def generate_asm(self, quad):
+        '''
+        Function to generate final asm code
+        '''
+        if(quad.op == "func"):
+            self.alloc_stack(quad)
+        elif(quad.op == "param"):
+            self.param(quad)
+        elif(quad.op == "call"):
+            self.function_call(quad)
+        elif(quad.op.endswith("=")):
+            self.assign(quad)
+        elif(quad.op == "ret"):
+            self.function_return(quad)
+
 def runmain():
     codegen = CodeGen()
     codegen.gen_top_headers()
+    for quad in instruction_array:
+        codegen.generate_asm(quad)
+
     codegen.data_section()
