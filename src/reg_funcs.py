@@ -26,7 +26,7 @@ def free_all_regs(instr):
                 temp_reg = reg
             symbols[operand].address_desc_reg.clear()
             if temp_reg != '':
-                print("\tmov " + get_location_in_memory(operand) + ", " + temp_reg)
+                print("\tmov dword" + get_location_in_memory(operand) + ", " + temp_reg)
 
 
 
@@ -76,7 +76,7 @@ def save_reg_to_mem(reg):
     for symbol in reg_desc[reg]:
         location = get_location_in_memory(symbol)
         if location not in saved_loc:
-            print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
+            print("\tmov dword" + get_location_in_memory(symbol) + ", " + reg)
             saved_loc.add(location)
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
@@ -86,7 +86,7 @@ def get_location_in_memory(symbol):
     Function to get the location of a symbol in memory
     '''
     if (symbol.startswith('__')):
-        return "dword [" + str(symbol) + "]"
+        return "[" + str(symbol) + "]"
     location = symbols[symbol].address_desc_mem[-1]
     prefix_string = "["
     if(is_number(location)):   # changed this from type(location) is int to .isnumeric
@@ -103,7 +103,7 @@ def save_caller_status():
     for reg in reg_desc.keys():
         for symbol in reg_desc[reg]:
             if symbol not in saved:
-                print("\tmov " + reg + ", " + get_location_in_memory(symbol))
+                print("\tmov " +  get_location_in_memory(symbol) + ", " + reg)
                 saved.add(symbol)
                 symbols[symbol].address_desc_reg.clear()
         reg_desc[reg].clear()
@@ -118,17 +118,15 @@ def get_best_location(symbol, exclude_reg = []):
     '''
     if is_number(symbol):
         return symbol
-    if (symbol.startswith('__')):
-        if(symbol in strings.keys()):
-            return symbol
-        return "dword [" + str(symbol) + "]"
+    if(symbol in strings.keys()):
+        return symbol
     if is_symbol(symbol):
         for reg in symbols[symbol].address_desc_reg:
             if (reg not in exclude_reg):
                 return reg
     if(symbol.isnumeric()):
         return symbol
-    return get_location_in_memory(symbol)
+    return "dword " + get_location_in_memory(symbol)
 
 def check_type_location(location):
     if is_number(location):
