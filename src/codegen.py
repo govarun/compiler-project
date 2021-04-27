@@ -2,6 +2,17 @@ from reg_funcs import *
 from helper_functions import *
 from parser import symbol_table, local_vars, strings
 import sys
+
+def dprint(str):
+    '''
+    Function for debugging
+    '''
+    sys.stdout.close()
+    sys.stdout = sys.__stdout__
+    print(str)
+    sys.stdout = open('out.asm', 'a')
+
+
 class CodeGen:
     def gen_top_headers(self):
         print('extern printf')
@@ -26,6 +37,8 @@ class CodeGen:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
         print("\t" + op + ' ' + reg1 + ", " + reg2)
+        for sym in reg_desc[reg1]:
+            dprint(reg1 + ", " + sym)
         # upd_reg_desc(reg1, quad.dest)
         free_all_regs(quad)
 
@@ -145,6 +158,10 @@ class CodeGen:
             self.function_return(quad)
         elif(quad.op.endswith("+")):
             self.add(quad)
+        elif(quad.op.endswith("*")):
+            self.mul(quad)
+        elif(quad.op.endswith("/")):
+            self.div(quad)
 
 def runmain():
     sys.stdout = open('out.asm', 'w')
