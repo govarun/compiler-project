@@ -89,6 +89,9 @@ class Instruction:
         elif(self.op == "*"):
             self.dest = quad[3]
             self.src1 = quad[1]
+        
+        elif(self.op == "funcEnd"):
+            self.dest = quad[3]
 
 def find_basic_blocks():
     i = 1

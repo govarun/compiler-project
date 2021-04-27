@@ -2346,7 +2346,7 @@ def p_function_definition_1(p):
       p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
       symbol_table[0][p[2].val]['isFunc'] = 1
     p[0].ast = build_AST(p)
-    emit('funcEnd', '', '', '')
+    emit('funcEnd', '', '', p[2].val)
 
 
 def p_function_definition_2(p):
@@ -2355,7 +2355,7 @@ def p_function_definition_2(p):
   p[0].ast = build_AST(p)
   # print(p[2].val)
   symbol_table[0][p[2].val]['isFunc'] = 1
-  emit('funcEnd', '', '', '')
+  emit('funcEnd', '', '', p[2].val)
 
 def p_FuncMark1(p):
   '''FuncMark1 : '''

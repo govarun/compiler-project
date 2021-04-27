@@ -43,12 +43,14 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                 and not instr.instr_info['live'][instr.src1]):
                     # symbols[instr.src1].address_desc_reg.remove(reg)
                     # upd_reg_desc(reg, instr.dest)
+                    save_reg_to_mem(reg)
                     return reg
 
     for reg in reg_desc.keys():
         if(reg not in exclude_reg):
             if(len(reg_desc[reg]) == 0):
                 # upd_reg_desc(reg, instr.dest)
+                save_reg_to_mem(reg)
                 return reg
     
     if(instr.instr_info['nextuse'][instr.dest] != None or compulsory == True):
@@ -64,6 +66,7 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                 elif(len(reg_desc[reg]) < len(reg_desc[R])):
                     R = reg
         # upd_reg_desc(R,instr.dest)
+        save_reg_to_mem(R)
         return R
 
     else:
@@ -104,7 +107,7 @@ def save_caller_status():
     for reg in reg_desc.keys():
         for symbol in reg_desc[reg]:
             if symbol not in saved:
-                print("\tmov " +  get_location_in_memory(symbol) + ", " + reg)
+                print("\tmov dword " +  get_location_in_memory(symbol) + ", " + reg)
                 saved.add(symbol)
                 symbols[symbol].address_desc_reg.clear()
         reg_desc[reg].clear()

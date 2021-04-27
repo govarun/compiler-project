@@ -41,10 +41,8 @@ class CodeGen:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
         print("\t" + op + ' ' + reg1 + ", " + reg2)
-        upd_reg_desc(reg1, quad.dest)
-        for sym in reg_desc[reg1]:
-            dprint(reg1 + ", " + sym)
         free_all_regs(quad)
+        upd_reg_desc(reg1, quad.dest)
 
     def add(self,quad):
         self.bin_operations(quad, 'add')
@@ -70,9 +68,6 @@ class CodeGen:
         print('\tidiv ' + reg)
         upd_reg_desc('eax', quad.dest)
 
-        for sym in reg_desc['eax']:
-            dprint('eax' + ", " + sym)
-
         free_all_regs(quad)
 
     def mod(self, quad):
@@ -90,8 +85,6 @@ class CodeGen:
         print('\tidiv ' + reg)
         upd_reg_desc('edx', quad.dest)
 
-        for sym in reg_desc['edx']:
-            dprint('edx' + ", " + sym)
 
         free_all_regs(quad)
     
@@ -103,7 +96,6 @@ class CodeGen:
         reg1 = get_register(quad, compulsory=True)
         save_reg_to_mem(reg1)
         op = quad.op.split("_")[-1]
-        dprint(op)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
@@ -128,8 +120,6 @@ class CodeGen:
         print("\tmov " + reg1 + ", 1")
         print(lbl2 + ":")
         upd_reg_desc(reg1, quad.dest)
-        for sym in reg_desc[reg1]:
-            dprint(reg1 + ", " + sym)
         free_all_regs(quad)
 
     def assign(self, quad):
@@ -141,8 +131,10 @@ class CodeGen:
                 upd_reg_desc(best_location, quad.dest)
             print("\tmov " + best_location + ", " + quad.src1)
         else:
+            #y_1 = t_1(eax)
             best_location = get_best_location(quad.src1)
-            if (check_type_location(best_location) in ["memory", "data"]):
+            dprint(quad.src1 + " " + best_location + " " + quad.dest)
+            if (check_type_location(best_location) in ["memory", "data", "number"]):
                 reg = get_register(quad, compulsory = True)
                 upd_reg_desc(reg, quad.src1)
                 print("\tmov " + reg + ", " + best_location)
@@ -152,8 +144,8 @@ class CodeGen:
             reg_desc[best_location].add(quad.dest)
             del_symbol_reg_exclude(quad.dest, [best_location])
 
-            if (quad.instr_info['nextuse'][quad.src1] == None):
-                del_symbol_reg_exclude(quad.src1)
+            # if (quad.instr_info['nextuse'][quad.src1] == None):
+            #     del_symbol_reg_exclude(quad.src1)
 
 
     def param(self, quad):
@@ -167,10 +159,12 @@ class CodeGen:
         print("\tcall " + quad.src1)
         if(len(quad.src2)):
             print("\tmov " + get_best_location(quad.src2) + ", eax")
-        for var in local_vars[quad.src1]:
-            symbols[var].address_desc_mem.pop()
         print("\tadd esp, " + str(4*param_count))
         param_count = 0
+
+    def funcEnd(self, quad):
+        for var in local_vars[quad.dest]:
+            symbols[var].address_desc_mem.pop()
 
     def alloc_stack(self,quad):
         '''
@@ -210,6 +204,7 @@ class CodeGen:
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
         print("\tcmp " + reg1 + ", 0")
+        save_caller_status()
         if(quad.src2.startswith("n")):
             print("\tjne " + quad.dest)
         else:
@@ -224,6 +219,7 @@ class CodeGen:
         # print("\t")
 
     def goto(self,quad):
+        save_caller_status()
         print("\tjmp " + quad.dest)
 
     def label(self,quad):
@@ -261,6 +257,9 @@ class CodeGen:
             self.label(quad)
         elif(quad.op == "goto"):
             self.goto(quad)
+        elif(quad.op == "funcEnd"):
+            self.funcEnd(quad)
+
 def runmain():
     sys.stdout = open('out.asm', 'w')
     codegen = CodeGen()
