@@ -41,4 +41,4 @@ code = file.read()
 if __name__ == '__main__':
 	parser.runmain(code)
 	helper_functions.runmain()
-	# codegen.runmain()
+	codegen.runmain()

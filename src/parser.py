@@ -49,6 +49,8 @@ def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
     symbol_table[0][symbol]['isFunc'] = 1
+    symbol_table[0][symbol]['argumentList'] = ['char *','int']
+    symbol_table[0][symbol]['type'] = 'int'
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
@@ -377,7 +379,7 @@ def p_primary_expression_4(p):
 
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'string',children = [], place = p[1])
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = p[1])
   p[0].ast = build_AST(p)
 
 ########################
@@ -438,7 +440,7 @@ def p_postfix_expression_3(p):
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call") 
   emit('call', 0, '', p[1].val) 
-
+  print("checking" + p[1].type)
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
@@ -1704,6 +1706,7 @@ def p_direct_declarator_3(p):
     p[0].ast = build_AST(p)  
   global curFuncReturnType
   if(p[3] == ')'):
+    func_arguments[p[1].val] = []
     if(p[1].val in symbol_table[parent[currentScope]].keys()):
       # print('check')
       if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
@@ -2383,6 +2386,7 @@ def p_error(p):
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
+  pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
