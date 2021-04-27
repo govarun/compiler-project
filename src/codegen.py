@@ -91,8 +91,29 @@ class CodeGen:
 
         free_all_regs(quad)
     
-    def lshift(self, quad):
-        pass
+    def increment(self, quad):
+        best_location = get_best_location(quad.src1)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.src1)
+        print("\tinc " + best_location)
+
+    def decrement(self, quad):
+        best_location = get_best_location(quad.src1)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location,quad.src1)
+        print("\tdec " + best_location)
+
+    def bitwisenot(self, quad):
+        best_location = get_best_location(quad.dest)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.dest)
+        print("\tnot " + best_location)
+
+    def uminus(self, quad):
+        best_location = get_best_location(quad.dest)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.dest)
+        print("\tneg " + best_location)
 
     def assign(self, quad):
         if (quad.src2 is not None): # case for pointer
@@ -186,6 +207,16 @@ class CodeGen:
             self.div(quad)
         elif(quad.op.endswith("%")):
             self.mod(quad)
+        elif(quad.op.endswith("inc")):
+            self.increment(quad)
+        elif(quad.op.endswith("dec")):
+            self.decrement(quad)
+        elif(quad.op.endswith("bitwisenot")):
+            self.assign(quad)
+            self.bitwisenot(quad)
+        elif(quad.op.endswith("uminus")):
+            self.assign(quad)
+            self.uminus(quad)
 
 def runmain():
     sys.stdout = open('out.asm', 'w')

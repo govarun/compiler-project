@@ -38,11 +38,9 @@ class Instruction:
         elif(self.op == "inc" or self.op == "dec"):
             self.src1 = quad[3]
 
-        elif(self.op == 'bitwisenot'):
-            self.src1 = quad[3]
-
-        elif(self.op == 'unot'):
-            self.src1 = quad[3]
+        elif(self.op.endswith('bitwisenot')):
+            self.src1 = quad[1]
+            self.dest = quad[3]
 
         elif(self.op == "param"):
             self.src1 = quad[3]
