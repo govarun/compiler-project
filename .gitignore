@@ -17,4 +17,5 @@ symbol_table_output.json
 src/symbol_table_output.json
 graph1.dot
 pydot_graph.png
-*.asm
+out.asm
+src/out.asm

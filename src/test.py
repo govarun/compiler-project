@@ -17,4 +17,4 @@
 #     symbols[symbol].address_desc_reg.add(reg)
 #     reg_desc[reg].add(symbol)
 s = "-12232344545"
-print(s.is_instance(s, aint))
+print(s.is_instance(s, ))
