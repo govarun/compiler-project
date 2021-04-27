@@ -1,14 +1,20 @@
-
+extern printf
 section .text
-	global main
+        global main
 main:
-	mov edx, 0
-	mov eax, 52
-	push eax
-	add esp, 4
-	ret
-
+        push ebp
+        mov ebp, esp
+        sub esp, 0
+        push 1
+        push __t_0
+        call printf
+        mov dword [__t_1], eax
+        add esp, 8
+        mov eax, 0
+        mov esp, ebp
+        pop ebp
+        ret
 section .data
-	x	db	0
-	y 	dw	32
-
+        __t_1   dd      0
+        getInt: db      "%d"
+        __t_0:  db      "%d", 0

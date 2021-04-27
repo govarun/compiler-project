@@ -1,5 +1,5 @@
 from helper_functions import *
-from parser import local_vars
+from parser import local_vars, strings
 
 # 32 bit register descriptors
 reg_desc = {}
@@ -107,11 +107,15 @@ def get_best_location(symbol, exclude_reg = []):
         - for remaining symbols it gives the memory location
     '''
     if (symbol.startswith('__')):
+        if(symbol in strings.keys()):
+            return symbol
         return "dword [" + str(symbol) + "]"
     if is_symbol(symbol):
         for reg in symbols[symbol].address_desc_reg:
             if (reg not in exclude_reg):
                 return reg
+    if(symbol.isnumeric()):
+        return symbol
     return get_location_in_memory(symbol)
 
 def check_type_location(location):
