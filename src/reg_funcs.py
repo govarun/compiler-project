@@ -27,6 +27,7 @@ def free_all_regs(instr):
 def get_register(instr, compulsory = True, exclude_reg = []):
     '''
         Function to get the best register for instr.dest, using nextuse and live status of the symbols
+        X := Y op Z
     '''
     for reg in symbols[instr.src1].address_desc_reg:
         if reg not in exclude_reg:
@@ -123,6 +124,9 @@ def check_type_location(location):
         return "register"
 
 def del_symbol_reg_exclude(symbol, exclude = []):
+    '''
+        Delete symbol from all registers excule the ones in the list
+    '''
     for reg in symbols[symbol].address_desc_reg:
         if reg not in exclude:
             reg_desc[reg].remove(symbol)
