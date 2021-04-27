@@ -147,13 +147,19 @@ def del_symbol_reg_exclude(symbol, exclude = []):
         Delete symbol from all registers excule the ones in the list
     '''
     to_keep = set()
+    if len(exclude) == 0:
+        for reg in symbols[symbol].address_desc_reg:
+            save_reg_to_mem(reg)
+            break
     for reg in symbols[symbol].address_desc_reg:
         if reg not in exclude:
             reg_desc[reg].remove(symbol)
+            tmp = reg
         else:
             to_keep.add(reg)
     symbols[symbol].address_desc_reg.clear()
     symbols[symbol].address_desc_reg = copy.deepcopy(to_keep)
+    
 
 def upd_reg_desc(reg, symbol):
     '''

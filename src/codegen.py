@@ -88,8 +88,64 @@ class CodeGen:
 
         free_all_regs(quad)
     
+    def increment(self, quad):
+        best_location = get_best_location(quad.src1)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.src1)
+        print("\tinc " + best_location)
+
+    def decrement(self, quad):
+        best_location = get_best_location(quad.src1)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location,quad.src1)
+        print("\tdec " + best_location)
+
+    def bitwisenot(self, quad):
+        best_location = get_best_location(quad.dest)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.dest)
+        print("\tnot " + best_location)
+
+    def uminus(self, quad):
+        best_location = get_best_location(quad.dest)
+        if check_type_location(best_location) == "register":
+            upd_reg_desc(best_location, quad.dest)
+        print("\tneg " + best_location)
+
+
     def lshift(self, quad):
-        pass
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True)
+        upd_reg_desc(reg1, quad.dest)
+        if best_location != reg1:
+            print("\tmov " + reg1 + ", " + best_location)
+        
+        best_location = get_best_location(quad.src2)
+        if check_type_location(best_location) == "number":
+            print("\tshl " + reg1 +  ', ' + best_location)
+        else:
+            if best_location != "ecx":
+                upd_reg_desc("ecx",quad.src2)
+                print("\tmov " + "ecx" + ", " + best_location)
+            print("\tshl " + reg1 + ", cl")
+        free_all_regs(quad)
+
+    def rshift(self, quad):
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True)
+        upd_reg_desc(reg1, quad.dest)
+        if best_location != reg1:
+            print("\tmov " + reg1 + ", " + best_location)
+
+        best_location = get_best_location(quad.src2)
+        if check_type_location(best_location) == "number":
+            print("\tshr " + reg1 + ', ' + best_location)
+        else:
+            if best_location != "ecx":
+                upd_reg_desc("ecx", quad.src2)
+                print("\tmov " + "ecx" + ", " + best_location)
+            print("\tshr " + reg1 + ", cl")
+        free_all_regs(quad)
     
     def relational_op(self,quad):
         best_location = get_best_location(quad.src1)
@@ -249,6 +305,16 @@ class CodeGen:
             self.div(quad)
         elif(quad.op.endswith("%")):
             self.mod(quad)
+        elif(quad.op.endswith("inc")):
+            self.increment(quad)
+        elif(quad.op.endswith("dec")):
+            self.decrement(quad)
+        elif(quad.op.endswith("bitwisenot")):
+            self.assign(quad)
+            self.bitwisenot(quad)
+        elif(quad.op.endswith("uminus")):
+            self.assign(quad)
+            self.uminus(quad)
         elif(quad.op.split("_")[-1] in relational_op_list):
             self.relational_op(quad)
         elif(quad.op == "ifgoto"):
@@ -259,6 +325,13 @@ class CodeGen:
             self.goto(quad)
         elif(quad.op == "funcEnd"):
             self.funcEnd(quad)
+        elif(quad.op.endswith("<<")):
+            self.lshift(quad)
+        elif(quad.op.endswith(">>")):
+            self.rshift(quad)
+
+
+
 
 def runmain():
     sys.stdout = open('out.asm', 'w')
