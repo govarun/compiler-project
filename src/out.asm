@@ -4,9 +4,8 @@ section .text
 main:
 	push ebp
 	mov ebp, esp
-	sub esp, 4
-	mov dword [ebp-4], 1
-	push dword [ebp-4]
+	sub esp, 0
+	push 1
 	push __t_0
 	call printf
 	mov dword [__t_1], eax

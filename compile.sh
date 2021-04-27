@@ -1,4 +1,4 @@
 python3 ./src/main.py $1
-echo "\n-----Program Output-----"
+printf "\n-----Program Output-----\n"
 ./run.sh out.asm
-echo "\n------------------------"
+printf "\n------------------------"
