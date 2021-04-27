@@ -26,7 +26,7 @@ def free_all_regs(instr):
                 temp_reg = reg
             symbols[operand].address_desc_reg.clear()
             if temp_reg != '':
-                print("\tmov dword" + get_location_in_memory(operand) + ", " + temp_reg)
+                print("\tmov dword " + get_location_in_memory(operand) + ", " + temp_reg)
 
 
 
@@ -36,18 +36,19 @@ def get_register(instr, compulsory = True, exclude_reg = []):
         Function to get the best register for instr.dest, using nextuse and live status of the symbols
         X := Y op Z
     '''
-    for reg in symbols[instr.src1].address_desc_reg:
-        if reg not in exclude_reg:
-            if(len(reg_desc[reg]) == 1 and instr.instr_info['nextuse'][instr.src1] == None\
-             and not instr.instr_info['live'][instr.src1]):
-                # symbols[instr.src1].address_desc_reg.remove(reg)
-                upd_reg_desc(reg, instr.dest)
-                return reg
+    if is_symbol(instr.src1): 
+        for reg in symbols[instr.src1].address_desc_reg:
+            if reg not in exclude_reg:
+                if(len(reg_desc[reg]) == 1 and instr.instr_info['nextuse'][instr.src1] == None\
+                and not instr.instr_info['live'][instr.src1]):
+                    # symbols[instr.src1].address_desc_reg.remove(reg)
+                    # upd_reg_desc(reg, instr.dest)
+                    return reg
 
     for reg in reg_desc.keys():
         if(reg not in exclude_reg):
             if(len(reg_desc[reg]) == 0):
-                upd_reg_desc(reg, instr.dest)
+                # upd_reg_desc(reg, instr.dest)
                 return reg
     
     if(instr.instr_info['nextuse'][instr.dest] != None or compulsory == True):
@@ -62,7 +63,7 @@ def get_register(instr, compulsory = True, exclude_reg = []):
                     R = reg
                 elif(len(reg_desc[reg]) < len(reg_desc[R])):
                     R = reg
-        upd_reg_desc(R,instr.dest)
+        # upd_reg_desc(R,instr.dest)
         return R
 
     else:
@@ -76,7 +77,7 @@ def save_reg_to_mem(reg):
     for symbol in reg_desc[reg]:
         location = get_location_in_memory(symbol)
         if location not in saved_loc:
-            print("\tmov dword" + get_location_in_memory(symbol) + ", " + reg)
+            print("\tmov dword " + get_location_in_memory(symbol) + ", " + reg)
             saved_loc.add(location)
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
