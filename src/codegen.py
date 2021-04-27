@@ -68,7 +68,7 @@ class CodeGen:
             best_location = get_best_location(quad.dest)
             if (check_type_location(best_location) == "register"):
                 upd_reg_desc(best_location, quad.dest)
-            print("\tmov " + best_location + ", " + int(quad.src1))
+            print("\tmov " + best_location + ", " + quad.src1)
         else:
             best_location = get_best_location(quad.src1)
             if (check_type_location(best_location) in ["memory", "data"]):

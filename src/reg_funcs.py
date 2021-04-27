@@ -117,7 +117,7 @@ def get_best_location(symbol, exclude_reg = []):
         - for remaining symbols it gives the memory location
     '''
     if is_number(symbol):
-        return int(symbol)
+        return symbol
     if (symbol.startswith('__')):
         if(symbol in strings.keys()):
             return symbol
