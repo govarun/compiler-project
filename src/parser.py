@@ -457,7 +457,7 @@ def p_postfix_expression_4(p):
   p[0].ast = build_AST(p)
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
-  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children)):
+  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children) and p[1].val != 'printf'):
     print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
   else:
     i = 0
