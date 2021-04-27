@@ -64,10 +64,10 @@ def save_reg_to_mem(reg):
     '''
     saved_loc = set()
     for symbol in reg_desc[reg]:
-        for location in symbols[symbol].address_desc_mem:
-            if location not in saved_loc:
-                print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
-                saved_loc.add(location)
+        location = symbols[symbol].address_desc_mem[-1]
+        if location not in saved_loc:
+            print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
+            saved_loc.add(location)
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
 
@@ -75,13 +75,29 @@ def get_location_in_memory(symbol):
     '''
     Function to get the location of a symbol in memory
     '''
-    for location in symbols[symbol].address_desc_mem:
-        prefix_string = "["
-        if(location.isnumeric()):   # changed this from type(location) is int to .isnumeric
-            prefix_string = "[ebp"
-            if(location >= 0):
-                prefix_string = "[ebp+"
-        return prefix_string+str(location)+"]"
+    if (symbol.startswith('__')):
+        return "dword [" + str(symbol) + "]"
+    location = symbols[symbol].address_desc_mem[-1]
+    prefix_string = "["
+    if(location.isnumeric()):   # changed this from type(location) is int to .isnumeric
+        prefix_string = "[ebp"
+        if(location >= 0):
+            prefix_string = "[ebp+"
+    return prefix_string+str(location)+"]"
+
+def save_caller_status():
+    '''
+    Function to save the status of the caller function
+    '''
+    saved = set()
+    for reg in reg_desc.keys():
+        for symbol in reg_desc[reg]:
+            if symbol not in saved:
+                print("\tmov " + reg + ", " + get_location_in_memory(symbol))
+                saved.add(symbol)
+                symbols[symbol].address_desc_reg.clear()
+        reg_desc[reg].clear()
+
 
 def get_best_location(symbol, exclude_reg = []):
     '''
@@ -98,12 +114,25 @@ def get_best_location(symbol, exclude_reg = []):
                 return reg
     return get_location_in_memory(symbol)
 
+def check_type_location(location):
+    if (location.startswith('[')):
+        return "memory"
+    elif(location.startswith("dword")):
+        return "data"
+    else:
+        return "register"
+
+def del_symbol_reg_exclude(symbol, exclude = []):
+    for reg in symbols[symbol].address_desc_reg:
+        if reg not in exclude:
+            reg_desc[reg].remove(symbol)
+            symbols[symbol].address_desc_reg.remove(reg)
 
 def upd_reg_desc(reg, symbol):
     '''
         Stores the symbol exclusively in one register, and removes it from other registers
     '''
-    reg_desc[reg].clear()
+    save_reg_to_mem(reg)
     if not is_symbol(symbol):
         return
     for register in symbols[symbol].address_desc_reg:

@@ -8,7 +8,7 @@ symbols = {}
 
 class symbol_info:
     def __init__(self):
-        self.address_desc_mem = set()
+        self.address_desc_mem = []
         self.address_desc_reg = set()
 
 class Instruction:
@@ -53,6 +53,10 @@ class Instruction:
 
         elif(self.op == "func"):
             self.src1 = quad[3]
+
+        elif(self.op == "call"):
+            self.src1 = quad[3]
+            self.src2 = quad[2]
 
         elif(self.op == "int_="):
             self.dest = quad[3]
@@ -102,6 +106,13 @@ def is_symbol(var):
     else:
         return False
 
+def is_number(number):
+    number = str(number)
+    if (number.startswith('-')):
+        return True
+    if number[0] == '.' or number[0].isnumeric():
+        return True
+    return False
 
 def gen_next_use_and_live():
     for i in range(len(leaders) - 1):
