@@ -74,7 +74,7 @@ def save_reg_to_mem(reg):
     '''
     saved_loc = set()
     for symbol in reg_desc[reg]:
-        location = symbols[symbol].address_desc_mem[-1]
+        location = get_location_in_memory(symbol)
         if location not in saved_loc:
             print("\tmov " + get_location_in_memory(symbol) + ", " + reg)
             saved_loc.add(location)

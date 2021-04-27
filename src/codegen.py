@@ -1,6 +1,7 @@
 from reg_funcs import *
 from helper_functions import *
 from parser import symbol_table, local_vars, strings
+import sys
 class CodeGen:
     def gen_top_headers(self):
         print('extern printf')
@@ -29,13 +30,13 @@ class CodeGen:
         free_all_regs(quad)
 
     def add(self,quad):
-        bin_operations(quad, 'add')
+        self.bin_operations(quad, 'add')
 
     def sub(self, quad):
-        bin_operations(quad, 'sub')
+        self.bin_operations(quad, 'sub')
 
     def mul(self, quad):
-        bin_operations(quad, 'imul')
+        self.bin_operations(quad, 'imul')
     
     def div(self, quad):
         save_reg_to_mem('eax')
@@ -58,7 +59,7 @@ class CodeGen:
         free_all_regs(quad)
     
     def lshift(self, quad):
-        bin_operations(quad, 'imul')
+        self.bin_operations(quad, 'imul')
 
     def assign(self, quad):
         if (quad.src2 is not None): # case for pointer
@@ -142,11 +143,14 @@ class CodeGen:
             self.assign(quad)
         elif(quad.op == "ret"):
             self.function_return(quad)
+        elif(quad.op.endswith("+")):
+            self.add(quad)
 
 def runmain():
+    sys.stdout = open('out.asm', 'w')
     codegen = CodeGen()
     codegen.gen_top_headers()
     for quad in instruction_array:
         codegen.generate_asm(quad)
-
     codegen.data_section()
+    sys.stdout.close()
