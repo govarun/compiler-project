@@ -1681,6 +1681,7 @@ def p_direct_declarator_1(p):
     func_arguments[p[1].val] = []
     for child in p[3].children:
       func_arguments[p[1].val].append(child.val)
+    # print(func_arguments[p[1].val])
       # print(child.val)
     p[0].children = p[3].children
     p[0].type = curType[-1]
@@ -1692,6 +1693,11 @@ def p_direct_declarator_1(p):
       else:
         scope_to_function[currentScope] = p[1].val
         local_vars[p[1].val] = []
+        iterator = 0
+        for child in p[3].children:
+          if(child.type != symbol_table[0][p[1].val]['argumentList'][iterator]):
+            print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' argument ' + str(iterator+1) +' does not match function declaration')
+          iterator += 1
       return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     
@@ -2439,7 +2445,8 @@ def visualize_symbol_table():
           newkey = key + "_" + str(i)
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           print(newkey, global_symbol_table[newkey])
-          local_vars[scope_to_function[i]].append(newkey)
+          if(newkey not in local_vars[scope_to_function[i]]):
+            local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
             if key in func_arguments[scope_to_function[i]]:
               func_arguments[scope_to_function[i]].append(newkey)
