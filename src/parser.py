@@ -122,10 +122,10 @@ def _new_var():
   return s
 
 def insert_in_sym_table(tmp_name, dtype, value=0):
-  symbol_table[0][tmp_name] = {}
-  symbol_table[0][tmp_name]['type'] = dtype
-  symbol_table[0][tmp_name]['size'] = get_data_type_size(dtype)
-  symbol_table[0][tmp_name]['value'] = value
+  symbol_table[currentScope][tmp_name] = {}
+  symbol_table[currentScope][tmp_name]['type'] = dtype
+  symbol_table[currentScope][tmp_name]['size'] = get_data_type_size(dtype)
+  symbol_table[currentScope][tmp_name]['value'] = value
 
 def get_new_tmp(dtype, value=0):
   tmp_name = _new_var()
@@ -2440,10 +2440,13 @@ def visualize_symbol_table():
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           print(newkey, global_symbol_table[newkey])
           local_vars[scope_to_function[i]].append(newkey)
-          if key in func_arguments[scope_to_function[i]]:
-            func_arguments[scope_to_function[i]].append(newkey)
-            func_arguments[scope_to_function[i]].remove(key)
+          if i > 0:
+            if key in func_arguments[scope_to_function[i]]:
+              func_arguments[scope_to_function[i]].append(newkey)
+              func_arguments[scope_to_function[i]].remove(key)
         elif key.startswith('__'):
+          if(key not in strings.keys()):
+            local_vars[scope_to_function[i]].append(key)
           global_symbol_table[key] = symbol_table[i][key]
           print(key, global_symbol_table[key])
       json_object = json.dumps(temp_list, indent = 4)

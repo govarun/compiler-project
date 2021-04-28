@@ -24,8 +24,8 @@ class CodeGen:
 
     def data_section(self):
         print("section\t.data")
-        for vars in symbol_table[0].keys():
-            if 'isFunc' not in symbol_table[0][vars].keys() and vars not in strings.keys():
+        for vars in local_vars['global']:
+            if vars not in strings.keys():
                 print("\t" + vars + "\tdd\t0")
         # print("\tgetInt:\tdb\t\"%d\"\t")
         for name in strings.keys():

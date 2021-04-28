@@ -4,7 +4,7 @@ section .text
 fib:
 	push ebp
 	mov ebp, esp
-	sub esp, 36
+	sub esp, 12
 	mov eax, dword [ebp+8]
 	mov ebx, eax
 	cmp ebx, 0
@@ -15,11 +15,11 @@ __l5:
 	mov ebx, 1
 __l6:
 	mov dword [ebp+8], eax
-	mov dword [ebp-8], ebx
+	mov dword [__t_0], ebx
 	cmp ebx, 0
-	mov dword [ebp-4], eax
 	je __l1
-	mov dword [ebp-12], 1
+	mov dword [__t_1], 1
+	mov dword [ebp-12], eax
 	jmp __l0
 __l1:
 	mov eax, dword [ebp+8]
@@ -30,15 +30,15 @@ __l1:
 __l7:
 	mov eax, 1
 __l8:
-	mov dword [ebp-16], eax
+	mov dword [__t_2], eax
 	cmp eax, 0
 	je __l2
-	mov dword [ebp-12], 1
+	mov dword [__t_1], 1
 	jmp __l0
 __l2:
-	mov dword [ebp-12], 0
+	mov dword [__t_1], 0
 __l0:
-	mov eax, dword [ebp-12]
+	mov eax, dword [__t_1]
 	cmp eax, 0
 	je __l3
 	mov eax, dword [ebp+8]
@@ -49,45 +49,53 @@ __l3:
 	mov eax, dword [ebp+8]
 	sub eax, 1
 	push eax
-	mov dword [ebp-20], eax
+	mov dword [__t_3], eax
 	call fib
-	mov dword [ebp-24], eax
+	mov dword [__t_4], eax
 	add esp, 4
 	mov eax, dword [ebp+8]
 	sub eax, 2
 	push eax
-	mov dword [ebp-28], eax
+	mov dword [__t_5], eax
 	call fib
-	mov dword [ebp-32], eax
+	mov dword [__t_6], eax
 	add esp, 4
-	mov eax, dword [ebp-24]
-	add eax, dword [ebp-32]
-	mov dword [x_0], eax
-	mov dword [ebp-36], eax
+	mov eax, dword [__t_4]
+	add eax, dword [__t_6]
+	mov dword [ebp-4], eax
+	mov dword [__t_7], eax
 	mov esp, ebp
 	pop ebp
 	ret
 main:
 	push ebp
 	mov ebp, esp
-	sub esp, 20
+	sub esp, 12
 	mov dword [ebp-4], 5
 	mov dword [ebp-8], 7
 	mov dword [ebp-12], 1
 	push 7
 	call fib
-	mov dword [ebp-16], eax
+	mov dword [__t_9], eax
 	add esp, 4
-	push dword [ebp-16]
+	push dword [__t_9]
 	push __t_8
 	call printf
-	mov dword [ebp-20], eax
+	mov dword [__t_10], eax
 	add esp, 8
 	mov eax, 1
 	mov esp, ebp
 	pop ebp
 	ret
 section	.data
-	x_0	dd	0
-	y_0	dd	0
+	__t_0	dd	0
+	__t_1	dd	0
+	__t_2	dd	0
+	__t_3	dd	0
+	__t_4	dd	0
+	__t_5	dd	0
+	__t_6	dd	0
+	__t_7	dd	0
+	__t_9	dd	0
+	__t_10	dd	0
 	__t_8:	db	`%d\n`, 0

@@ -91,7 +91,7 @@ def get_location_in_memory(symbol):
     '''
     if not is_symbol(symbol):
         return symbol
-    if (symbol.startswith('__')):
+    if (symbol in strings.keys() or symbol in local_vars['global']):
         return "[" + str(symbol) + "]"
     location = symbols[symbol].address_desc_mem[-1]
     prefix_string = "["
