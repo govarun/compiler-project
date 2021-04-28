@@ -19,6 +19,7 @@ def dprint(str):
 class CodeGen:
     def gen_top_headers(self):
         print('extern printf')
+        print('extern scanf')
         print("section .text")
         print("\tglobal main")
 
@@ -281,6 +282,12 @@ class CodeGen:
     def label(self,quad):
         print(quad.src1 + ":")
 
+    def addr(self, quad):
+        reg = get_register(quad)
+        print("\tlea " + reg + ", " + get_location_in_memory(quad.src1))
+        reg_desc[reg].add(quad.dest)
+        symbols[quad.dest].address_desc_reg.add(reg)
+
     def generate_asm(self, quad):
         '''
         Function to generate final asm code
@@ -329,6 +336,8 @@ class CodeGen:
             self.lshift(quad)
         elif(quad.op.endswith(">>")):
             self.rshift(quad)
+        elif(quad.op == "addr"):
+            self.addr(quad)
 
 
 
