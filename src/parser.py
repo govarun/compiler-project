@@ -46,6 +46,7 @@ local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
 strings = {}
+functionScope = {}
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
@@ -1690,6 +1691,9 @@ def p_direct_declarator_1(p):
         # print(symbol_table[parent[currentScope]][p[1].val])
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
       else:
+        if(p[1].val in functionScope.keys()):
+          scope_to_function.pop(functionScope[p[1].val])
+        functionScope[p[1].val] = currentScope
         scope_to_function[currentScope] = p[1].val
         local_vars[p[1].val] = []
       return 
@@ -1703,6 +1707,9 @@ def p_direct_declarator_1(p):
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
+    if(p[1].val in functionScope.keys()):
+      scope_to_function.pop(functionScope[p[1].val])
+    functionScope[p[1].val] = currentScope
     scope_to_function[currentScope] = p[1].val
     local_vars[p[1].val] = []
     # emit('func', '', '', p[1].val)
@@ -1731,6 +1738,9 @@ def p_direct_declarator_3(p):
       if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
       else:
+        if(p[1].val in functionScope.keys()):
+          scope_to_function.pop(functionScope[p[1].val])
+        functionScope[p[1].val] = currentScope
         scope_to_function[currentScope] = p[1].val
         local_vars[p[1].val] = []
       return 
@@ -1740,6 +1750,9 @@ def p_direct_declarator_3(p):
     symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 2
     p[0].isFunc = 2
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
+    if(p[1].val in functionScope.keys()):
+      scope_to_function.pop(functionScope[p[1].val])
+    functionScope[p[1].val] = currentScope
     scope_to_function[currentScope] = p[1].val
     local_vars[p[1].val] = []
     print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
@@ -2422,13 +2435,12 @@ def print_emit_array(debug = False):
     return
   for i in emit_array:
     print(i)
-
 def visualize_symbol_table():
   global scopeName
   with open("symbol_table_output.json", "w") as outfile:
     outfile.write('')
   for i in range (nextScope):
-    if(len(symbol_table[i]) > 0):
+    if(len(symbol_table[i]) > 0 and i in scope_to_function.keys()):
       print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
