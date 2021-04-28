@@ -124,11 +124,13 @@ def get_best_location(symbol, exclude_reg = []):
     '''
     if not is_symbol(symbol):
         return symbol
-    else:
+    if(symbol in strings.keys()):
+        return symbol
+    if is_symbol(symbol):
         for reg in symbols[symbol].address_desc_reg:
             if (reg not in exclude_reg):
                 return reg
-        return "dword " + get_location_in_memory(symbol)
+    return "dword " + get_location_in_memory(symbol)
 
 def check_type_location(location):
     if is_number(location):
