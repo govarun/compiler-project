@@ -89,6 +89,8 @@ def get_location_in_memory(symbol):
     '''
     Function to get the location of a symbol in memory
     '''
+    if not is_symbol(symbol):
+        return symbol
     if (symbol.startswith('__')):
         return "[" + str(symbol) + "]"
     location = symbols[symbol].address_desc_mem[-1]
@@ -120,17 +122,13 @@ def get_best_location(symbol, exclude_reg = []):
         - for symbols in register it gives the register name
         - for remaining symbols it gives the memory location
     '''
-    if is_number(symbol):
+    if not is_symbol(symbol):
         return symbol
-    if(symbol in strings.keys()):
-        return symbol
-    if is_symbol(symbol):
+    else:
         for reg in symbols[symbol].address_desc_reg:
             if (reg not in exclude_reg):
                 return reg
-    if(symbol.isnumeric()):
-        return symbol
-    return "dword " + get_location_in_memory(symbol)
+        return "dword " + get_location_in_memory(symbol)
 
 def check_type_location(location):
     if is_number(location):
