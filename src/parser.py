@@ -359,11 +359,11 @@ def p_primary_expression_1(p):
   # p[0] = build_AST(p)
   if(len(p) == 4):
     p[0] = p[2]
-    p[0].ast = build_AST(p)
     # p[0].name = 'primaryExpression'
     # place copied automatically
   else:
-    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
+    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+  p[0].ast = build_AST(p)
     
 
 def p_primary_expression_2(p):
@@ -1219,7 +1219,6 @@ def p_temp_declaration(p):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
         continue
       if(child.children[0].val in symbol_table[currentScope].keys()):
-        print('here1')
         print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
       symbol_table[currentScope][child.children[0].val] = {}
       symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
@@ -1238,6 +1237,7 @@ def p_temp_declaration(p):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
       symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
+
       # 3AC Code 
       child.children[0].place = child.children[0].val + '_' + str(currentScope)
       # print(child.children[1].val)
@@ -1246,9 +1246,16 @@ def p_temp_declaration(p):
       if (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
-        emit(data_type + '_' + operator, tmp, '', child.children[0].place)
+        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
+          emit(data_type + '_' + operator, tmp, '', child.children[0].place)
+        else:
+          emit(data_type + '_' + operator, tmp, '*', child.children[0].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
+        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
+          emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)
+        else:
+          emit(data_type + '_' + operator, child.children[1].place, '*', child.children[0].place)
+
     else:
       if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
         continue
@@ -1682,6 +1689,7 @@ def p_direct_declarator_1(p):
     func_arguments[p[1].val] = []
     for child in p[3].children:
       func_arguments[p[1].val].append(child.val)
+    # print(func_arguments[p[1].val])
       # print(child.val)
     p[0].children = p[3].children
     p[0].type = curType[-1]
@@ -1696,6 +1704,11 @@ def p_direct_declarator_1(p):
         functionScope[p[1].val] = currentScope
         scope_to_function[currentScope] = p[1].val
         local_vars[p[1].val] = []
+        iterator = 0
+        for child in p[3].children:
+          if(child.type != symbol_table[0][p[1].val]['argumentList'][iterator]):
+            print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' argument ' + str(iterator+1) +' does not match function declaration')
+          iterator += 1
       return 
     symbol_table[parent[currentScope]][p[1].val] = {}
     
@@ -2451,7 +2464,8 @@ def visualize_symbol_table():
           newkey = key + "_" + str(i)
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           print(newkey, global_symbol_table[newkey])
-          local_vars[scope_to_function[i]].append(newkey)
+          if(newkey not in local_vars[scope_to_function[i]]):
+            local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
             if key in func_arguments[scope_to_function[i]]:
               func_arguments[scope_to_function[i]].append(newkey)

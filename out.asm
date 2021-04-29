@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 extern printf
 extern scanf
 section .text
@@ -88,3 +89,5 @@ main:
 section	.data
 	x_0	dd	0
 	__t_8:	db	`%d`, 0
+=======
+>>>>>>> 074b29ae5ed1f2fbbc0ae378aa790e4914cd6ae4
