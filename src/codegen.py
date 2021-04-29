@@ -280,6 +280,7 @@ class CodeGen:
         print("\tjmp " + quad.dest)
 
     def label(self,quad):
+        save_caller_status()
         print(quad.src1 + ":")
 
     def addr(self, quad):
