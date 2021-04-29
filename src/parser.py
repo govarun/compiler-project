@@ -1219,7 +1219,6 @@ def p_temp_declaration(p):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
         continue
       if(child.children[0].val in symbol_table[currentScope].keys()):
-        print('here1')
         print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
       symbol_table[currentScope][child.children[0].val] = {}
       symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
@@ -1238,6 +1237,7 @@ def p_temp_declaration(p):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
       symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
+
       # 3AC Code 
       child.children[0].place = child.children[0].val + '_' + str(currentScope)
       # print(child.children[1].val)
@@ -1246,9 +1246,16 @@ def p_temp_declaration(p):
       if (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
-        emit(data_type + '_' + operator, tmp, '', child.children[0].place)
+        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
+          emit(data_type + '_' + operator, tmp, '', child.children[0].place)
+        else:
+          emit(data_type + '_' + operator, tmp, '*', child.children[0].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
+        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
+          emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)
+        else:
+          emit(data_type + '_' + operator, child.children[1].place, '*', child.children[0].place)
+
     else:
       if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
         continue
