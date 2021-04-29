@@ -115,16 +115,17 @@ def t_FLOAT_CONST(t):
   
 def t_HEX_CONST(t):
     r'0[xX][0-9a-fA-F]+'
-    # t.value = int(t.value,16)
+    t.value = int(t.value,16)
     return t
 
 def t_BIN_CONST(t):
     r'0b[01]+'
+    t.value = int(t.value, 2)
     return t
 
 def t_OCTAL_CONST(t):
     r'0[0-7]+'
-    # t.value = int(t.value,8)
+    t.value = int(t.value,8)
     return t
 
 # def t_INV_OCTAL(t):

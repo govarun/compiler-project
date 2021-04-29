@@ -359,11 +359,11 @@ def p_primary_expression_1(p):
   # p[0] = build_AST(p)
   if(len(p) == 4):
     p[0] = p[2]
-    p[0].ast = build_AST(p)
     # p[0].name = 'primaryExpression'
     # place copied automatically
   else:
-    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
+    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+  p[0].ast = build_AST(p)
     
 
 def p_primary_expression_2(p):
