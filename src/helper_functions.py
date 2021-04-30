@@ -85,6 +85,7 @@ class Instruction:
             self.src1 = quad[1]
 
         elif(self.op == "*"):
+            self.op = "deref"
             self.dest = quad[3]
             self.src1 = quad[1]
         

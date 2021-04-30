@@ -146,7 +146,7 @@ def get_label():
 def int_or_real(dtype):
   arr = dtype.split()
   if ('*' in arr):
-    return 'pointer'
+    return 'int'
   if 'long' in arr:
     return 'long' 
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
@@ -359,11 +359,11 @@ def p_primary_expression_1(p):
   # p[0] = build_AST(p)
   if(len(p) == 4):
     p[0] = p[2]
-    p[0].ast = build_AST(p)
     # p[0].name = 'primaryExpression'
     # place copied automatically
   else:
-    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
+    p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+  p[0].ast = build_AST(p)
     
 
 def p_primary_expression_2(p):
@@ -1227,7 +1227,6 @@ def p_temp_declaration(p):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
         continue
       if(child.children[0].val in symbol_table[currentScope].keys()):
-        print('here1')
         print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
       symbol_table[currentScope][child.children[0].val] = {}
       symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
@@ -1235,28 +1234,33 @@ def p_temp_declaration(p):
       symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
       symbol_table[currentScope][child.children[0].val]['offset'] = offset[currentScope]
       totalEle = 1
+      act_data_type=p[1].type
       if(len(child.children[0].array) > 0):
         symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
         for i in child.children[0].array:
           totalEle = totalEle*i
       if(len(child.children[0].type) > 0):
-        symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
+        act_data_type = p[1].type + ' ' + child.children[0].type
+        symbol_table[currentScope][child.children[0].val]['type'] = act_data_type 
         symbol_table[currentScope][child.children[0].val]['size'] = 8
       elif(flag == 0):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
       symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
+
       # 3AC Code 
       child.children[0].place = child.children[0].val + '_' + str(currentScope)
       # print(child.children[1].val)
       operator = '='
-      data_type = int_or_real(p[1].type)
-      if (int_or_real(child.children[1].type) != data_type):
+      data_type = int_or_real(act_data_type)
+      if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
+        print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
+      elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
         emit(data_type + '_' + operator, tmp, '', child.children[0].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
+        emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)
     else:
       if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
         continue
