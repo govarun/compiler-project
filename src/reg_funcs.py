@@ -1,6 +1,7 @@
 from helper_functions import *
 from parser import local_vars, strings
 import copy
+import sys
 
 # 32 bit register descriptors
 reg_desc = {}
@@ -10,6 +11,15 @@ reg_desc["ecx"] = set()
 reg_desc["edx"] = set()
 reg_desc["esi"] = set()
 reg_desc["edi"] = set()
+
+def dprint(str):
+    '''
+    Function for debugging
+    '''
+    sys.stdout.close()
+    sys.stdout = sys.__stdout__
+    print(str)
+    sys.stdout = open('out.asm', 'a')
 
 
 def free_all_regs(instr):

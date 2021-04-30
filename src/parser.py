@@ -146,7 +146,7 @@ def get_label():
 def int_or_real(dtype):
   arr = dtype.split()
   if ('*' in arr):
-    return 'pointer'
+    return 'int'
   if 'long' in arr:
     return 'long' 
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
@@ -1226,7 +1226,7 @@ def p_temp_declaration(p):
       symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
       symbol_table[currentScope][child.children[0].val]['offset'] = offset[currentScope]
       totalEle = 1
-      act_data_type=''
+      act_data_type=p[1].type
       if(len(child.children[0].array) > 0):
         symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
         for i in child.children[0].array:

@@ -180,8 +180,33 @@ class CodeGen:
         free_all_regs(quad)
 
     def assign(self, quad):
-        if (quad.src2 is not None): # case for pointer
-            pass 
+        if(quad.src2 is not None):
+            #*x = y
+            best_location = get_best_location(quad.dest)
+            if(best_location not in reg_desc.keys()):
+                reg = get_register(quad, compulsory = True)
+                print("\tmov " + reg + ", " + best_location)
+                best_location = reg
+                
+            symbols[quad.dest].address_desc_reg.add(best_location)
+            reg_desc[best_location].add(quad.dest)
+
+            if(not is_number(quad.src1)):
+                loc = get_best_location(quad.src1)
+                if(loc not in reg_desc.keys()):
+                    reg = get_register(quad, compulsory = True, exclude_reg = [best_location])
+                    upd_reg_desc(reg, quad.src1)
+                    print("\tmov " + reg + ", " + loc)
+                    loc = reg
+                
+                symbols[quad.src1].address_desc_reg.add(loc)
+                reg_desc[loc].add(quad.src1)
+
+                print("\tmov [" + best_location + "], " + loc)
+            else:
+                print("\tmov dword [" + best_location + "], " + quad.src1)
+
+            
         elif (is_number(quad.src1)): # case when src1 is an integral numeric
             best_location = get_best_location(quad.dest)
             if (check_type_location(best_location) == "register"):
@@ -190,7 +215,6 @@ class CodeGen:
         else:
             #y_1 = t_1(eax)
             best_location = get_best_location(quad.src1)
-            dprint(quad.src1 + " " + best_location + " " + quad.dest)
             if (check_type_location(best_location) in ["memory", "data", "number"]):
                 reg = get_register(quad, compulsory = True)
                 upd_reg_desc(reg, quad.src1)
@@ -204,6 +228,24 @@ class CodeGen:
             # if (quad.instr_info['nextuse'][quad.src1] == None):
             #     del_symbol_reg_exclude(quad.src1)
 
+    def deref(self, quad):
+        #x = *y assignment
+        best_location = get_best_location(quad.src1)
+        if (check_type_location(best_location) in ["memory", "data", "number"]):
+            reg = get_register(quad, compulsory = True)
+            upd_reg_desc(reg, quad.src1)
+            print("\tmov " + reg + ", " + best_location)
+            best_location = reg
+
+        reg2 = get_register(quad, compulsory  = True, exclude_reg = [best_location])
+        print("\tmov " + reg2 + ", [" + best_location + "] ")
+
+        dest_loc = get_best_location(quad.dest)
+
+        if(dest_loc in reg_desc.keys()):
+            upd_reg_desc(dest_loc, quad.dest)
+
+        print("\tmov " + dest_loc + ", " + reg2 )
 
     def param(self, quad):
         global param_count
@@ -339,6 +381,8 @@ class CodeGen:
             self.rshift(quad)
         elif(quad.op == "addr"):
             self.addr(quad)
+        elif(quad.op == "deref"):
+            self.deref(quad)
 
 
 
