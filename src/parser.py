@@ -1226,12 +1226,14 @@ def p_temp_declaration(p):
       symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
       symbol_table[currentScope][child.children[0].val]['offset'] = offset[currentScope]
       totalEle = 1
+      act_data_type=''
       if(len(child.children[0].array) > 0):
         symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
         for i in child.children[0].array:
           totalEle = totalEle*i
       if(len(child.children[0].type) > 0):
-        symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
+        act_data_type = p[1].type + ' ' + child.children[0].type
+        symbol_table[currentScope][child.children[0].val]['type'] = act_data_type 
         symbol_table[currentScope][child.children[0].val]['size'] = 8
       elif(flag == 0):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
@@ -1242,20 +1244,15 @@ def p_temp_declaration(p):
       child.children[0].place = child.children[0].val + '_' + str(currentScope)
       # print(child.children[1].val)
       operator = '='
-      data_type = int_or_real(p[1].type)
-      if (int_or_real(child.children[1].type) != data_type):
+      data_type = int_or_real(act_data_type)
+      if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
+        print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
+      elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
-        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
-          emit(data_type + '_' + operator, tmp, '', child.children[0].place)
-        else:
-          emit(data_type + '_' + operator, tmp, '*', child.children[0].place)
+        emit(data_type + '_' + operator, tmp, '', child.children[0].place)
       else:
-        if (len(child.children[0].array) == 0 and child.children[0].type != '*'):
-          emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)
-        else:
-          emit(data_type + '_' + operator, child.children[1].place, '*', child.children[0].place)
-
+        emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)
     else:
       if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
         continue
