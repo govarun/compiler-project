@@ -611,7 +611,10 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[2].type + ' *')
-    emit('addr',p[2].place,'',tmp)
+    if(p[2].addr is not None):
+      emit('int_=', p[2].addr, '', tmp)
+    else:
+      emit('addr',p[2].place,'',tmp)
     p[0].place = tmp
   elif(p[1].val == '*'):
     if(not p[2].type.endswith('*')):

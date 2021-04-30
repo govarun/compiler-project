@@ -293,7 +293,7 @@ class CodeGen:
                     print("\tpush " + reg)
                     print("\tcall malloc")
                     print("\tadd esp, 4")
-                    upd_reg_desc("eax", var)
+                    print("\tmov " + get_location_in_memory(var) + ", eax")
 
         counter = 0
         for var in func_arguments[quad.src1]:
@@ -346,7 +346,11 @@ class CodeGen:
 
     def addr(self, quad):
         reg = get_register(quad)
-        print("\tlea " + reg + ", " + get_location_in_memory(quad.src1))
+        if(symbols[quad.src1].isArray):
+            if(reg != get_best_location(quad.src1)):
+                print("\tmov " + reg + ", " + get_best_location(quad.src1))
+        else:
+            print("\tlea " + reg + ", " + get_location_in_memory(quad.src1))
         reg_desc[reg].add(quad.dest)
         symbols[quad.dest].address_desc_reg.add(reg)
 
