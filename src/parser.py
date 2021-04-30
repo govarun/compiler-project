@@ -2270,6 +2270,8 @@ def p_forMark7(p):
     if p[-1].place:
       emit('ifgoto', p[-1].place, 'eq 0', p[-2][1])
     emit('goto', '', '', p[-2][2])
+    continueStack.pop()
+    continueStack.append(p[-2][3])
     emit('label', '', '', p[-2][3])
 
 def p_forMark3(p):
