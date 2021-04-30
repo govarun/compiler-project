@@ -148,7 +148,7 @@ def int_or_real(dtype):
   if ('*' in arr):
     return 'int'
   if 'long' in arr:
-    return 'long' 
+    return 'int' 
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
@@ -411,19 +411,19 @@ def p_postfix_expression_2(p):
   if(tempScope != -1):
     d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
     if d == 0:
-      emit('long_=', p[3].place, '', temp_ind)
+      emit('int_=', p[3].place, '', temp_ind)
     else:
-      v1 = get_new_tmp('long')
-      emit('long_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
-      emit('long_+', v1, p[3].place, temp_ind)
+      v1 = get_new_tmp('int')
+      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
+      emit('int_+', v1, p[3].place, temp_ind)
 
   if(p[0].level == 0 and len(p[0].array) > 0):
-    v1 = get_new_tmp('long')
-    emit('long_*', temp_ind, get_data_type_size(p[1].type), v1)
-    v2 = get_new_tmp('long')
-    emit('addr', p[0].val, '', v2)
-    v3 = get_new_tmp('long')
-    emit('long_+', v2, v1, v3)
+    v1 = get_new_tmp('int')
+    emit('int_*', temp_ind, get_data_type_size(p[1].type), v1)
+    v2 = get_new_tmp('int')
+    emit('addr', p[0].place, '', v2)
+    v3 = get_new_tmp('int')
+    emit('int_+', v2, v1, v3)
     v4 = get_new_tmp(p[1].type)
     emit('*', v3, '', v4)
     p[0].place = v4
@@ -526,10 +526,10 @@ def p_postfix_expression_5(p):
   # 3AC Code Handling
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
     if curr_list[1] == p[3][0]:
-      tmp = get_new_tmp('long')
+      tmp = get_new_tmp('int')
       emit('addr',p[1].place, '', tmp)
       tmp2 = get_new_tmp(curr_list[0])
-      emit('long_+',tmp, curr_list[3], tmp2)
+      emit('int_+',tmp, curr_list[3], tmp2)
       tmp3 = get_new_tmp(curr_list[0])
       emit('*',tmp2,'',tmp3)
       p[0].place = tmp3

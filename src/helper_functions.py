@@ -1,5 +1,5 @@
 import pprint
-from parser import emit_array, global_symbol_table, local_vars, func_arguments
+from parser import *
 instruction_array = []
 leaders = [0]
 nextuse = {}
@@ -8,7 +8,9 @@ symbols = {}
 
 
 class symbol_info:
-    def __init__(self):
+    def __init__(self, isArray = False, length = 0):
+        self.isArray = isArray
+        self.length = length
         self.address_desc_mem = []
         self.address_desc_reg = set()
 
@@ -144,22 +146,16 @@ def gen_next_use_and_live():
             if cur_instr.op in ignore_instr_list:
                 continue
             if (dest != None and not dest.isnumeric() and is_symbol(dest)):
-                if(dest not in symbols.keys()):
-                    symbols[dest] = symbol_info()
                 cur_instr.instr_info['live'][dest] = live[dest]
                 cur_instr.instr_info['nextuse'][dest] = nextuse[dest]
                 live[dest] = False
                 nextuse[dest] = None
             if (src2 != None and not src2.isnumeric() and is_symbol(src2)):
-                if(src2 not in symbols.keys()):
-                    symbols[src2] = symbol_info()
                 cur_instr.instr_info['live'][src2] = live[src2]
                 cur_instr.instr_info['nextuse'][src2] = nextuse[src2]
                 live[src2] = True
                 nextuse[src2] = j
             if (src1 != None and not src1.isnumeric() and is_symbol(src1)):
-                if(src1 not in symbols.keys()):
-                    symbols[src1] = symbol_info()
                 cur_instr.instr_info['live'][src1] = live[src1]
                 cur_instr.instr_info['nextuse'][src1] = nextuse[src1]
                 live[src1] = True
@@ -179,7 +175,11 @@ def runmain():
     gen_next_use_and_live()
     for key in global_symbol_table.keys():
         if key not in symbols.keys():
-            symbols[key] = symbol_info()
+            if('array' in global_symbol_table[key].keys()):
+                len = global_symbol_table[key]['size']//get_data_type_size(global_symbol_table[key]['type'])
+                symbols[key] = symbol_info(isArray = True, length = len)
+            else:
+                symbols[key] = symbol_info()
     print_basic_blocks(debug = True)
 
 

@@ -20,6 +20,7 @@ class CodeGen:
     def gen_top_headers(self):
         print('extern printf')
         print('extern scanf')
+        print('extern malloc')
         print("section .text")
         print("\tglobal main")
 
@@ -274,11 +275,23 @@ class CodeGen:
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
                 counter += 1
-                symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
+                symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp`
 
         print("\tpush ebp")
         print("\tmov ebp, esp")
         print("\tsub esp, " + str(4*counter))
+
+        for var in local_vars[quad.src1]:
+            if var not in func_arguments[quad.src1]:
+                # symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
+                if(symbols[var].isArray):
+                    reg = get_register(quad, compulsory = True)
+                    print("\tmov " + reg + ", " + str(symbols[var].length))
+                    print("\tshl " + reg + ", 2")
+                    print("\tpush " + reg)
+                    print("\tcall malloc")
+                    print("\tadd esp, 4")
+                    upd_reg_desc("eax", var)
 
         counter = 0
         for var in func_arguments[quad.src1]:
