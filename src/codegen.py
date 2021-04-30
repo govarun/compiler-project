@@ -216,6 +216,7 @@ class CodeGen:
         else:
             #y_1 = t_1(eax)
             best_location = get_best_location(quad.src1)
+            # dprint(quad.src1 + " " + best_location + " " + quad.dest)
             if (check_type_location(best_location) in ["memory", "data", "number"]):
                 reg = get_register(quad, compulsory = True)
                 upd_reg_desc(reg, quad.src1)
@@ -274,6 +275,7 @@ class CodeGen:
         counter = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
+                dprint(var)
                 counter += 1
                 symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp`
 
@@ -297,6 +299,10 @@ class CodeGen:
         for var in func_arguments[quad.src1]:
             symbols[var].address_desc_mem.append(4*counter + 8)
             counter += 1
+
+    # def handle_pointer(self,quad):
+    #     reg1 = get_best_location(quad.)
+
 
     def function_return(self, quad):
         if(quad.src1):

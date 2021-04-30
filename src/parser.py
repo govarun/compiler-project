@@ -41,7 +41,7 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -769,7 +769,10 @@ def p_additive_expression(p):
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[1].type.endswith('*') and p[3].type.endswith('*')):
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+      if(p[2] == '-'):
+        pass
+      else:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     else :
@@ -779,7 +782,6 @@ def p_additive_expression(p):
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
       p[0].ast = build_AST(p)
-
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
     
@@ -838,9 +840,12 @@ def p_relational_expression(p):
       p[0] = Node(name = 'RelationalOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
       return
-    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+    if(p[1].type.endswith('*') and p[3].type.endswith('*')):
+      pass
+    else:
+      type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+      if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -864,9 +869,12 @@ def p_equality_expresssion(p):
       p[0] = Node(name = 'EqualityOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
       return
-    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+    if(p[1].type.endswith('*') and p[3].type.endswith('*')):
+      pass
+    else:
+      type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+      if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -2305,7 +2313,9 @@ def p_jump_statement(p):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
       emit('ret', '', '', '')
     else:
-      if(p[2].type != '' and curFuncReturnType != p[2].type):
+      if(p[2].type in ['int','char','float'] and curFuncReturnType in ['int','char','float']):
+        pass
+      elif(p[2].type != '' and curFuncReturnType != p[2].type):
         print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
