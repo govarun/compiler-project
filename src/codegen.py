@@ -54,6 +54,15 @@ class CodeGen:
 
     def mul(self, quad):
         self.bin_operations(quad, 'imul')
+
+    def band(self, quad):
+        self.bin_operations(quad, 'and')
+
+    def bor(self, quad):
+        self.bin_operations(quad, 'or')
+    
+    def bxor(self, quad):
+        self.bin_operations(quad, 'xor')
     
     def div(self, quad):
         best_location = get_best_location(quad.src1)
@@ -406,7 +415,12 @@ class CodeGen:
             self.addr(quad)
         elif(quad.op == "deref"):
             self.deref(quad)
-
+        elif(quad.op.endswith("&")):
+            self.band(quad)
+        elif(quad.op.endswith("|")):
+            self.bor(quad)
+        elif(quad.op.endswith("^")):
+            self.bxor(quad)
 
 
 
