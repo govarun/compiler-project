@@ -421,7 +421,10 @@ def p_postfix_expression_2(p):
     v1 = get_new_tmp('int')
     emit('int_*', temp_ind, get_data_type_size(p[1].type), v1)
     v2 = get_new_tmp('int')
-    emit('addr', p[0].place, '', v2)
+    if(len(p[1].addr) > 0):
+      emit('int_=', p[1].addr, '', v2)
+    else:
+      emit('addr', p[0].place, '', v2)
     v3 = get_new_tmp('int')
     emit('int_+', v2, v1, v3)
     v4 = get_new_tmp(p[1].type)
@@ -527,7 +530,10 @@ def p_postfix_expression_5(p):
   for curr_list in symbol_table[found_scope][struct_name]['field_list']:
     if curr_list[1] == p[3][0]:
       tmp = get_new_tmp('int')
-      emit('addr',p[1].place, '', tmp)
+      if(len(p[1].addr) > 0):
+        emit('int_=',p[1].addr, '', tmp)  
+      else:
+        emit('addr',p[1].place, '', tmp)
       tmp2 = get_new_tmp(curr_list[0])
       emit('int_+',tmp, curr_list[3], tmp2)
       tmp3 = get_new_tmp(curr_list[0])
@@ -1155,12 +1161,12 @@ def p_assignment_expression(p):
       if (int_or_real(p[3].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(p[3].type, data_type, p[3].place, tmp)
-        if(p[1].addr == ''):
+        if(len(p[1].addr) == 0  ):
           emit(data_type + '_' + operator, tmp, '', p[1].place)
         else:
           emit(data_type + '_' + operator, tmp, '*', p[1].addr)
       else:
-        if(p[1].addr == ''):
+        if(len(p[1].addr) == 0  ):
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
         else:
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '*', p[1].addr)
@@ -2480,7 +2486,7 @@ def visualize_symbol_table():
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
           newkey = key + "_" + str(i)
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
-          print(newkey, global_symbol_table[newkey])
+          # print(newkey, global_symbol_table[newkey])
           if(newkey not in local_vars[scope_to_function[i]]):
             local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
@@ -2491,7 +2497,7 @@ def visualize_symbol_table():
           if(key not in strings.keys()):
             local_vars[scope_to_function[i]].append(key)
           global_symbol_table[key] = symbol_table[i][key]
-          print(key, global_symbol_table[key])
+          # print(key, global_symbol_table[key])
       json_object = json.dumps(temp_list, indent = 4)
       # print(json_object)
       with open("symbol_table_output.json", "a") as outfile:
