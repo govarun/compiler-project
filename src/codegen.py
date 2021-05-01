@@ -289,7 +289,10 @@ class CodeGen:
                 if(symbols[var].isArray):
                     reg = get_register(quad, compulsory = True)
                     print("\tmov " + reg + ", " + str(symbols[var].length))
-                    print("\tshl " + reg + ", 2")
+                    # if(symbols[var].isStruct):
+                    print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
+
+                    # print("\tshl " + reg + ", 2")
                     print("\tpush " + reg)
                     print("\tcall malloc")
                     print("\tadd esp, 4")
