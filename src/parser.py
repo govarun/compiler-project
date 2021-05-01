@@ -1804,6 +1804,10 @@ def p_direct_declarator_3(p):
     local_vars[p[1].val] = []
     print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
     # emit('func', '', '', p[1].val)
+  else:
+    p[0].array = copy.deepcopy(p[1].array)
+    # this dummy 0 is inserted, can be source of error later
+    p[0].array.append(0)
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
