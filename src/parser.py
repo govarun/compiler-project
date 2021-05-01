@@ -611,7 +611,7 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[2].type + ' *')
-    if(p[2].addr is not None):
+    if len(p[2].addr) > 0:
       emit('int_=', p[2].addr, '', tmp)
     else:
       emit('addr',p[2].place,'',tmp)
@@ -691,10 +691,15 @@ def p_cast_expression(p):
     p[0].ast = build_AST(p)
   else:
     # confusion about val
-    tmp = get_new_tmp(p[2].type)
-    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
+    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
     p[0].ast = build_AST(p)
     change_data_type_emit(p[4].type, p[2].type, p[4].place, p[0].place)
+    if int_or_real(p[2].type) != int_or_real(p[4].type):
+      tmp = get_new_tmp(p[2].type)
+      change_data_type_emit(p[4].type, p[2].type, p[4].place, tmp)
+      p[0].place = tmp
+    else:
+      p[0].place = p[4].place
 ################
 
 #No type should be passed in below cases since multiplication, division, add, sub work
@@ -1150,12 +1155,12 @@ def p_assignment_expression(p):
       if (int_or_real(p[3].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(p[3].type, data_type, p[3].place, tmp)
-        if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
+        if(p[1].addr == ''):
           emit(data_type + '_' + operator, tmp, '', p[1].place)
         else:
           emit(data_type + '_' + operator, tmp, '*', p[1].addr)
       else:
-        if(len(p[1].array) == 0 and p[1].name != 'PointerVariable'):
+        if(p[1].addr == ''):
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
         else:
           emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '*', p[1].addr)
