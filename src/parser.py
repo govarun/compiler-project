@@ -408,7 +408,19 @@ def p_postfix_expression_2(p):
 
   temp_ind = get_new_tmp('int')
 
-  if(tempScope != -1):
+
+  if(len(p[0].parentStruct)):
+    found_scope = find_scope(p[0].parentStruct)
+    for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
+      if curr_list[1] == p[0].val:
+        d = len(curr_list[4]) - 1 - p[0].level
+        if d == 0:
+          emit('int_=', p[3].place, '', temp_ind)
+        else:
+          v1 = get_new_tmp('int')
+          emit('int_*', p[1].tind, curr_list[4][d-1], v1)
+          emit('int_+', v1, p[3].place, temp_ind)
+  elif(tempScope != -1):
     d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
     if d == 0:
       emit('int_=', p[3].place, '', temp_ind)
@@ -416,6 +428,7 @@ def p_postfix_expression_2(p):
       v1 = get_new_tmp('int')
       emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
       emit('int_+', v1, p[3].place, temp_ind)
+    
 
   if(p[0].level == 0 and len(p[0].array) > 0):
     v1 = get_new_tmp('int')
@@ -617,7 +630,7 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[2].type + ' *')
-    if len(p[2].addr) > 0:
+    if(p[2].addr is not None):
       emit('int_=', p[2].addr, '', tmp)
     else:
       emit('addr',p[2].place,'',tmp)
@@ -697,15 +710,10 @@ def p_cast_expression(p):
     p[0].ast = build_AST(p)
   else:
     # confusion about val
-    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
+    tmp = get_new_tmp(p[2].type)
+    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
     p[0].ast = build_AST(p)
     change_data_type_emit(p[4].type, p[2].type, p[4].place, p[0].place)
-    if int_or_real(p[2].type) != int_or_real(p[4].type):
-      tmp = get_new_tmp(p[2].type)
-      change_data_type_emit(p[4].type, p[2].type, p[4].place, tmp)
-      p[0].place = tmp
-    else:
-      p[0].place = p[4].place
 ################
 
 #No type should be passed in below cases since multiplication, division, add, sub work
@@ -1494,43 +1502,28 @@ def p_type_specifier_2(p):
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
-def p_struct_or_union_name(p):
-  '''struct_or_union_name : struct_or_union ID'''
-  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
-  val_name = p[1].type + ' ' + p[2]
-  p[0].val = val_name
-  p[0].ast = build_AST(p)
-  if val_name in symbol_table[currentScope].keys():
-    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
-  valptr_name = val_name + ' *'
-  symbol_table[currentScope][val_name] = {}
-  symbol_table[currentScope][val_name]['type'] = val_name
-  symbol_table[currentScope][valptr_name] = {}
-  symbol_table[currentScope][valptr_name]['type'] = valptr_name
-
-
 def p_struct_or_union_specifier(p):
-  '''struct_or_union_specifier : struct_or_union_name openbrace struct_declaration_list closebrace
+  '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
   | struct_or_union openbrace struct_declaration_list closebrace
   | struct_or_union ID
   '''
   # TODO : check the semicolon thing after closebrace in grammar
   # TODO : Manage the size and offset of fields
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
-  if len(p) == 5:
-    val_name = p[1].val
+  if len(p) == 6:
+    val_name = p[1].type + ' ' + p[2]
     p[0].ast = build_AST(p)
-    # if val_name in symbol_table[currentScope].keys():
-    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    if val_name in symbol_table[currentScope].keys():
+      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
     valptr_name = val_name + ' *'
-    # symbol_table[currentScope][val_name] = {}
-    # symbol_table[currentScope][val_name]['type'] = val_name
-    # symbol_table[currentScope][valptr_name] = {}
-    # symbol_table[currentScope][valptr_name]['type'] = valptr_name
+    symbol_table[currentScope][val_name] = {}
+    symbol_table[currentScope][val_name]['type'] = val_name
+    symbol_table[currentScope][valptr_name] = {}
+    symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0
     max_size = 0
-    for child in p[3].children:
+    for child in p[4].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
@@ -2495,7 +2488,7 @@ def visualize_symbol_table():
       print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        # print(key, symbol_table[i][key])
+        print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
