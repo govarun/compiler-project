@@ -272,16 +272,16 @@ class CodeGen:
         Allocate stack space for function local variables
         '''
         print(quad.src1 + ":")
-        counter = 0
+        offset = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
                 dprint(var)
-                counter += 1
-                symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp`
+                offset += get_data_type_size(global_symbol_table[var]['type'])
+                symbols[var].address_desc_mem.append(-offset) #why is the first loc variable at ebp -4 and not at ebp`
 
         print("\tpush ebp")
         print("\tmov ebp, esp")
-        print("\tsub esp, " + str(4*counter))
+        print("\tsub esp, " + str(offset))
 
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
@@ -297,7 +297,7 @@ class CodeGen:
 
         counter = 0
         for var in func_arguments[quad.src1]:
-            symbols[var].address_desc_mem.append(4*counter + 8)
+            symbols[var].address_desc_mem.append(offset + 8)
             counter += 1
 
     # def handle_pointer(self,quad):

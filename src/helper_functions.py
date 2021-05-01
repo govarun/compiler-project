@@ -8,8 +8,10 @@ symbols = {}
 
 
 class symbol_info:
-    def __init__(self, isArray = False, length = 0):
+    def __init__(self, isArray = False, length = 0, isStruct = False, structSize = 0):
         self.isArray = isArray
+        self.isStruct = isStruct
+        self.structSize = structSize
         self.length = length
         self.address_desc_mem = []
         self.address_desc_reg = set()
@@ -140,7 +142,7 @@ def gen_next_use_and_live():
                     nextuse[operand] = None
 
         for j in range(block_end, block_start - 1, -1): # backward pass to set next use and live
-            print(block_end, block_start, j)
+            # print(block_end, block_start, j)
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
@@ -178,9 +180,11 @@ def runmain():
             if('array' in global_symbol_table[key].keys()):
                 len = global_symbol_table[key]['size']//get_data_type_size(global_symbol_table[key]['type'])
                 symbols[key] = symbol_info(isArray = True, length = len)
+            elif(global_symbol_table[key]['type'].startswith('struct')):
+                symbols[key] = symbol_info(isStruct = True, structSize = get_data_type_size(global_symbol_table[key]['type']))
             else:
                 symbols[key] = symbol_info()
-    print_basic_blocks(debug = True)
+    # print_basic_blocks(debug = True)
 
 
 
