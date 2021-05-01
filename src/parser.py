@@ -1483,28 +1483,43 @@ def p_type_specifier_2(p):
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
+def p_struct_or_union_name(p):
+  '''struct_or_union_name : struct_or_union ID'''
+  p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = p[1].type, lno = p[1].lno , children = [])
+  val_name = p[1].type + ' ' + p[2]
+  p[0].val = val_name
+  p[0].ast = build_AST(p)
+  if val_name in symbol_table[currentScope].keys():
+    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+  valptr_name = val_name + ' *'
+  symbol_table[currentScope][val_name] = {}
+  symbol_table[currentScope][val_name]['type'] = val_name
+  symbol_table[currentScope][valptr_name] = {}
+  symbol_table[currentScope][valptr_name]['type'] = valptr_name
+
+
 def p_struct_or_union_specifier(p):
-  '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
+  '''struct_or_union_specifier : struct_or_union_name openbrace struct_declaration_list closebrace
   | struct_or_union openbrace struct_declaration_list closebrace
   | struct_or_union ID
   '''
   # TODO : check the semicolon thing after closebrace in grammar
   # TODO : Manage the size and offset of fields
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
-  if len(p) == 6:
-    val_name = p[1].type + ' ' + p[2]
+  if len(p) == 5:
+    val_name = p[1].val
     p[0].ast = build_AST(p)
-    if val_name in symbol_table[currentScope].keys():
-      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    # if val_name in symbol_table[currentScope].keys():
+    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
     valptr_name = val_name + ' *'
-    symbol_table[currentScope][val_name] = {}
-    symbol_table[currentScope][val_name]['type'] = val_name
-    symbol_table[currentScope][valptr_name] = {}
-    symbol_table[currentScope][valptr_name]['type'] = valptr_name
+    # symbol_table[currentScope][val_name] = {}
+    # symbol_table[currentScope][val_name]['type'] = val_name
+    # symbol_table[currentScope][valptr_name] = {}
+    # symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0
     max_size = 0
-    for child in p[4].children:
+    for child in p[3].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
