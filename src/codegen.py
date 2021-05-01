@@ -275,6 +275,9 @@ class CodeGen:
     def funcEnd(self, quad):
         for var in local_vars[quad.dest]:
             symbols[var].address_desc_mem.pop()
+        #do we need to do this?
+        for key in reg_desc.keys():
+            reg_desc[key].clear()
 
     def alloc_stack(self,quad):
         '''
@@ -298,7 +301,10 @@ class CodeGen:
                 if(symbols[var].isArray):
                     reg = get_register(quad, compulsory = True)
                     print("\tmov " + reg + ", " + str(symbols[var].length))
-                    print("\tshl " + reg + ", 2")
+                    # if(symbols[var].isStruct):
+                    print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
+
+                    # print("\tshl " + reg + ", 2")
                     print("\tpush " + reg)
                     print("\tcall malloc")
                     print("\tadd esp, 4")
@@ -306,7 +312,7 @@ class CodeGen:
 
         counter = 0
         for var in func_arguments[quad.src1]:
-            symbols[var].address_desc_mem.append(offset + 8)
+            symbols[var].address_desc_mem.append(4*counter + 8)
             counter += 1
 
     # def handle_pointer(self,quad):

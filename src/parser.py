@@ -408,7 +408,19 @@ def p_postfix_expression_2(p):
 
   temp_ind = get_new_tmp('int')
 
-  if(tempScope != -1):
+
+  if(len(p[0].parentStruct)):
+    found_scope = find_scope(p[0].parentStruct)
+    for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
+      if curr_list[1] == p[0].val:
+        d = len(curr_list[4]) - 1 - p[0].level
+        if d == 0:
+          emit('int_=', p[3].place, '', temp_ind)
+        else:
+          v1 = get_new_tmp('int')
+          emit('int_*', p[1].tind, curr_list[4][d-1], v1)
+          emit('int_+', v1, p[3].place, temp_ind)
+  elif(tempScope != -1):
     d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
     if d == 0:
       emit('int_=', p[3].place, '', temp_ind)
@@ -416,6 +428,7 @@ def p_postfix_expression_2(p):
       v1 = get_new_tmp('int')
       emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
       emit('int_+', v1, p[3].place, temp_ind)
+    
 
   if(p[0].level == 0 and len(p[0].array) > 0):
     v1 = get_new_tmp('int')
@@ -617,7 +630,7 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[2].type + ' *')
-    if len(p[2].addr) > 0:
+    if(p[2].addr is not None):
       emit('int_=', p[2].addr, '', tmp)
     else:
       emit('addr',p[2].place,'',tmp)
@@ -697,15 +710,10 @@ def p_cast_expression(p):
     p[0].ast = build_AST(p)
   else:
     # confusion about val
-    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [])
+    tmp = get_new_tmp(p[2].type)
+    p[0] = Node(name = 'TypeCasting',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = tmp)
     p[0].ast = build_AST(p)
     change_data_type_emit(p[4].type, p[2].type, p[4].place, p[0].place)
-    if int_or_real(p[2].type) != int_or_real(p[4].type):
-      tmp = get_new_tmp(p[2].type)
-      change_data_type_emit(p[4].type, p[2].type, p[4].place, tmp)
-      p[0].place = tmp
-    else:
-      p[0].place = p[4].place
 ################
 
 #No type should be passed in below cases since multiplication, division, add, sub work
@@ -1789,6 +1797,10 @@ def p_direct_declarator_3(p):
     local_vars[p[1].val] = []
     print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
     # emit('func', '', '', p[1].val)
+  else:
+    p[0].array = copy.deepcopy(p[1].array)
+    # this dummy 0 is inserted, can be source of error later
+    p[0].array.append(0)
 
 def p_pointer(p):
   '''pointer : MULTIPLY 
@@ -2480,7 +2492,7 @@ def visualize_symbol_table():
       print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        # print(key, symbol_table[i][key])
+        print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
