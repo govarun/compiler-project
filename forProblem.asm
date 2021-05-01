@@ -1,31 +1,12 @@
 extern printf
+extern scanf
+extern malloc
 section .text
 	global main
-even:
+binsearch:
 	push ebp
 	mov ebp, esp
-	sub esp, 8
-	push dword [ebp+8]
-	push __t_0
-	call printf
-	mov dword [ebp-4], eax
-	add esp, 8
-	mov eax, dword [ebp+8]
-	cmp eax, 0
-	je __l2
-	mov eax, 0
-	jmp __l3
-__l2:
-	mov eax, 1
-__l3:
-	mov dword [ebp-8], eax
-	cmp eax, 0
-	je __l0
-	mov eax, 0
-	mov esp, ebp
-	pop ebp
-	ret
-__l0:
+	sub esp, 0
 	mov eax, 1
 	mov esp, ebp
 	pop ebp
@@ -33,23 +14,30 @@ __l0:
 main:
 	push ebp
 	mov ebp, esp
-	sub esp, 12
-	push 10
-	call even
-	mov dword [ebp-4], eax
-	add esp, 4
-	mov eax, dword [ebp-4]
+	sub esp, 28
+	mov eax, 2
+	imul eax, 4
 	push eax
-	push __t_4
-	mov dword [ebp-4], eax
-	mov dword [ebp-8], eax
-	call printf
+	call malloc
+	add esp, 4
+	mov [ebp-4], eax
+	mov dword [ebp-8], 0
+	mov eax, dword [ebp-8]
+	imul eax, 4
+	mov ebx, dword [ebp-4]
+	mov dword [ebp-16], ebx
+	add ebx, eax
 	mov dword [ebp-12], eax
-	add esp, 8
-	mov eax, 1
+	mov eax, [ebx] 
+	mov dword [ebp-24], eax
+	mov dword [ebx], 2
+	push dword [ebp-4]
+	mov dword [ebp-20], ebx
+	call binsearch
+	mov dword [ebp-28], eax
+	add esp, 4
+	mov eax, 0
 	mov esp, ebp
 	pop ebp
 	ret
 section	.data
-	__t_0:	db	`%d\n`, 0
-	__t_4:	db	`%d\n`, 0

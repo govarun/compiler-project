@@ -103,6 +103,9 @@ def get_location_in_memory(symbol):
         return symbol
     if (symbol in strings.keys() or symbol in local_vars['global']):
         return "[" + str(symbol) + "]"
+    if(len(symbols[symbol].address_desc_mem) == 0):
+        dprint("not found" + symbol)
+        return symbol
     location = symbols[symbol].address_desc_mem[-1]
     prefix_string = "["
     if(is_number(location)):   # changed this from type(location) is int to .isnumeric

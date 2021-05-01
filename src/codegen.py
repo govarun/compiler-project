@@ -266,6 +266,9 @@ class CodeGen:
     def funcEnd(self, quad):
         for var in local_vars[quad.dest]:
             symbols[var].address_desc_mem.pop()
+        #do we need to do this?
+        for key in reg_desc.keys():
+            reg_desc[key].clear()
 
     def alloc_stack(self,quad):
         '''
@@ -300,7 +303,7 @@ class CodeGen:
 
         counter = 0
         for var in func_arguments[quad.src1]:
-            symbols[var].address_desc_mem.append(offset + 8)
+            symbols[var].address_desc_mem.append(4*counter + 8)
             counter += 1
 
     # def handle_pointer(self,quad):
