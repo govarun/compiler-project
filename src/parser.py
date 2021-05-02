@@ -383,7 +383,7 @@ def p_primary_expression_4(p):
 
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
-  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char'))
+  p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char *'))
   strings[p[0].place] = p[1]
   p[0].ast = build_AST(p)
 
@@ -629,8 +629,8 @@ def p_unary_expression_2(p):
     # no '&' child added, will deal in traversal
     p[0] = Node(name = 'AddressOfVariable',val = p[2].val,lno = p[2].lno,type = p[2].type + ' *',children = [p[2]])
     p[0].ast = build_AST(p)
-    tmp = get_new_tmp(p[2].type + ' *')
-    if(p[2].addr is not None):
+    tmp = get_new_tmp(p[0].type)
+    if len(p[2].addr) > 0:
       emit('int_=', p[2].addr, '', tmp)
     else:
       emit('addr',p[2].place,'',tmp)
@@ -640,7 +640,7 @@ def p_unary_expression_2(p):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:-2],children = [p[2]])
     p[0].ast = build_AST(p)
-    tmp = get_new_tmp(p[2].type[:-2])
+    tmp = get_new_tmp(p[0].type)
     emit('*',p[2].place,'',tmp)
     p[0].place = tmp
     p[0].addr = p[2].place
@@ -1702,7 +1702,7 @@ def p_direct_declarator_1(p):
   '''
   global curFuncReturnType
   if(len(p) == 2):
-    p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [], place = p[1])
     p[0].ast = build_AST(p)
 
   elif(len(p) == 4):
@@ -1766,10 +1766,7 @@ def p_direct_declarator_3(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET RSQUAREBRACKET
                         | direct_declarator lopenparen RPAREN'''
   p[0] = p[1]
-  if(p[3] == ')'):
-    p[0].ast = build_AST(p)
-  else:
-    p[0].ast = build_AST(p)  
+  p[0].ast = build_AST(p)
   global curFuncReturnType
   if(p[3] == ')'):
     func_arguments[p[1].val] = []
@@ -1895,7 +1892,7 @@ def p_identifier_list(p):
                        | identifier_list COMMA ID
     '''
     if(len(p) == 2):
-      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]])
+      p[0] = Node(name = 'IdentifierList',val = p[1],type = '', lno = p.lineno(1), children = [p[1]], place= p[1])
       p[0].ast = build_AST(p)
     else:
       p[0] = p[1]
@@ -2169,7 +2166,7 @@ def p_SwMark3(p):
   ''' SwMark3 : '''
   emit('goto','','',p[-2][0])
   emit('label','','',p[-2][1])
-  flag=0;
+  flag=0
   lazy_label = ''
   for i in range(len(p[-1].label)):
     tmp_label = p[-1].label[i]
@@ -2414,6 +2411,10 @@ def p_function_definition_1(p):
       p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
       symbol_table[0][p[2].val]['isFunc'] = 1
     p[0].ast = build_AST(p)
+    if p[1].type == 'void' and emit_array[-1][0] != 'ret':
+      emit('ret','','','')
+    elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
+      print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
     emit('funcEnd', '', '', p[2].val)
 
 
@@ -2423,6 +2424,10 @@ def p_function_definition_2(p):
   p[0].ast = build_AST(p)
   # print(p[2].val)
   symbol_table[0][p[2].val]['isFunc'] = 1
+  if p[1].type == 'void' and emit_array[-1][0] != 'ret':
+      emit('ret','','','')
+  elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
+      print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
   emit('funcEnd', '', '', p[2].val)
 
 def p_FuncMark1(p):
