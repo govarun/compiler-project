@@ -7,7 +7,7 @@ import copy
 import json
 
 # Get the token map from the lexer.  This is required.
-from lexer import tokens, keywords
+from lexer import tokens, keywords, typecast
 precedence = (
      ('nonassoc', 'IFX'),
      ('nonassoc', 'ELSE')
@@ -1305,14 +1305,9 @@ def p_temp_declaration(p):
       symbol_table[currentScope][child.val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.val]['size']
       # TODO : Confirm with others about two possible approaches
-      # if(p[1].type.startswith('struct')):
-      #   found_scope = find_if_ID_is_declared(p[1].type, p.lineno(1))
-      #   if found_scope != -1:
-      #     symbol_table[currentScope][child.val]['field_list'] = symbol_table[found_scope][p[1].type]['field_list']
 
   if p[1].type.startswith('typedef'):
-    keywords[p[2].children[0].val] = keywords[p[1].type.split()[-1]]
-    print(p[2].children[0].val, p[1].type.split()[-1])
+    typecast[p[2].children[0].val] = p[1].type.split(' ', 1)[1]
 
 def p_declaration(p):
   '''declaration : declaration_specifiers SEMICOLON
@@ -1503,15 +1498,15 @@ def p_type_specifier_2(p):
   p[0].ast = build_AST(p)
 
 def p_struct_or_union_specifier(p):
-  '''struct_or_union_specifier : struct_or_union ID openbrace struct_declaration_list closebrace
+  '''struct_or_union_specifier : struct_or_union_type openbrace struct_declaration_list closebrace
   | struct_or_union openbrace struct_declaration_list closebrace
-  | struct_or_union ID
+  | struct_or_union_type
   '''
   # TODO : check the semicolon thing after closebrace in grammar
   # TODO : Manage the size and offset of fields
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
-  if len(p) == 6:
-    val_name = p[1].type + ' ' + p[2]
+  if len(p) == 5 and p[1].name == 'StructOrUnionType':
+    val_name = p[1].type
     p[0].ast = build_AST(p)
     if val_name in symbol_table[currentScope].keys():
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
@@ -1523,10 +1518,10 @@ def p_struct_or_union_specifier(p):
     temp_list = []
     curr_offset = 0
     max_size = 0
-    for child in p[4].children:
+    for child in p[3].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
-          print('COMPILATION ERROR : line ' + str(p[4].lno) + ' : ' + child.val + ' already deaclared')
+          print('COMPILATION ERROR : line ' + str(p[3].lno) + ' : ' + child.val + ' already deaclared')
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
       SZ = get_data_type_size(child.type)
@@ -1540,19 +1535,19 @@ def p_struct_or_union_specifier(p):
       curr_list[2] *= totalEle
       SZ *= totalEle
       max_size = max(max_size , SZ)
-      if p[1].type == 'union':
+      if p[1].type.startswith('union'):
         curr_list[3] = 0
       temp_list.append(curr_list)
 
-    if p[1].type == 'union':
+    if p[1].type.startswith('union'):
       curr_offset = max_size
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
     symbol_table[currentScope][valptr_name]['size'] = 8
 
-  elif len(p) == 3:
-    p[0].type = p[1].type + ' ' + p[2]
+  elif len(p) == 2:
+    p[0].type = p[1].type
     p[0].ast = build_AST(p)
     found_scope = find_scope(p[0].type, p[1].lno)
     if(found_scope == -1):
@@ -1560,16 +1555,27 @@ def p_struct_or_union_specifier(p):
   else:
     p[0].ast = build_AST(p)
 
+def p_struct_or_union_type(p):
+  '''struct_or_union_type : struct_or_union ID
+    | STRUCT_TYPECAST
+  '''
+  if len(p) == 3:
+    p[0]=p[1]
+    p[0].name = 'StructOrUnionType'
+    p[0].type += ' ' + p[2]
+  else:
+    p[0] = Node(name = 'StructOrUnionType', val = '', type = p[1], lno = p.lineno(1), children = [])
+  p[0].ast = build_AST(p)
 
 def p_struct_or_union(p):
   '''struct_or_union : STRUCT
 	| UNION
   '''
   if p[1] == 'struct':
-    p[0] = Node(name = 'StructOrUNion', val = '', type = 'struct', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'StructOrUnion', val = '', type = 'struct', lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
   else:
-    p[0] = Node(name = 'StructOrUNion', val = '', type = 'union', lno = p.lineno(1), children = [])
+    p[0] = Node(name = 'StructOrUnion', val = '', type = 'union', lno = p.lineno(1), children = [])
     p[0].ast = build_AST(p)
 
 def p_struct_declaration_list(p):

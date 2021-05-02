@@ -9,7 +9,7 @@ keywords = {'auto':'AUTO', 'break':'BREAK', 'case':'CASE', 'char':'CHAR', 'const
 'float':'FLOAT', 'for':'FOR', 'goto':'GOTO', 'if':'IF', 'int':'INT', 'long':'LONG','register':'REGISTER', 
 'return':'RETURN', 'short':'SHORT', 'signed':'SIGNED', 'sizeof':'SIZEOF', 'static':'STATIC', 'struct':'STRUCT',
 'switch':'SWITCH', 'typedef':'TYPEDEF', 'union':'UNION', 'unsigned':'UNSIGNED', 'void':'VOID', 'volatile':'VOLATILE', 
-'while':'WHILE', 'type_name':'TYPE_NAME'}
+'while': 'WHILE', 'type_name': 'TYPE_NAME', 'struct_typecast': 'STRUCT_TYPECAST'}
 
 
 tokens = ['ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTAL_CONST', 'HEX_CONST', 'BIN_CONST',
@@ -44,7 +44,7 @@ tokens = ['ID','CHAR_CONST', 'INT_CONST', 'FLOAT_CONST', 'STRING_LITERAL', 'OCTA
 'LCURLYBRACKET', 'RCURLYBRACKET',
 ] + list(keywords.values())
 
-
+typecast = {}
 # for s in keywords:
 #     low_s = s.lower()
 #     keyword_tokens[low_s] = s
@@ -153,10 +153,14 @@ def t_STRING_LITERAL(t):
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = keywords.get(t.value,'ID')    # Check for reserved words
-    # print(t.type, t.value)
-    if t.type != 'ID':
-        t.value = t.type.lower()
+    if t.value in typecast:
+        t.value = typecast[t.value]
+        if t.value.startswith('struct') or t.value.startswith('union'):
+            t.type = 'STRUCT_TYPECAST'
+        else:
+            t.type = t.value.upper()
+    else:
+        t.type = keywords.get(t.value, 'ID')    # Check for reserved words
     return t
 
 
