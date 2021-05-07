@@ -41,7 +41,7 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -51,7 +51,7 @@ def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
     symbol_table[0][symbol]['isFunc'] = 1
-    symbol_table[0][symbol]['argumentList'] = ['char *','int']
+    symbol_table[0][symbol]['argumentList'] = ['int']
     symbol_table[0][symbol]['type'] = 'int'
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []

@@ -21,6 +21,7 @@ class CodeGen:
         print('extern printf')
         print('extern scanf')
         print('extern malloc')
+        print('extern free')
         print("section .text")
         print("\tglobal main")
 
