@@ -6,7 +6,7 @@ section .text
 main:
 	push ebp
 	mov ebp, esp
-	sub esp, 72
+	sub esp, 68
 	lea eax, [ebp-8]
 	mov dword [ebp-20], eax
 	add eax, 0
@@ -18,34 +18,34 @@ main:
 	add ebx, 4
 	mov ecx, [ebx] 
 	mov dword [ebp-40], ecx
-	mov ecx, 8
-	imul ecx, 13
-	mov [ebx], ecx
-	lea edx, [ebp-8]
-	mov esi, edx
-	add esi, 0
-	mov edi, [esi] 
-	mov dword [ebp-60], edi
-	mov edi, edx
-	add edi, 4
-	mov dword [ebp-16], edx
-	mov dword [ebp-24], eax
-	mov eax, [edi] 
-	mov dword [ebp-68], eax
-	push dword [ebp-68]
-	push dword [ebp-60]
-	push __t_8
-	mov dword [ebp-36], ebx
+	mov dword [ebx], 12
+	mov ecx, dword [ebp-8 + 0]
+	mov dword [ebp-16 + 0], ecx
+	mov ecx, dword [ebp-8 + 4]
+	mov dword [ebp-16 + 4], ecx
+	lea ecx, [ebp-16]
 	mov dword [ebp-44], ecx
+	add ecx, 0
+	mov edx, [ecx] 
 	mov dword [ebp-52], edx
-	mov dword [ebp-56], esi
-	mov dword [ebp-64], edi
+	lea edx, [ebp-16]
+	mov dword [ebp-56], edx
+	add edx, 4
+	mov esi, [edx] 
+	mov dword [ebp-64], esi
+	push dword [ebp-64]
+	push dword [ebp-52]
+	push __t_6
+	mov dword [ebp-24], eax
+	mov dword [ebp-36], ebx
+	mov dword [ebp-48], ecx
+	mov dword [ebp-60], edx
 	call printf
-	mov dword [ebp-72], eax
+	mov dword [ebp-68], eax
 	add esp, 12
 	mov eax, 0
 	mov esp, ebp
 	pop ebp
 	ret
 section	.data
-	__t_8:	db	`%d , %d\n`, 0
+	__t_6:	db	`%d , %d\n`, 0

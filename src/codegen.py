@@ -224,17 +224,26 @@ class CodeGen:
             print("\tmov " + best_location + ", " + quad.src1)
         else:
             #y_1 = t_1(eax)
-            best_location = get_best_location(quad.src1)
-            # dprint(quad.src1 + " " + best_location + " " + quad.dest)
-            if (check_type_location(best_location) in ["memory", "data", "number"]):
-                reg = get_register(quad, compulsory = True)
-                upd_reg_desc(reg, quad.src1)
-                print("\tmov " + reg + ", " + best_location)
-                best_location = reg
+            if(symbols[quad.dest].size <= 4):
+                best_location = get_best_location(quad.src1)
+                # dprint(quad.src1 + " " + best_location + " " + quad.dest)
+                if (check_type_location(best_location) in ["memory", "data", "number"]):
+                    reg = get_register(quad, compulsory = True)
+                    upd_reg_desc(reg, quad.src1)
+                    print("\tmov " + reg + ", " + best_location)
+                    best_location = reg
 
-            symbols[quad.dest].address_desc_reg.add(best_location)
-            reg_desc[best_location].add(quad.dest)
-            del_symbol_reg_exclude(quad.dest, [best_location])
+                symbols[quad.dest].address_desc_reg.add(best_location)
+                reg_desc[best_location].add(quad.dest)
+                del_symbol_reg_exclude(quad.dest, [best_location])
+            else:
+                loc1 = get_location_in_memory(quad.dest, sqb = False)
+                loc2 = get_location_in_memory(quad.src1, sqb = False)
+                reg = get_register(quad, compulsory = True)
+
+                for i in range(0, symbols[quad.dest].size, 4):
+                    print("\tmov " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
+                    print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg )
 
             # if (quad.instr_info['nextuse'][quad.src1] == None):
             #     del_symbol_reg_exclude(quad.src1)

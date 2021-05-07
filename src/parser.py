@@ -1170,9 +1170,17 @@ def p_assignment_expression(p):
     if p[2].val != '=':
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
         print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-    
+
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
+
+    if('struct' in p[1].type.split() and 'struct' in p[3].type.split()):
+      if(p[1].type != p[3].type):
+        print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+      else:
+        emit('int_=', p[3].place, '', p[1].place)
+      return
+    
     if p[2].val == '=':
       operator = '='
       data_type = int_or_real(p[1].type)
