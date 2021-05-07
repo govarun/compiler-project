@@ -540,21 +540,31 @@ def p_postfix_expression_5(p):
   # structure things , do later
 
   # 3AC Code Handling
-  for curr_list in symbol_table[found_scope][struct_name]['field_list']:
-    if curr_list[1] == p[3][0]:
-      tmp = get_new_tmp('int')
-      if(len(p[1].addr) > 0):
-        emit('int_=',p[1].addr, '', tmp)  
-      else:
-        emit('addr',p[1].place, '', tmp)
-      tmp2 = get_new_tmp(curr_list[0])
-      emit('int_+',tmp, curr_list[3], tmp2)
-      tmp3 = get_new_tmp(curr_list[0])
-      emit('*',tmp2,'',tmp3)
-      p[0].place = tmp3
-      p[0].addr = tmp2
-      break
-      
+  if(extract_if_tuple(p[2]) == '.'):
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        if(len(p[1].addr) > 0):
+          emit('int_=',p[1].addr, '', tmp)  
+        else:
+          emit('addr',p[1].place, '', tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('int_+',tmp, curr_list[3], tmp2)
+        tmp3 = get_new_tmp(curr_list[0])
+        emit('*',tmp2,'',tmp3)
+        p[0].place = tmp3
+        p[0].addr = tmp2
+        break
+  else:
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        emit('int_+', p[1].place, curr_list[3], tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('*',tmp,'',tmp2)
+        p[0].place = tmp2
+        p[0].addr = tmp
+        break
 
 
 

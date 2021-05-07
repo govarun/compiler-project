@@ -303,7 +303,7 @@ class CodeGen:
                     print("\tmov " + reg + ", " + str(symbols[var].length))
                     # if(symbols[var].isStruct):
                     print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
-                    # Where does variables stored in eax go in this case?
+
                     # print("\tshl " + reg + ", 2")
                     print("\tpush " + reg)
                     print("\tcall malloc")
