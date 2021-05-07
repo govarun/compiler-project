@@ -8,10 +8,10 @@ symbols = {}
 
 
 class symbol_info:
-    def __init__(self, isArray = False, length = 0, isStruct = False, structSize = 0):
+    def __init__(self, isArray = False, length = 0, isStruct = False, size = 0):
         self.isArray = isArray
         self.isStruct = isStruct
-        self.structSize = structSize
+        self.size = size
         self.length = length
         self.address_desc_mem = []
         self.address_desc_reg = set()
@@ -181,9 +181,9 @@ def runmain():
                 len = global_symbol_table[key]['size']//get_data_type_size(global_symbol_table[key]['type'])
                 symbols[key] = symbol_info(isArray = True, length = len)
             elif(global_symbol_table[key]['type'].startswith('struct')):
-                symbols[key] = symbol_info(isStruct = True, structSize = get_data_type_size(global_symbol_table[key]['type']))
+                symbols[key] = symbol_info(isStruct = True, size = get_data_type_size(global_symbol_table[key]['type']))
             else:
-                symbols[key] = symbol_info()
+                symbols[key] = symbol_info(size = get_data_type_size(global_symbol_table[key]['type']))
     # print_basic_blocks(debug = True)
 
 

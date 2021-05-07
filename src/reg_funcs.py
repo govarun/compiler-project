@@ -95,18 +95,29 @@ def save_reg_to_mem(reg):
         symbols[symbol].address_desc_reg.remove(reg)
     reg_desc[reg].clear()
 
-def get_location_in_memory(symbol):
+def get_location_in_memory(symbol, sqb = True):
     '''
     Function to get the location of a symbol in memory
     '''
     if not is_symbol(symbol):
         return symbol
     if (symbol in strings.keys() or symbol in local_vars['global']):
-        return "[" + str(symbol) + "]"
+        if(sqb):
+            return "[" + str(symbol) + "]"
+        else:
+            return str(symbol)
+
     if(len(symbols[symbol].address_desc_mem) == 0):
         dprint("not found" + symbol)
         return symbol
     location = symbols[symbol].address_desc_mem[-1]
+    if(not sqb):
+        prefix_string = ""
+        if(is_number(location)):   # changed this from type(location) is int to .isnumeric
+            prefix_string = "ebp"
+            if(location >= 0):
+                prefix_string = "ebp+"    
+        return prefix_string+str(location)
     prefix_string = "["
     if(is_number(location)):   # changed this from type(location) is int to .isnumeric
         prefix_string = "[ebp"

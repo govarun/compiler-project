@@ -568,21 +568,31 @@ def p_postfix_expression_5(p):
   # structure things , do later
 
   # 3AC Code Handling
-  for curr_list in symbol_table[found_scope][struct_name]['field_list']:
-    if curr_list[1] == p[3][0]:
-      tmp = get_new_tmp('int')
-      if(len(p[1].addr) > 0):
-        emit('int_=',p[1].addr, '', tmp)  
-      else:
-        emit('addr',p[1].place, '', tmp)
-      tmp2 = get_new_tmp(curr_list[0])
-      emit('int_+',tmp, curr_list[3], tmp2)
-      tmp3 = get_new_tmp(curr_list[0])
-      emit('*',tmp2,'',tmp3)
-      p[0].place = tmp3
-      p[0].addr = tmp2
-      break
-      
+  if(extract_if_tuple(p[2]) == '.'):
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        if(len(p[1].addr) > 0):
+          emit('int_=',p[1].addr, '', tmp)  
+        else:
+          emit('addr',p[1].place, '', tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('int_+',tmp, curr_list[3], tmp2)
+        tmp3 = get_new_tmp(curr_list[0])
+        emit('*',tmp2,'',tmp3)
+        p[0].place = tmp3
+        p[0].addr = tmp2
+        break
+  else:
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        emit('int_+', p[1].place, curr_list[3], tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('*',tmp,'',tmp2)
+        p[0].place = tmp2
+        p[0].addr = tmp
+        break
 
 
 
@@ -1188,9 +1198,17 @@ def p_assignment_expression(p):
     if p[2].val != '=':
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
         print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-    
+
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
+
+    if('struct' in p[1].type.split() and 'struct' in p[3].type.split()):
+      if(p[1].type != p[3].type):
+        print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+      else:
+        emit('int_=', p[3].place, '', p[1].place)
+      return
+    
     if p[2].val == '=':
       operator = '='
       data_type = int_or_real(p[1].type)
