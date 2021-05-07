@@ -2260,8 +2260,8 @@ def p_WhMark1(p):
   '''WhMark1 : '''
   l1 = get_label()
   l2 = get_label()
-  continueStack.append(1)
-  breakStack.append(2)
+  continueStack.append(l1)
+  breakStack.append(l2)
   emit('label', '', '', l1)
   p[0] = [l1 , l2]
 
