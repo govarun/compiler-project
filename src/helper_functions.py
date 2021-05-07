@@ -66,7 +66,7 @@ class Instruction:
             self.src1 = quad[3]
             self.src2 = quad[2]
 
-        elif(self.op == "int_="):
+        elif(self.op == "int_=" or self.op == "int_int_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):

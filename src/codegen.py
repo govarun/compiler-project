@@ -1,6 +1,6 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
@@ -36,12 +36,14 @@ class CodeGen:
 
     def bin_operations(self, quad, op):
         #check where moved back into memory
+
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
         save_reg_to_mem(reg1)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
+
         print("\t" + op + ' ' + reg1 + ", " + reg2)
         free_all_regs(quad)
         upd_reg_desc(reg1, quad.dest)
@@ -226,7 +228,7 @@ class CodeGen:
             #y_1 = t_1(eax)
             best_location = get_best_location(quad.src1)
             # dprint(quad.src1 + " " + best_location + " " + quad.dest)
-            if (check_type_location(best_location) in ["memory", "data", "number"]):
+            if (best_location not in reg_desc.keys()):
                 reg = get_register(quad, compulsory = True)
                 upd_reg_desc(reg, quad.src1)
                 print("\tmov " + reg + ", " + best_location)

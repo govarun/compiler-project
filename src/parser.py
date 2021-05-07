@@ -171,6 +171,34 @@ def handle_binary_emit(p0, p1, p2, p3):
     emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
   return p0, p1, p2, p3
 
+def handle_binary_emit_sub_add(p0, p1, p2, p3):
+  operator = extract_if_tuple(p2)
+  higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
+  return_tmp = get_new_tmp(higher_data_type)
+  p0.place = return_tmp
+  if (int_or_real(p1.type) != higher_data_type):
+    tmp = get_new_tmp(higher_data_type)
+    change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
+    emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
+  elif (int_or_real(p3.type) != higher_data_type):
+    tmp = get_new_tmp(higher_data_type)
+    change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
+    emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
+  else:
+    if(p1.type.endswith('*') or p3.type.endswith('*')):
+      tmp = get_new_tmp('int')
+      if(p1.type.endswith('*')):
+        emit('int_*',p3.place,get_data_type_size(p3.type),tmp)
+        emit(int_or_real(p3.type) + '_' + operator, p1.place, tmp, p0.place)
+      else:
+        emit('int_*',p1.place,get_data_type_size(p1.type),tmp)
+        emit(int_or_real(p1.type) + '_' + operator, tmp, p3.place, p0.place)
+    else:
+      emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
+  return p0, p1, p2, p3
+
+
+
 def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
@@ -214,7 +242,7 @@ def get_data_type_size(type_1):
   if (type_1 == ''):
     return 0
   type_size = {}
-  type_size['char'] = 1
+  type_size['char'] = 4
   type_size['short'] = 2
   type_size['int'] = 4
   type_size['long'] = 8
@@ -222,7 +250,7 @@ def get_data_type_size(type_1):
   type_size['double'] = 8
   type_size['void'] = 0
   if(type_1.endswith('*')):
-    return 8
+    return 4
   if( type_1.startswith('struct') or type_1.startswith('union')):
     curscp = currentScope
     while(parent[curscp] != curscp):
@@ -808,7 +836,7 @@ def p_additive_expression(p):
     check_invalid_operation_on_function(p[3])
     
     # handling emits
-    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
+    p[0], p[1], p[2], p[3] = handle_binary_emit_sub_add(p[0], p[1], p[2], p[3])
     
 ##############
 
