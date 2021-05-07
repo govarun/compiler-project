@@ -41,7 +41,7 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -51,7 +51,7 @@ def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
     symbol_table[0][symbol]['isFunc'] = 1
-    symbol_table[0][symbol]['argumentList'] = ['char *','int']
+    symbol_table[0][symbol]['argumentList'] = ['int']
     symbol_table[0][symbol]['type'] = 'int'
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
@@ -171,6 +171,34 @@ def handle_binary_emit(p0, p1, p2, p3):
     emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
   return p0, p1, p2, p3
 
+def handle_binary_emit_sub_add(p0, p1, p2, p3):
+  operator = extract_if_tuple(p2)
+  higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
+  return_tmp = get_new_tmp(higher_data_type)
+  p0.place = return_tmp
+  if (int_or_real(p1.type) != higher_data_type):
+    tmp = get_new_tmp(higher_data_type)
+    change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
+    emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
+  elif (int_or_real(p3.type) != higher_data_type):
+    tmp = get_new_tmp(higher_data_type)
+    change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
+    emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
+  else:
+    if(p1.type.endswith('*') or p3.type.endswith('*')):
+      tmp = get_new_tmp('int')
+      if(p1.type.endswith('*')):
+        emit('int_*',p3.place,get_data_type_size(p3.type),tmp)
+        emit(int_or_real(p3.type) + '_' + operator, p1.place, tmp, p0.place)
+      else:
+        emit('int_*',p1.place,get_data_type_size(p1.type),tmp)
+        emit(int_or_real(p1.type) + '_' + operator, tmp, p3.place, p0.place)
+    else:
+      emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
+  return p0, p1, p2, p3
+
+
+
 def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
@@ -214,7 +242,7 @@ def get_data_type_size(type_1):
   if (type_1 == ''):
     return 0
   type_size = {}
-  type_size['char'] = 1
+  type_size['char'] = 4
   type_size['short'] = 2
   type_size['int'] = 4
   type_size['long'] = 8
@@ -222,7 +250,7 @@ def get_data_type_size(type_1):
   type_size['double'] = 8
   type_size['void'] = 0
   if(type_1.endswith('*')):
-    return 8
+    return 4
   if( type_1.startswith('struct') or type_1.startswith('union')):
     curscp = currentScope
     while(parent[curscp] != curscp):
@@ -540,21 +568,31 @@ def p_postfix_expression_5(p):
   # structure things , do later
 
   # 3AC Code Handling
-  for curr_list in symbol_table[found_scope][struct_name]['field_list']:
-    if curr_list[1] == p[3][0]:
-      tmp = get_new_tmp('int')
-      if(len(p[1].addr) > 0):
-        emit('int_=',p[1].addr, '', tmp)  
-      else:
-        emit('addr',p[1].place, '', tmp)
-      tmp2 = get_new_tmp(curr_list[0])
-      emit('int_+',tmp, curr_list[3], tmp2)
-      tmp3 = get_new_tmp(curr_list[0])
-      emit('*',tmp2,'',tmp3)
-      p[0].place = tmp3
-      p[0].addr = tmp2
-      break
-      
+  if(extract_if_tuple(p[2]) == '.'):
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        if(len(p[1].addr) > 0):
+          emit('int_=',p[1].addr, '', tmp)  
+        else:
+          emit('addr',p[1].place, '', tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('int_+',tmp, curr_list[3], tmp2)
+        tmp3 = get_new_tmp(curr_list[0])
+        emit('*',tmp2,'',tmp3)
+        p[0].place = tmp3
+        p[0].addr = tmp2
+        break
+  else:
+    for curr_list in symbol_table[found_scope][struct_name]['field_list']:
+      if curr_list[1] == p[3][0]:
+        tmp = get_new_tmp('int')
+        emit('int_+', p[1].place, curr_list[3], tmp)
+        tmp2 = get_new_tmp(curr_list[0])
+        emit('*',tmp,'',tmp2)
+        p[0].place = tmp2
+        p[0].addr = tmp
+        break
 
 
 
@@ -808,7 +846,7 @@ def p_additive_expression(p):
     check_invalid_operation_on_function(p[3])
     
     # handling emits
-    p[0], p[1], p[2], p[3] = handle_binary_emit(p[0], p[1], p[2], p[3])
+    p[0], p[1], p[2], p[3] = handle_binary_emit_sub_add(p[0], p[1], p[2], p[3])
     
 ##############
 
@@ -1160,9 +1198,17 @@ def p_assignment_expression(p):
     if p[2].val != '=':
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
         print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
-    
+
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
+
+    if('struct' in p[1].type.split() and 'struct' in p[3].type.split()):
+      if(p[1].type != p[3].type):
+        print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+      else:
+        emit('int_=', p[3].place, '', p[1].place)
+      return
+    
     if p[2].val == '=':
       operator = '='
       data_type = int_or_real(p[1].type)
@@ -2214,8 +2260,8 @@ def p_WhMark1(p):
   '''WhMark1 : '''
   l1 = get_label()
   l2 = get_label()
-  continueStack.append(1)
-  breakStack.append(2)
+  continueStack.append(l1)
+  breakStack.append(l2)
   emit('label', '', '', l1)
   p[0] = [l1 , l2]
 
