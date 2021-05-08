@@ -425,7 +425,8 @@ def p_postfix_expression_4(p):
       # print('here',curType)
       if(curType == ''):
         continue
-      check_func_call_op(arguments,curType,i,p[1].lno)
+      if(p[1].val not in pre_append_in_symbol_table_list):
+        check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
     for param in reversed(p[3].children):
       emit('param', '', '', param.place)
@@ -2498,7 +2499,7 @@ def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
-  result = parser.parse(code,debug=True)
+  result = parser.parse(code,debug=False)
   print_emit_array(debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
