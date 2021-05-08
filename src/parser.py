@@ -152,7 +152,7 @@ def int_or_real(dtype):
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
-    return 'real'
+    return 'int'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
