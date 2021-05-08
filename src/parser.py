@@ -7,7 +7,8 @@ import copy
 import json
 
 # Get the token map from the lexer.  This is required.
-from lexer import tokens, keywords, typecast, syn_error_count
+import lexer
+from lexer import tokens, keywords, typecast
 from type_checking import *
 precedence = (
      ('nonassoc', 'IFX'),
@@ -65,7 +66,7 @@ ts_unit = Node('START',val = '',type ='' ,children = [])
 
 def give_error():
   global syn_error_count
-  syn_error_count = syn_error_count+1 
+  lexer.syn_error_count = lexer.syn_error_count+1 
 
 def emit(op, s1, s2, dest):
   global emit_array
@@ -2515,7 +2516,7 @@ def print_emit_array(debug = False):
     print(i)
 def visualize_symbol_table():
   global syn_error_count
-  print('parser.py : syn_error_count = ', syn_error_count)
+  print('parser.py : syn_error_count = ', lexer.syn_error_count)
   global scopeName
   with open("symbol_table_output.json", "w") as outfile:
     outfile.write('')
