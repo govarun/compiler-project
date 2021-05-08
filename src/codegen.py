@@ -1,9 +1,10 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
+param_size = 0
 relational_op_list = ["<",">","<=",">=","==","!="] 
 
 def dprint(str):
@@ -18,10 +19,8 @@ def dprint(str):
 
 class CodeGen:
     def gen_top_headers(self):
-        print('extern printf')
-        print('extern scanf')
-        print('extern malloc')
-        print('extern free')
+        for func in pre_append_in_symbol_table_list:
+            print("extern " + func)
         print("section .text")
         print("\tglobal main")
 
@@ -272,17 +271,37 @@ class CodeGen:
 
     def param(self, quad):
         global param_count
+        global param_size
         param_count += 1
+        param_size += 4
+        if(is_symbol(quad.src1) and symbols[quad.src1].size > 4):
+            param_size += symbols[quad.src1].size - 4
+            loc = get_location_in_memory(quad.src1, sqb = False)
+            for i in range(symbols[quad.src1].size - 4, -1, -4):
+                print("\tpush dword [" + loc + "+" + str(i) + "]")
+            return
+
         print("\tpush " + str(get_best_location(quad.src1)))
 
     def function_call(self, quad):
-        global param_count
+        global param_count, param_size
         save_caller_status()
+        if(len(quad.src2) and symbols[quad.src2].size > 4):
+            #idhar koi haath mat lagana
+            print("\tmov ecx, ebp")
+            print("\tsub ecx, esp")
+            print("\tadd ecx, " + str(symbols[quad.src2].address_desc_mem[-1]+ 12))
+            print("\tpush ecx")
+            #####
+            param_size += 4
+            param_count += 1
         print("\tcall " + quad.src1)
-        if(len(quad.src2)):
+
+        if(len(quad.src2) and symbols[quad.src2].size <= 4):
             print("\tmov " + get_best_location(quad.src2) + ", eax")
-        print("\tadd esp, " + str(4*param_count))
+        print("\tadd esp, " + str(param_size))
         param_count = 0
+        param_size = 0
 
     def funcEnd(self, quad):
         for var in local_vars[quad.dest]:
@@ -323,20 +342,34 @@ class CodeGen:
                     print("\tmov " + get_location_in_memory(var) + ", eax")
 
         counter = 0
+        if(get_data_type_size(symbol_table[0][quad.src1]['type']) > 4):
+            counter += 4
         for var in func_arguments[quad.src1]:
-            symbols[var].address_desc_mem.append(4*counter + 8)
-            counter += 1
+            symbols[var].address_desc_mem.append(counter + 8)
+            counter += symbols[var].size
+
 
     # def handle_pointer(self,quad):
     #     reg1 = get_best_location(quad.)
 
 
     def function_return(self, quad):
+        save_caller_status()
         if(quad.src1):
-            location = get_best_location(quad.src1)
-            save_reg_to_mem("eax")
-            if(location != "eax"):
-                print("\tmov eax, " + str(location))
+            if(is_symbol(quad.src1) and symbols[quad.src1].size > 4):
+                loc2 = get_location_in_memory(quad.src1, sqb = False)
+                print("\tmov eax, dword [ebp + 8]")
+                loc1 = "ebp + eax"
+                reg = get_register(quad, exclude_reg = ["eax"])
+
+                for i in range(0, symbols[quad.src1].size, 4):
+                    print("\tmov " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
+                    print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg )
+            else:
+                location = get_best_location(quad.src1)
+                save_reg_to_mem("eax")
+                if(location != "eax"):
+                    print("\tmov eax, " + str(location))
         
         print("\tmov esp, ebp")
         print("\tpop ebp")
