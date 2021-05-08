@@ -635,12 +635,18 @@ def p_unary_expression_3(p):
   p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
+  tmp = get_new_tmp('int')
+  p[0].place = tmp
+  emit('int_=',get_data_type_size(p[2].type),'',p[0].place)
 
 def p_unary_expression_4(p):
   '''unary_expression : SIZEOF LPAREN type_name RPAREN'''
   p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = p[3].type,children = [p[3]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
+  tmp = get_new_tmp('int')
+  p[0].place = tmp
+  emit('int_=',get_data_type_size(p[3].type),'',p[0].place)
 
 #########################
 
@@ -2491,8 +2497,8 @@ def runmain(code):
   open('graph1.dot','w').write("digraph G {")
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
-  result = parser.parse(code,debug=False)
-  print_emit_array(debug=True)
+  result = parser.parse(code,debug=True)
+  print_emit_array(debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
