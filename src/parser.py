@@ -42,7 +42,7 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'abs', 'pow']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -394,9 +394,7 @@ def p_postfix_expression_4(p):
       if(curVal not in symbol_table[currentScope].keys()):
         continue
       curType = symbol_table[currentScope][curVal]['type']
-      # check_func_call_op(arguments,curType,i,p[1].lno)
-      if(curType.split()[-1] != arguments.split()[-1]):
-        print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
+      check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
     for param in reversed(p[3].children):
       emit('param', '', '', param.place)
@@ -2270,6 +2268,7 @@ def p_jump_statement(p):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
       emit('ret', '', '', '')
     else:
+      # check_func_return_type(p[2].type,curFuncReturnType)
       if(p[2].type in ['int','char','float'] and curFuncReturnType in ['int','char','float']):
         pass
       elif(p[2].type != '' and curFuncReturnType != p[2].type):

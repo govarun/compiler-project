@@ -95,9 +95,16 @@ def check_compatibility_of_op(p1,p3,type_list = ['char' , 'short' , 'int' , 'lon
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
 def check_func_call_op(func_argument,call_argument,i,lno):
+    if(func_argument == call_argument):
+        return
     if(func_argument in ['int','float','char']):
         if(call_argument in ['int','char','float']):
             return
         print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)
     elif(func_argument.endswith('*')):
-        if()
+        if(not call_argument.endswith('*')):
+            print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)
+        else:
+            print("warning at line " + str(lno), ": Implicit pointer convrsion during function call")
+    else:
+        print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)     
