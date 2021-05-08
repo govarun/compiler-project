@@ -8,6 +8,7 @@ import json
 
 # Get the token map from the lexer.  This is required.
 from lexer import tokens, keywords, typecast
+from type_checking import *
 precedence = (
      ('nonassoc', 'IFX'),
      ('nonassoc', 'ELSE')
@@ -56,32 +57,7 @@ def pre_append_in_symbol_table():
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
-class Node:
-  def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
-    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = ''):
-    self.name = name
-    self.val = val
-    self.type = type
-    self.lno = lno
-    self.scope = scope
-    self.array = array
-    self.maxDepth = maxDepth
-    self.isFunc = isFunc
-    self.parentStruct = parentStruct
-    self.ast = ast
-    self.level = level
-    self.place = place
-    self.quad = quad
-    self.expr = expr
-    self.label = label
-    self.tind = tind
-    self.addr = addr
-    if children:
-      self.children = children
-    else:
-      self.children = []
 
-    # add more later
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
 ############ Address Code generation functions ############
@@ -91,24 +67,6 @@ def emit(op, s1, s2, dest):
   global nextstat
   emit_array.append([str(op), str(s1), str(s2), str(dest)])
   nextstat += 1
-
-def backpatch(to_patch, instr):
-  # we are expecting to_patch to be a list of integers here
-  # when the operator is goto, the quad will be: [goto, instr number, , ]
-  global emit_array
-  for i in range(len(to_patch)):
-    emit_array[to_patch[i]][1] = str(instr)
-
-def merge(list1, list2):
-  return (list1 + list2)
-
-def make_list(i = -1):
-  new_list = []
-  if i == -1:
-    return new_list
-  else:
-    new_list.append(int(i))
-  return new_list
 
 def _new_var():
   global var_cnt
@@ -132,21 +90,6 @@ def get_label():
   s = "__l" + str(label_cnt)
   label_cnt += 1
   return s
-
-
-# def handle_pointer(arr):
-#   return 'int'
-
-def int_or_real(dtype):
-  arr = dtype.split()
-  if ('*' in arr):
-    return 'int'
-  if 'long' in arr:
-    return 'int' 
-  elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
-    return 'int'
-  else:
-    return 'real'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
@@ -197,41 +140,6 @@ def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
 
-def extract_if_tuple(p2):
-  if (type(p2) is tuple):
-    return str(p2[0])
-  else:
-    return str(p2)
-
-def get_higher_data_type(type_1 , type_2):
-  if (type_1 == '' or type_2 == ''):
-    return ''
-  if(type_1.endswith('*')):
-    return type_1
-  if(type_2.endswith('*')):
-    return type_2
-  to_num = {}
-  to_num['char'] = 0
-  to_num['short'] = 1
-  to_num['int'] = 2
-  to_num['long'] = 3
-  to_num['float'] = 4
-  to_num['double'] = 5
-  to_str = {}
-  to_str[0] = 'char'
-  to_str[1] = 'short'
-  to_str[2] = 'int'
-  to_str[3] = 'long'
-  to_str[4] = 'float'
-  to_str[5] = 'double'
-  type_1 =  type_1.split()[-1]
-  type_2 =  type_2.split()[-1]
-  if (type_1 not in to_num) or type_2 not in to_num:
-    return str(-1)
-  num_type_1 = to_num[type_1]
-  num_type_2 = to_num[type_2]
-  return to_str[max(num_type_1 , num_type_2)]
-
 def get_data_type_size(type_1):
   if (type_1 == ''):
     return 0
@@ -259,25 +167,6 @@ def get_data_type_size(type_1):
   if type_1 not in type_size.keys():
     return -1
   return type_size[type_1]
-
-def ignore_1(s):
-  if(s == "}"):
-    return True
-  elif(s == "{"):
-    return True
-  elif(s == ")"):
-    return True
-  elif(s == "("):
-    return True
-  elif(s == ";"):
-    return True
-  elif(s == '['):
-    return True
-  elif(s == ']'):
-    return True
-  elif(s == ','):
-    return True
-  return False
 
 def find_if_ID_is_declared(id,lineno):
   curscp = currentScope
@@ -505,6 +394,7 @@ def p_postfix_expression_4(p):
       if(curVal not in symbol_table[currentScope].keys()):
         continue
       curType = symbol_table[currentScope][curVal]['type']
+      # check_func_call_op(arguments,curType,i,p[1].lno)
       if(curType.split()[-1] != arguments.split()[-1]):
         print("warning at line " + str(p[1].lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + arguments + ', called with : ' + curType)
       i += 1
@@ -706,14 +596,12 @@ def p_unary_expression_2(p):
 
 def p_unary_expression_3(p):
   '''unary_expression : SIZEOF unary_expression'''
-  # should I add SIZEOF in children
   p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
 
 def p_unary_expression_4(p):
   '''unary_expression : SIZEOF LPAREN type_name RPAREN'''
-  # should I add SIZEOF in children
   p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = p[3].type,children = [p[3]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
@@ -768,9 +656,7 @@ def p_multipicative_expression(p):
       return
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
 
-    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+    check_compatibility_of_op(p[1],p[3])
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])    
