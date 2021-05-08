@@ -3,6 +3,7 @@ import sys
 import lexer
 import codegen
 import helper_functions
+from lexer import syn_error_count
 s = str(sys.argv)
 if(len(sys.argv) <= 1):
 	print("Incorrect Usage")
@@ -41,4 +42,9 @@ code = file.read()
 if __name__ == '__main__':
 	parser.runmain(code)
 	helper_functions.runmain()
-	codegen.runmain()
+	global syn_error_count
+	print('main.py : syn_error_count = ', syn_error_count)
+	if syn_error_count == 0:
+		codegen.runmain()
+	else:
+		print('main.py : number of errors is non-zero')

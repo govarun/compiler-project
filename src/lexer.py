@@ -3,6 +3,8 @@ import ply.lex as lex
 from ply.lex import TOKEN
 from tabulate import tabulate
 
+syn_error_count = 0
+
 keyword_tokens = {}
 keywords = {'auto':'AUTO', 'break':'BREAK', 'case':'CASE', 'char':'CHAR', 'const':'CONST','continue':'CONTINUE',
 'default':'DEFAULT', 'do':'DO', 'double':'DOUBLE', 'else':'ELSE', 'enum':'ENUM', 'extern':'EXTERN',

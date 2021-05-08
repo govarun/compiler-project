@@ -7,7 +7,7 @@ import copy
 import json
 
 # Get the token map from the lexer.  This is required.
-from lexer import tokens, keywords, typecast
+from lexer import tokens, keywords, typecast, syn_error_count
 from type_checking import *
 precedence = (
      ('nonassoc', 'IFX'),
@@ -61,6 +61,11 @@ def pre_append_in_symbol_table():
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
 ############ Address Code generation functions ############
+
+
+def give_error():
+  global syn_error_count
+  syn_error_count = syn_error_count+1 
 
 def emit(op, s1, s2, dest):
   global emit_array
@@ -193,6 +198,7 @@ def find_if_ID_is_declared(id,lineno):
     if(id in symbol_table[curscp].keys()):
       return curscp
   print (lineno, 'COMPILATION ERROR: unary_expression ' + id + ' not declared')
+  give_error()
   return -1
 
 def find_scope(id, lineno = -1): #default value kept, because it is not needed, and has been passed in code at some places
@@ -211,6 +217,8 @@ def check_invalid_operation_on_function(node):
   found_scope = find_scope(node.val, node.lno)
   if (found_scope != -1) and (node.isFunc >= 1):
     print("Compilation Error at line", str(node.lno), ":Invalid operation on", node.val)
+    give_error()
+
 
 
 def build_AST(p,nope = []):
@@ -331,6 +339,7 @@ def p_postfix_expression_2(p):
   p[0].ast = build_AST(p)
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+    give_error()
 
   temp_ind = get_new_tmp('int')
 
@@ -377,6 +386,7 @@ def p_postfix_expression_2(p):
   curscp = currentScope
   if(p[3].type not in ['char', 'short', 'int', 'long']):
     print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
+    give_error()
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
@@ -384,8 +394,10 @@ def p_postfix_expression_3(p):
   p[0].ast = build_AST(p)
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
+    give_error() 
   elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
     print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call") 
+    give_error()
   retVal = ''
   if(p[1].type != 'void'):
     retVal = get_new_tmp(p[1].type)
@@ -400,8 +412,10 @@ def p_postfix_expression_4(p):
   p[0].ast = build_AST(p)
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
+    give_error()
   elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children) and p[1].val not in pre_append_in_symbol_table_list):
     print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
+    give_error()
   else:
     i = 0
     for arguments in symbol_table[0][p[1].val]['argumentList']:
@@ -436,15 +450,18 @@ def p_postfix_expression_5(p):
     struct_scope = find_scope(p[1].val , p[1].lno)
     if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
       print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+      give_error()
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
   p[0].ast = build_AST(p)
   struct_name = p[1].type
   if (struct_name.endswith('*') and p[2][0] == '.') or (not struct_name.endswith('*') and p[2][0] == '->') :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " +  " on " + struct_name)
+    give_error()
     return
   if(not struct_name.startswith('struct')):
     print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
+    give_error()
     return
 
   found_scope = find_scope(struct_name , p[1].lno) 
@@ -459,9 +476,11 @@ def p_postfix_expression_5(p):
         p[0].level = len(curr_list[4])
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
+    give_error()
     return
   if flag == 0 :
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : field " + " not declared in " + struct_name)
+    give_error()
     return
   # structure things , do later
 
@@ -504,6 +523,7 @@ def p_postfix_expression_6(p):
   found_scope = find_scope(p[1].val, p[1].lno)
   if (found_scope != -1) and ((p[1].isFunc >= 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
+    give_error()
   # emit(p[1].val + p[2])
   emit(int_or_real(p[1].type) + '_=', p[1].place, '', tmp)
   # emit(int_or_real(p[1].type) + '_' + p[2][0][:-1], '1' ,p[1].place, p[1].place)
@@ -550,6 +570,7 @@ def p_unary_expression_1(p):
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc >= 1) or ('struct' in p[2].type.split())):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
+      give_error()
     
     if (extract_if_tuple(p[1]) == '++'):
       emit('inc', '', '', p[2].place)
@@ -574,6 +595,7 @@ def p_unary_expression_2(p):
   elif(p[1].val == '*'):
     if(not p[2].type.endswith('*')):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
+      give_error()
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:-2],children = [p[2]])
     p[0].ast = build_AST(p)
     tmp = get_new_tmp(p[0].type)
@@ -672,6 +694,7 @@ def p_multipicative_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
     if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+      give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])    
@@ -682,6 +705,7 @@ def p_multipicative_expression(p):
       
       if higher_data_type not in valid_type:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with MOD operator')
+        give_error()
 
       return_data_type = higher_data_type
       if return_data_type == 'char' :
@@ -716,11 +740,13 @@ def p_additive_expression(p):
     elif(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
       if(p[3].type == 'float'):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
       if(p[1].type == 'float'):
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[3].type,children = [])
       p[0].ast = build_AST(p)
     elif(p[1].type.endswith('*') and p[3].type.endswith('*')):
@@ -728,12 +754,14 @@ def p_additive_expression(p):
         pass
       else:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = p[1].type,children = [])
       p[0].ast = build_AST(p)
     else :
       type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
       if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
       higher_data_type = get_higher_data_type(p[1].type , p[3].type)
       p[0] = Node(name = 'AddSub',val = '',lno = p[1].lno,type = higher_data_type,children = [])
       p[0].ast = build_AST(p)
@@ -765,6 +793,7 @@ def p_shift_expression(p):
     type_list = ['short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+      give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -801,6 +830,7 @@ def p_relational_expression(p):
       type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
       if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -830,6 +860,7 @@ def p_equality_expresssion(p):
       type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
       if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
         print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -858,6 +889,7 @@ def p_and_expression(p):
 
     if p[1].type.split()[-1] not in valid or p[3].type.split()[-1] not in valid:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data types', p[1].type, 'and', p[3].type, 'for the AND operator')
+      give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -883,6 +915,7 @@ def p_exclusive_or_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+      give_error()
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
 
@@ -906,6 +939,7 @@ def p_inclusive_or_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long']
     if p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+      give_error()
     
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
@@ -930,6 +964,7 @@ def p_logical_and_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[4].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[3]) +  ' operator')
+      give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[4])
@@ -975,6 +1010,7 @@ def p_logical_or_expression(p):
     type_list = ['char' , 'short' , 'int' , 'long','float','double']
     if p[1].type.split()[-1] not in type_list or p[4].type.split()[-1] not in type_list:
       print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[3]) +  ' operator')
+      give_error()
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[4])
@@ -1068,17 +1104,22 @@ def p_assignment_expression(p):
       return
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
+      give_error()
     if('struct' in p[1].type.split() and 'struct' not in p[3].type.split()):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
+      give_error()
     elif('struct' not in p[1].type.split() and 'struct' in p[3].type.split()):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
+      give_error()
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_scope(p[1].val, p.lineno(1))
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+      give_error()
     if(p[1].level != 0 or p[3].level != 0):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", cannot assign array pointer")
+      give_error()
     if(len(p[1].parentStruct) > 0):
       found_scope = find_scope(p[1].parentStruct , p[1].lno)
       for curr_list in symbol_table[found_scope][p[1].parentStruct]['field_list']:
@@ -1087,12 +1128,14 @@ def p_assignment_expression(p):
             break
           if(len(curr_list) < 5 or (len(curr_list[4]) < len(p[1].array))):
             print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions")
+            give_error()
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])
 
     if p[2].val != '=':
       if ('struct' in p[1].type.split()) or ('struct' in p[3].type.split()):
         print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
+        give_error()
 
     p[0] = Node(name = 'AssignmentOperation',val = '',type = p[1].type, lno = p[1].lno, children = [], level = p[1].level)
     p[0].ast = build_AST(p)
@@ -1100,6 +1143,7 @@ def p_assignment_expression(p):
     if('struct' in p[1].type.split() and 'struct' in p[3].type.split()):
       if(p[1].type != p[3].type):
         print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
+        give_error()
       else:
         emit('int_=', p[3].place, '', p[1].place)
       return
@@ -1193,9 +1237,11 @@ def p_temp_declaration(p):
     if(child.name == 'InitDeclarator'):
       if(p[1].type.startswith('typedef')):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
+        give_error()
         continue
       if(child.children[0].val in symbol_table[currentScope].keys()):
         print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
+        give_error()
       symbol_table[currentScope][child.children[0].val] = {}
       symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
       symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
@@ -1213,6 +1259,7 @@ def p_temp_declaration(p):
         symbol_table[currentScope][child.children[0].val]['size'] = 8
       elif(flag == 0):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
+        give_error()
       symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
 
@@ -1223,6 +1270,7 @@ def p_temp_declaration(p):
       data_type = int_or_real(act_data_type)
       if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
+        give_error()
       elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
@@ -1234,6 +1282,7 @@ def p_temp_declaration(p):
         continue
       if(child.val in symbol_table[currentScope].keys() and 'isFunc' not in symbol_table[currentScope][child.val]):
         print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
+        give_error()
       symbol_table[currentScope][child.val] = {}
       symbol_table[currentScope][child.val]['type'] = p[1].type
       symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
@@ -1248,6 +1297,7 @@ def p_temp_declaration(p):
         symbol_table[currentScope][child.val]['size'] = 8
       elif(flag == 0):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
+        give_error()
       symbol_table[currentScope][child.val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.val]['size']
       # TODO : Confirm with others about two possible approaches
@@ -1363,10 +1413,13 @@ def p_declaration_specifiers(p):
   elif(len(p) == 3):
     if(p[1].name == 'StorageClassSpecifier' and p[2].name.startswith('StorageClassSpecifier')):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+      give_error()
     if(p[1].name == 'TypeSpecifier1' and (p[2].name.startswith('TypeSpecifier1') or p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+      give_error()
     if(p[1].name == 'TypeQualifier' and (p[2].name.startswith('StorageClassSpecifier') or p[2].name.startswith('TypeQualifier'))):
       print("Invalid Syntax at line " + str(p[1].lno) + ", " + p[2].type + " not allowed after " + p[1].type)
+      give_error()
     curType.pop()
     curType.append(p[1].type + ' ' + p[2].type)
     
@@ -1408,8 +1461,10 @@ def p_init_declarator(p):
     p[0].ast = build_AST(p)
     if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
       print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
+      give_error()
     if(p[1].level != p[3].level):
       print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
+      give_error()
     # print(p[3].name, "fn name:p_init_declarator")
     # emit(["=",[p[3].place, ], [], [p[1].place], find_scope(p[1].val)]) # a = 5 ,  a = t1
 
@@ -1456,6 +1511,7 @@ def p_struct_or_union_specifier(p):
     p[0].ast = build_AST(p)
     if val_name in symbol_table[currentScope].keys():
       print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+      give_error()
     valptr_name = val_name + ' *'
     symbol_table[currentScope][val_name] = {}
     symbol_table[currentScope][val_name]['type'] = val_name
@@ -1468,8 +1524,10 @@ def p_struct_or_union_specifier(p):
       for prev_list in temp_list:
         if prev_list[1] == child.val:
           print('COMPILATION ERROR : line ' + str(p[3].lno) + ' : ' + child.val + ' already deaclared')
+          give_error()
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
+        give_error()
       SZ = get_data_type_size(child.type)
       curr_list = [child.type, child.val, SZ, curr_offset]
       totalEle = 1
@@ -1498,6 +1556,7 @@ def p_struct_or_union_specifier(p):
     found_scope = find_scope(p[0].type, p[1].lno)
     if(found_scope == -1):
       print("COMPILATION ERROR : at line " + str(p[1].lno) + ", " + p[0].type + " is not a type")
+      give_error()
   else:
     p[0].ast = build_AST(p)
 
@@ -1549,6 +1608,7 @@ def p_struct_declaration(p):
     else:
       if('void' in p[1].type.split()):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
+        give_error()
       child.type = p[1].type
 
 def p_specifier_qualifier_list(p):
@@ -1677,6 +1737,7 @@ def p_direct_declarator_1(p):
         # print(symbol_table[parent[currentScope]][p[1].val]['isFunc'])
         # print(symbol_table[parent[currentScope]][p[1].val])
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+        give_error()
       else:
         if(p[1].val in functionScope.keys()):
           scope_to_function.pop(functionScope[p[1].val])
@@ -1687,6 +1748,7 @@ def p_direct_declarator_1(p):
         for child in p[3].children:
           if(child.type != symbol_table[0][p[1].val]['argumentList'][iterator]):
             print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' argument ' + str(iterator+1) +' does not match function declaration')
+            give_error()
           iterator += 1
       return 
     symbol_table[parent[currentScope]][p[1].val] = {}
@@ -1726,6 +1788,7 @@ def p_direct_declarator_3(p):
       # print('check')
       if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
         print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+        give_error()
       else:
         if(p[1].val in functionScope.keys()):
           scope_to_function.pop(functionScope[p[1].val])
@@ -1821,6 +1884,7 @@ def p_parameter_declaration(p):
     if(len(p) > 2 and p[2].name == 'Declarator'):
       if(p[2].val in symbol_table[currentScope].keys()):
         print(p.lineno(1), 'COMPILATION ERROR : ' + p[2].val + ' parameter already declared')
+        give_error()
       symbol_table[currentScope][p[2].val] = {}
       symbol_table[currentScope][p[2].val]['type'] = p[1].type
 
@@ -1830,6 +1894,7 @@ def p_parameter_declaration(p):
       else:
         if('void' in p[1].type.split()):
           print("COMPILATION ERROR at line " + str(p[1].lno) + ", parameter " + p[2].val + " cannot have type void")
+          give_error()
         symbol_table[currentScope][p[2].val]['size'] = get_data_type_size(p[1].type)
       if(len(p[2].array) > 0):
         symbol_table[currentScope][p[2].val]['array'] = p[2].array
@@ -2103,6 +2168,7 @@ def p_selection_statement_3(p):
     p[0].ast = build_AST(p,[5,7])
     if not (p[3].type == 'int' or p[3].type == 'short' or p[3].type == 'long' or p[3].type == 'char'):
       print("COMPILATION ERROR: Invalid data type used inside switch clause") 
+      give_error()
 
 
 def p_SwMark2(p):
@@ -2288,6 +2354,7 @@ def p_jump_statement(p):
       p[0].ast = build_AST(p)
       if(curFuncReturnType != 'void'):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
+        give_error()
       emit('ret', '', '', '')
     else:
       check_func_return_type(p[2].type,curFuncReturnType,p.lineno(1))
@@ -2364,6 +2431,7 @@ def p_function_definition_1(p):
       emit('ret','','','')
     elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
       print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
+      give_error()
     emit('funcEnd', '', '', p[2].val)
 
 
@@ -2377,6 +2445,7 @@ def p_function_definition_2(p):
       emit('ret','','','')
   elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
       print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
+      give_error()
   emit('funcEnd', '', '', p[2].val)
 
 def p_FuncMark1(p):
@@ -2416,6 +2485,7 @@ def p_closebrace(p):
 def p_error(p):
     if(p):
       print("Syntax error in input at line " + str(p.lineno))
+      give_error()
 
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
@@ -2438,6 +2508,8 @@ def print_emit_array(debug = False):
   for i in emit_array:
     print(i)
 def visualize_symbol_table():
+  global syn_error_count
+  print('parser.py : syn_error_count = ', syn_error_count)
   global scopeName
   with open("symbol_table_output.json", "w") as outfile:
     outfile.write('')
