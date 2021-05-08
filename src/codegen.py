@@ -1,6 +1,6 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
@@ -19,10 +19,8 @@ def dprint(str):
 
 class CodeGen:
     def gen_top_headers(self):
-        print('extern printf')
-        print('extern scanf')
-        print('extern malloc')
-        print('extern free')
+        for func in pre_append_in_symbol_table_list:
+            print("extern " + func)
         print("section .text")
         print("\tglobal main")
 
