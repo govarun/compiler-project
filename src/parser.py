@@ -58,8 +58,7 @@ def pre_append_in_symbol_table():
 
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
-    parentStruct = '', level = 0,ast = None, place = None, trueList = [], falseList = [], continueList = [], breakList = [], nextList = [],
-    quad = None, expr = [], label = [], tind = '', addr = ''):
+    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = ''):
     self.name = name
     self.val = val
     self.type = type
@@ -72,11 +71,6 @@ class Node:
     self.ast = ast
     self.level = level
     self.place = place
-    self.trueList = trueList
-    self.falseList = falseList
-    self.continueList = continueList
-    self.breakList = breakList
-    self.nextList = nextList
     self.quad = quad
     self.expr = expr
     self.label = label
