@@ -653,8 +653,9 @@ def p_multipicative_expression(p):
       p[0].ast = build_AST(p)
       return
     tempNode = Node(name = '',val = p[2],lno = p[1].lno,type = '',children = '')
-
-    check_compatibility_of_op(p[1],p[3])
+    type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
+    if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
+      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
     check_invalid_operation_on_function(p[1])
     check_invalid_operation_on_function(p[3])    

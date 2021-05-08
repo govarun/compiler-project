@@ -33,7 +33,7 @@ def int_or_real(dtype):
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
-    return 'real'
+    return 'int'
 
 def extract_if_tuple(p2):
   if (type(p2) is tuple):
@@ -88,11 +88,6 @@ def ignore_1(s):
   elif(s == ','):
     return True
   return False
-
-def check_compatibility_of_op(p1,p3,type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']):
-        # type_list = ['char' , 'short' , 'int' , 'long' , 'float' , 'double']
-    if(p[1].type.split()[-1] not in type_list or p[3].type.split()[-1] not in type_list):
-      print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
 
 def check_func_call_op(func_argument,call_argument,i,lno):
     if(func_argument == call_argument):
