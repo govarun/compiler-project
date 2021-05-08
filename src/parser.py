@@ -2517,7 +2517,6 @@ def print_emit_array(debug = False):
     print(i)
 def visualize_symbol_table():
   global syn_error_count
-  print('parser.py : syn_error_count = ', lexer.syn_error_count)
   global scopeName
   with open("symbol_table_output.json", "w") as outfile:
     outfile.write('')

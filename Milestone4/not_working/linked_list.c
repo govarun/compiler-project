@@ -1,12 +1,10 @@
-#include<stdio.h>
-#include<stdlib.h>
-
-struct node* head = NULL ;
-
 struct node{
     int data ;
     struct node* next ;
 };
+
+struct node* head = NULL ;
+
 
 void print_list()
 {

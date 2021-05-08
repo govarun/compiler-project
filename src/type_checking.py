@@ -1,3 +1,4 @@
+import lexer
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
     parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = ''):
@@ -23,6 +24,9 @@ class Node:
     else:
       self.children = []
 
+def give_error():
+  global syn_error_count
+  lexer.syn_error_count = lexer.syn_error_count+1 
 
 def int_or_real(dtype):
   arr = dtype.split()
@@ -97,13 +101,16 @@ def check_func_call_op(func_argument,call_argument,i,lno):
         if(call_argument in ['int','char','float']):
             return
         print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)
+        give_error()
     elif(func_argument.endswith('*')):
         if(not call_argument.endswith('*')):
             print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)
+            give_error()
         else:
             print("warning at line " + str(lno), ": Implicit pointer convrsion during function call")
     else:
-        print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)     
+        print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)   
+        give_error()  
 
 def check_func_return_type(expression_type,func_return_type,lno):
   if(expression_type in ['int','char','float'] and func_return_type in ['int','char','float']):
@@ -114,11 +121,14 @@ def check_func_return_type(expression_type,func_return_type,lno):
     return
   if(func_return_type == 'void'):
     print('error at line ' + str(lno) + ": function with return type void cannot return a value")
+    give_error()
   elif(func_return_type.endswith('*')):
     if(not expression_type.endswith('*')):
       print('error at line ' + str(lno) + ': function return type is not ' + expression_type)
+      give_error()
     else:
       print('warning at line ' + str(lno) + ' implicit pointer conversion')
   else:
     print('error at line ' + str(p.lineno(1)) + ': function return type is not ' + expression_type)
+    give_error()
 

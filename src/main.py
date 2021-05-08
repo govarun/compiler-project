@@ -43,7 +43,6 @@ if __name__ == '__main__':
 	parser.runmain(code)
 	helper_functions.runmain()
 	global syn_error_count
-	print('main.py : syn_error_count = ', lexer.syn_error_count)
 	if lexer.syn_error_count == 0:
 		codegen.runmain()
 	else:
