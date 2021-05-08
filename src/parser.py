@@ -1133,7 +1133,12 @@ def p_assignment_expression(p):
       else:
         emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[1].place)
         
-    p[0].place = p[1].place
+    if(len(p[1].addr) == 0):
+      p[0].place = p[1].place
+    else:
+      tmp = get_new_tmp(p[0].type)
+      emit('*', p[1].addr, '', tmp)
+      p[0].place = tmp
 
 
 def p_assignment_operator(p):
