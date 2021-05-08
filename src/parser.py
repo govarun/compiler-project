@@ -2291,10 +2291,6 @@ def p_jump_statement(p):
       emit('ret', '', '', '')
     else:
       check_func_return_type(p[2].type,curFuncReturnType,p.lineno(1))
-      # if(p[2].type in ['int','char','float'] and curFuncReturnType in ['int','char','float']):
-      #   pass
-      elif(p[2].type != '' and curFuncReturnType != p[2].type):
-        print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
       emit('ret', '', '', p[2].place)
