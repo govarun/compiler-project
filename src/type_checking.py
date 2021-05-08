@@ -92,6 +92,7 @@ def ignore_1(s):
 def check_func_call_op(func_argument,call_argument,i,lno):
     if(func_argument == call_argument):
         return
+    # if(func_argument)
     if(func_argument in ['int','float','char']):
         if(call_argument in ['int','char','float']):
             return
@@ -103,3 +104,21 @@ def check_func_call_op(func_argument,call_argument,i,lno):
             print("warning at line " + str(lno), ": Implicit pointer convrsion during function call")
     else:
         print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)     
+
+def check_func_return_type(expression_type,func_return_type,lno):
+  if(expression_type in ['int','char','float'] and func_return_type in ['int','char','float']):
+    return
+  if(expression_type == func_return_type):
+    return
+  if(expression_type == ''):
+    return
+  if(func_return_type == 'void'):
+    print('error at line ' + str(lno) + ": function with return type void cannot return a value")
+  elif(func_return_type.endswith('*')):
+    if(not expression_type.endswith('*')):
+      print('error at line ' + str(lno) + ': function return type is not ' + expression_type)
+    else:
+      print('warning at line ' + str(lno) + ' implicit pointer conversion')
+  else:
+    print('error at line ' + str(p.lineno(1)) + ': function return type is not ' + expression_type)
+

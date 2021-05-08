@@ -405,10 +405,11 @@ def p_postfix_expression_4(p):
   else:
     i = 0
     for arguments in symbol_table[0][p[1].val]['argumentList']:
-      curVal = p[3].children[i].val
-      if(curVal not in symbol_table[currentScope].keys()):
+      curType = p[3].children[i].type
+      curIsArray = p[3].children[i].array
+      # print('here',curType)
+      if(curType == ''):
         continue
-      curType = symbol_table[currentScope][curVal]['type']
       check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
     for param in reversed(p[3].children):
@@ -2289,11 +2290,7 @@ def p_jump_statement(p):
         print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ': function return type is not void')
       emit('ret', '', '', '')
     else:
-      # check_func_return_type(p[2].type,curFuncReturnType)
-      if(p[2].type in ['int','char','float'] and curFuncReturnType in ['int','char','float']):
-        pass
-      elif(p[2].type != '' and curFuncReturnType != p[2].type):
-        print('warning at line ' + str(p.lineno(1)) + ': function return type is not ' + p[2].type)
+      check_func_return_type(p[2].type,curFuncReturnType,p.lineno(1))
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
       emit('ret', '', '', p[2].place)
