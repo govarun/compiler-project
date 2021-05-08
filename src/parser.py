@@ -91,6 +91,21 @@ def get_label():
   label_cnt += 1
   return s
 
+
+# def handle_pointer(arr):
+#   return 'int'
+
+def int_or_real(dtype):
+  arr = dtype.split()
+  if ('*' in arr):
+    return 'int'
+  if 'long' in arr:
+    return 'int' 
+  elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
+    return 'int'
+  else:
+    return 'int'
+
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
