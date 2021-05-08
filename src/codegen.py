@@ -354,6 +354,7 @@ class CodeGen:
 
 
     def function_return(self, quad):
+        save_caller_status()
         if(quad.src1):
             if(is_symbol(quad.src1) and symbols[quad.src1].size > 4):
                 loc2 = get_location_in_memory(quad.src1, sqb = False)
