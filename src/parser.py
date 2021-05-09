@@ -625,7 +625,7 @@ def p_unary_expression_2(p):
       emit('addr',p[2].place,'',tmp)
     p[0].place = tmp
   elif(p[1].val == '*'):
-    if(not p[2].type.endswith('*') and len(p[2].array) == 0):
+    if(not p[2].type.endswith('*') and (p[2].level) == 0):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
       give_error()
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:-2],children = [p[2]])
@@ -1826,7 +1826,10 @@ def p_direct_declarator_1(p):
     p[0].isFunc = 2
     tempList = []
     for child in p[3].children:
-      tempList.append(child.type)
+      tempType = child.type
+      # if(child.level > 0):
+      #   tempType = child.type + " *"
+      tempList.append(tempType)
     symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
     symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
