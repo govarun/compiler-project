@@ -346,7 +346,10 @@ class CodeGen:
             counter += 4
         for var in func_arguments[quad.src1]:
             symbols[var].address_desc_mem.append(counter + 8)
-            counter += symbols[var].size
+            if(symbols[var].isArray):
+                counter += 4
+            else:
+                counter += symbols[var].size
 
 
     # def handle_pointer(self,quad):

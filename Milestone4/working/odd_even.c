@@ -1,4 +1,3 @@
-#include<iostream>
 int calc_odd(int) ;
 int calc_even(int) ;
 

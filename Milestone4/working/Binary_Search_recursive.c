@@ -1,6 +1,7 @@
 void binary_search(int arr[] , int l , int r , int val)
-{
+{   
     int mid ;
+    printf("l = %d, r = %d\n", l, r);
     if(l > r)
     {
         printf("not present\n") ;
