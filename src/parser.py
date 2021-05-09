@@ -163,6 +163,55 @@ def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
 
+def array_init(base_addr, offset, dtype, arr, p, lev, lno):
+  # print(lno)pe + " array")
+  if(len(p.children)  > arr[lev]):
+    print("Compilation error at " + str(lno) + ", incorrect initializer")
+    give_error()
+    return
+  i = 0
+  for child in p.children:
+    if(lev == len(arr) - 1 and len(child.children) > 0 and not dtype.startswith('struct')):
+      print("Compilation error at " + str(lno) + ", incorrect initializer")
+      give_error()
+      return
+    elif(lev < len(arr) - 1 and len(child.children) == 0):
+      print("Compilation error at " + str(lno) + ", incorrect initializer")
+      give_error()
+      return
+    tmp = get_new_tmp(dtype)
+    emit('int_*', offset, arr[lev], tmp)
+    emit('int_+', tmp, i, tmp)
+    if(lev == len(arr) - 1):
+      emit('int_*', tmp, get_data_type_size(dtype), tmp)
+      emit('int_+', tmp, base_addr, tmp)
+      if(dtype.startswith('struct')):
+        found_scope = find_scope(dtype)
+        struct_init(tmp, found_scope, dtype, child, lno)
+      else:
+        emit(int_or_real(dtype) + '_=', child.place, '*', tmp)  
+    else:
+      array_init(base_addr, tmp, dtype, arr, child, lev+1, lno)
+    i += 1
+
+def struct_init(base_addr, scope, struct_name, p, lno):
+  lst = symbol_table[scope][struct_name]['field_list']
+  if(len(lst) != len(p.children)):
+    print("Compilation error at " + str(lno) + ", incorrect initializer")
+    give_error()
+    return
+  i = 0
+  for child in p.children:
+    if(len(lst[i]) == 5):
+      array_init(base_addr, 0, lst[i][0], lst[i][4], child, 0, lno)
+    elif(lst[i][0].startswith('struct')):
+      found_scope = find_scope(lst[i][0])
+      struct_init(base_addr, found_scope, lst[i][0], child, lno)
+    else:
+      emit(int_or_real(lst[i][0]) + '_=', child.val, '*', base_addr)
+    emit('int_+', base_addr, lst[i][2], base_addr)
+    i = i+1
+
 def get_data_type_size(type_1):
   if (type_1 == ''):
     return 0
@@ -453,8 +502,8 @@ def p_postfix_expression_5(p):
 
   if (not p[1].name.startswith('Period')):
     struct_scope = find_scope(p[1].val , p[1].lno)
-    if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
-      print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+    if (struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys()) and len(p[1].array) == 0:
+      print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared " )
       give_error()
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
@@ -1274,6 +1323,7 @@ def p_temp_declaration(p):
   # a = 1
   p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
+  # print(str(p[0].lno) + " ok")
   flag = 1
   if('void' in p[1].type.split()):
     flag = 0
@@ -1316,6 +1366,23 @@ def p_temp_declaration(p):
       if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
         give_error()
+      elif(len(child.children[0].array) > 0):
+        base_addr = ''
+        if(len(child.children[0].addr) == 0):
+          base_addr = get_new_tmp(p[1].type)
+          emit('addr', child.children[0].place, '', base_addr)
+        else:
+          base_addr = child.children[0].addr
+        array_init(base_addr, 0, act_data_type, child.children[0].array, child.children[1], 0, p.lineno(1))
+      elif(p[1].type.startswith('struct')):
+        found_scope = find_scope(p[1].type)
+        base_addr = ''
+        if(len(child.children[0].addr) == 0):
+          base_addr = get_new_tmp(p[1].type)
+          emit('addr', child.children[0].place, '', base_addr)
+        else:
+          base_addr = child.children[0].addr
+        struct_init(base_addr, found_scope, p[1].type, child.children[1], p.lineno(1))
       elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
@@ -1504,12 +1571,12 @@ def p_init_declarator(p):
   else:
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array,isFunc=p[1].isFunc)
     p[0].ast = build_AST(p)
-    if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
-      print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
-      give_error()
-    if(p[1].level != p[3].level):
-      print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
-      give_error()
+    # if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
+    #   print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
+    #   give_error()
+    # if(p[1].level != p[3].level):
+    #   print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
+    #   give_error()
     # print(p[3].name, "fn name:p_init_declarator")
     # emit(["=",[p[3].place, ], [], [p[1].place], find_scope(p[1].val)]) # a = 5 ,  a = t1
 
@@ -1843,7 +1910,7 @@ def p_direct_declarator_1(p):
 
 def p_direct_declarator_2(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
-  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
+  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [], place = p[1].place)
   p[0].ast = build_AST(p)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(int(p[3][0]))
@@ -2048,8 +2115,13 @@ def p_initializer(p):
       p[0] = p[1]
       p[0].ast = build_AST(p)
     else:
-      p[0] = p[2]
+      p[0] = Node(name = 'Initializer')
+      if(p[2].sqb):
+        p[0].children = [p[2]]
+      else:
+        p[0] = p[2]
       p[0].name = 'Initializer'
+      p[0].sqb = True
     if(len(p) == 4):
       p[0].maxDepth = p[2].maxDepth + 1
       p[0].ast = build_AST(p)
@@ -2061,7 +2133,8 @@ def p_initializer_list(p):
   | initializer_list COMMA initializer
   '''
   if(len(p) == 2):
-    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth)
+    # p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth, sqb = p[1].sqb)
+    p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
@@ -2565,7 +2638,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=False)
+  print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
