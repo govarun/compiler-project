@@ -43,7 +43,7 @@ emit_array = [] #address code array, each element is a quad, which has [operator
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'abs']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -1104,14 +1104,14 @@ def p_CondMark1(p):
   l1 = get_label()
   tmp = get_new_tmp('')
   emit('ifgoto', p[-1].place, 'eq 0', l1)
-  p[0] = [l1, tmp]
+  p[0] = [l1, tmp, currentScope]
 
 def p_CondMark2(p):
   '''CondMark2 : '''
   l2 = get_label()
   # p[-4][1].type = int_or_real(p[-2].type)
-  symbol_table[0][p[-4][1]]['type'] = int_or_real(p[-2].type)
-  symbol_table[0][p[-4][1]]['size'] = get_data_type_size(int_or_real(p[-2].type))
+  symbol_table[p[-4][2]][p[-4][1]]['type'] = int_or_real(p[-2].type)
+  symbol_table[p[-4][2]][p[-4][1]]['size'] = get_data_type_size(int_or_real(p[-2].type))
   emit(int_or_real(p[-2].type) + '_=', p[-2].place, '', p[-4][1])
   emit('goto', '', '', l2)
   emit('label', '', '', p[-4][0])
@@ -1119,8 +1119,8 @@ def p_CondMark2(p):
 
 def p_CondMark3(p):
   '''CondMark3 : '''
-  symbol_table[0][p[-6][1]]['type'] = int_or_real(p[-1].type)
-  symbol_table[0][p[-6][1]]['size'] = get_data_type_size(int_or_real(p[-1].type))
+  symbol_table[p[-6][2]][p[-6][1]]['type'] = int_or_real(p[-1].type)
+  symbol_table[p[-6][2]][p[-6][1]]['size'] = get_data_type_size(int_or_real(p[-1].type))
   emit(int_or_real(p[-1].type) + '_=', p[-1].place, '', p[-6][1])
   emit('label', '', '', p[-2][0])
 

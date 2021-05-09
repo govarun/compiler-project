@@ -44,4 +44,37 @@ int calc_even(int n , int val[])
     printf("val of %d = %d\n", n , val[n]) ;
     return val[n];
 }
+/*
+n = 9
+n = 8
+n = 7
+n = 6
+n = 5
+n = 4
+n = 3
+n = 2
+n = 1
+n = 0
+val of 1 = 2
+val of 2 = 3
+val of 3 = 9
+val of 4 = 11
+val of 5 = 21
+val of 6 = 24
+val of 7 = 38
+val of 8 = 42
+val of 9 = 60
 
+i = 0, val = 0
+i = 1, val = 2
+i = 2, val = 3
+i = 3, val = 9
+i = 4, val = 11
+i = 5, val = 21
+i = 6, val = 24
+i = 7, val = 38
+i = 8, val = 42
+i = 9, val = 60
+
+n = 8
+*/
