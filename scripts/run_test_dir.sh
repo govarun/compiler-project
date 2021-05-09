@@ -4,13 +4,14 @@
 #     cd ./"$1"
 # fi
 
-for file in ../"$1"/*; do
+for file in "$1"/*; do
+    cd ./scripts
     cat template.c > new.c
-    cat "$file" >> new.c
+    cat ../"$file" >> new.c
     gcc -w new.c
     rm new.c
     a.out > gccOutput.txt
-    compile_test.sh "$file"
+    compile_test.sh ../"$file"
     echo "------------ Testing: $file ------------"
     DIFF = $(diff gccOutput.txt codeOutput.txt)
     if [ $DIFF != "" ]
