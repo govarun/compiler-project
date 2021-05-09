@@ -183,6 +183,7 @@ def get_data_type_size(type_1):
     if (curscp == 0):
       if(type_1 not in symbol_table[curscp].keys()):
         return -1 # If id is not found in symbol table
+    # print('I am here',type_1,curscp)
     return symbol_table[curscp][type_1]['size']    
   type_1 = type_1.split()[-1]
   if type_1 not in type_size.keys():
@@ -1533,15 +1534,30 @@ def p_type_specifier_2(p):
   p[0] = p[1]
   p[0].ast = build_AST(p)
 
+def p_struct_declaration_with_brace(p):
+  '''struct_declaration_with_brace : struct_or_union_type openbrace'''
+  p[0] = p[1]
+  val_name = p[1].type 
+  p[0].type = val_name
+  p[0].val = p[0].type
+  if(val_name in symbol_table[parent[currentScope]].keys()):
+    print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    give_error()
+  valptr_name = val_name + ' *'
+  symbol_table[parent[currentScope]][val_name] = {}
+  symbol_table[parent[currentScope]][val_name]['type'] = val_name
+  symbol_table[parent[currentScope]][valptr_name] = {}
+  symbol_table[parent[currentScope]][valptr_name]['type'] = valptr_name 
+
 def p_struct_or_union_specifier(p):
-  '''struct_or_union_specifier : struct_or_union_type openbrace struct_declaration_list closebrace
+  '''struct_or_union_specifier : struct_declaration_with_brace struct_declaration_list closebrace
   | struct_or_union openbrace struct_declaration_list closebrace
   | struct_or_union_type
   '''
   # TODO : check the semicolon thing after closebrace in grammar
   # TODO : Manage the size and offset of fields
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
-  if len(p) == 5 and p[1].name == 'StructOrUnionType':
+  if len(p) == 4 and p[1].name == 'StructOrUnionType':
     val_name = p[1].type
     p[0].ast = build_AST(p)
     # if val_name in symbol_table[currentScope].keys():
@@ -1554,10 +1570,10 @@ def p_struct_or_union_specifier(p):
     temp_list = []
     curr_offset = 0
     max_size = 0
-    for child in p[3].children:
+    for child in p[2].children:
       for prev_list in temp_list:
         if prev_list[1] == child.val:
-          print('COMPILATION ERROR : line ' + str(p[3].lno) + ' : ' + child.val + ' already deaclared')
+          print('COMPILATION ERROR : line ' + str(p[2].lno) + ' : ' + child.val + ' already deaclared')
           give_error()
       if get_data_type_size(child.type) == -1:
         print("COMPILATION ERROR at line " + str(child.lno) + " : data type not defined")
@@ -1582,7 +1598,7 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][val_name]['field_list'] = temp_list
     symbol_table[currentScope][val_name]['size'] = curr_offset
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
-    symbol_table[currentScope][valptr_name]['size'] = 8
+    symbol_table[currentScope][valptr_name]['size'] = 4
 
   elif len(p) == 2:
     p[0].type = p[1].type
@@ -1604,14 +1620,14 @@ def p_struct_or_union_type(p):
     val_name = p[1].type + ' ' + p[2]
     p[0].type = val_name
     p[0].val = p[0].type
-    if(val_name in symbol_table[currentScope].keys()):
-      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
-      give_error()
-    valptr_name = val_name + ' *'
-    symbol_table[currentScope][val_name] = {}
-    symbol_table[currentScope][val_name]['type'] = val_name
-    symbol_table[currentScope][valptr_name] = {}
-    symbol_table[currentScope][valptr_name]['type'] = valptr_name 
+    # if(val_name in symbol_table[currentScope].keys()):
+    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
+    #   give_error()
+    # valptr_name = val_name + ' *'
+    # symbol_table[currentScope][val_name] = {}
+    # symbol_table[currentScope][val_name]['type'] = val_name
+    # symbol_table[currentScope][valptr_name] = {}
+    # symbol_table[currentScope][valptr_name]['type'] = valptr_name 
   else:
     p[0] = Node(name = 'StructOrUnionType', val = '', type = p[1], lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
