@@ -30,7 +30,7 @@ int multi_return(int a, int b)
 
 int tern_return(int a , int b) // giving error
 {
-    return (eq_return(a , b) ? sum_return(a , b) : shift_return(a , b)) ;
+    return sum_return((eq_return(a , b) ? sum_return(a , b) : shift_return(a , b)) + (eq_return(a , b) ? sum_return(a , b) : shift_return(a , b)), 1);
 }
 
 int main()
