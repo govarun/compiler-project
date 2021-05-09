@@ -1212,7 +1212,12 @@ def p_assignment_expression(p):
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
         emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[1].place)
+        if(len(p[1].addr) == 0  ):
+          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
+        else:
+          tmp = get_new_tmp(p[0].type)
+          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, tmp)
+          emit(int_or_real(p[1].type) + '_=' , tmp, '*', p[1].addr)
         
     if(len(p[1].addr) == 0):
       p[0].place = p[1].place
