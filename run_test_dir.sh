@@ -12,6 +12,13 @@ for file in "$1"/*; do
     ./a.out > gccOutput.txt
     ./compile_test.sh "$file"
     echo "------------ Testing: $file ------------"
-    diff gccOutput.txt codeOutput.txt 
+    DIFF = $(diff gccOutput.txt codeOutput.txt)
+    if [ $DIFF != "" ]
+    then 
+        echo DIFF
+    else
+        echo "TEST PASSED"
+
+    fi
     rm a.out gccOutput.txt codeOutput.txt
 done
