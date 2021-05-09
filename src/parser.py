@@ -286,7 +286,7 @@ def p_primary_expression_0(p):
     if('isFunc' in symbol_table[temp][p[1]]):
       p[0].isFunc = 1
     p[0].ast = build_AST(p)
-
+    
 
 def p_primary_expression_1(p):
   '''primary_expression : OCTAL_CONST
@@ -625,7 +625,7 @@ def p_unary_expression_2(p):
       emit('addr',p[2].place,'',tmp)
     p[0].place = tmp
   elif(p[1].val == '*'):
-    if(not p[2].type.endswith('*')):
+    if(not p[2].type.endswith('*') and len(p[2].array) == 0):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
       give_error()
     p[0] = Node(name = 'PointerVariable',val = p[2].val,lno = p[2].lno,type = p[2].type[:-2],children = [p[2]])
@@ -808,7 +808,9 @@ def p_additive_expression(p):
     
     # handling emits
     p[0], p[1], p[2], p[3] = handle_binary_emit_sub_add(p[0], p[1], p[2], p[3])
-    
+    if(p[1].level > 0 or p[3].level > 0):
+      p[0].type = p[0].type + ' *'
+      
 ##############
 
 
@@ -1994,6 +1996,7 @@ def p_type_name(p):
       p[0].ast = build_AST(p)
     else:
       p[0] = Node(name = 'TypeName',val = '',type = p[1].type, lno = p[1].lno, children = [])
+      p[0].type = p[1].type + ' ' + p[2].type
       p[0].ast = build_AST(p)
 
 def p_abstract_declarator(p):
@@ -2559,7 +2562,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=True)
+  print_emit_array(debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
