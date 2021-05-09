@@ -58,6 +58,8 @@ def pre_append_in_symbol_table():
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
+symbol_table[0]['NULL'] = {}
+symbol_table[0]['NULL']['type'] = 'void *'
 
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
@@ -1141,7 +1143,7 @@ def p_assignment_expression(p):
     if('const' in p[1].type.split()):
       print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
       give_error()
-    if('struct' in p[1].type.split() and 'struct' not in p[3].type.split()):
+    if('struct' in p[1].type.split() and 'struct' not in p[3].type.split() and '*' not in p[1].type.split()):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
       give_error()
     elif('struct' not in p[1].type.split() and 'struct' in p[3].type.split()):
@@ -1212,7 +1214,12 @@ def p_assignment_expression(p):
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
         emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
       else:
-        emit(int_or_real(p[1].type) + '_' + operator, p[1].place, p[3].place, p[1].place)
+        if(len(p[1].addr) == 0  ):
+          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, '', p[1].place)
+        else:
+          tmp = get_new_tmp(p[0].type)
+          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, tmp)
+          emit(int_or_real(p[1].type) + '_=' , tmp, '*', p[1].addr)
         
     if(len(p[1].addr) == 0):
       p[0].place = p[1].place
@@ -2552,7 +2559,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=False)
+  print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
