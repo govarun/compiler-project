@@ -9,3 +9,7 @@ int main()
     printf("new_value of a = %d\n", a) ;
     return 0 ;
 }
+/*
+post = 5
+new_value of a = 6
+*/
