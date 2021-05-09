@@ -1,4 +1,4 @@
-#include<stdio.h>
+// #include<stdio.h>
 int post(int* a)
 {
     return (*a)++ ;
