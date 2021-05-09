@@ -2,14 +2,15 @@ int main()
 {
     int arr[500] ;
     int i = 0 ;
-    while(i < 500)
+    while(i < 50)
     {
         arr[i] = i+1 ;
         i++ ;
-        if(i == 150)
+        if(i == 15)
         {
-            break ; // continue also not working
+            continue ;
         }
+        printf("i = %d\n", i) ;
     }
     return 0 ;
 }

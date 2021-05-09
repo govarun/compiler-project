@@ -1,4 +1,5 @@
-#include<stdio.h>
+// giving wrong values .. first look at function_pointer_handle .. that is a simpler version
+
 int post(int* a)
 {
     return (*a)++ ;
@@ -55,3 +56,28 @@ int main()
     return 0 ;
 
 } 
+/*
+before : a = 2 , b = 3
+pre : 3
+after : a = 3 , b = 3
+
+before : a = 3 , b = 3
+post : 3
+after : a = 4 , b = 3
+
+before : a = 4 , b = 3
+pre_pre : 20
+after : a = 5 , b = 4
+
+before : a = 5 , b = 4
+pre_post : 24
+after : a = 6 , b = 5
+
+before : a = 6 , b = 5
+post_pre : 36
+after : a = 7 , b = 6
+
+before : a = 7 , b = 6
+post_post : 42
+after : a = 8 , b = 7
+*/
