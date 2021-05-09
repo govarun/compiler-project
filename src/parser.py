@@ -530,9 +530,19 @@ def p_postfix_expression_6(p):
   emit(int_or_real(p[1].type) + '_=', p[1].place, '', tmp)
   # emit(int_or_real(p[1].type) + '_' + p[2][0][:-1], '1' ,p[1].place, p[1].place)
   if (extract_if_tuple(p[2]) == '++'):
-    emit('inc', '', '', p[1].place)
+    if(len(p[1].addr) == 0):
+      emit('inc', '', '', p[1].place)
+    else:
+      tmp2 = get_new_tmp(p[1].type)
+      emit(int_or_real(p[1].type) + "_+", p[1].place, '1', tmp2)
+      emit(int_or_real(p[1].type) + "_=", tmp2, '*', p[1].addr)
   if (extract_if_tuple(p[2]) == '--'):
-    emit('dec', '', '', p[1].place)
+    if(len(p[1].addr) == 0):
+      emit('dec', '', '', p[1].place)
+    else:
+      tmp2 = get_new_tmp(p[1].type)
+      emit(int_or_real(p[1].type) + "_-", p[1].place, '1', tmp2)
+      emit(int_or_real(p[1].type) + "_=", tmp2, '*', p[1].addr)
 
 #################
 
@@ -574,10 +584,27 @@ def p_unary_expression_1(p):
       print("Compilation Error at line", str(p[2].lno), ":Invalid operation on", p[2].val)
       give_error()
     
+    # if (extract_if_tuple(p[1]) == '++'):
+    #   emit('inc', '', '', p[2].place)
+    # if (extract_if_tuple(p[1]) == '--'):
+    #   emit('dec', '', '', p[2].place)
+
     if (extract_if_tuple(p[1]) == '++'):
-      emit('inc', '', '', p[2].place)
+      if(len(p[2].addr) == 0):
+        emit('inc', '', '', p[2].place)
+      else:
+        tmp2 = get_new_tmp(p[2].type)
+        emit(int_or_real(p[2].type) + "_+", p[2].place, '1', tmp2)
+        emit(int_or_real(p[2].type) + "_=", tmp2, '*', p[2].addr)
+        p[0].place = tmp2
     if (extract_if_tuple(p[1]) == '--'):
-      emit('dec', '', '', p[2].place)
+      if(len(p[2].addr) == 0):
+        emit('dec', '', '', p[2].place)
+      else:
+        tmp2 = get_new_tmp(p[2].type)
+        emit(int_or_real(p[2].type) + "_-", p[2].place, '1', tmp2)
+        emit(int_or_real(p[2].type) + "_=", tmp2, '*', p[2].addr)
+        p[0].place = tmp2
 
 
 def p_unary_expression_2(p):

@@ -1,5 +1,4 @@
-// giving wrong values .. first look at function_pointer_handle .. that is a simpler version
-
+// #include<stdio.h>
 int post(int* a)
 {
     return (*a)++ ;
