@@ -2531,10 +2531,10 @@ def visualize_symbol_table():
     outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0 and i in scope_to_function.keys()):
-      print('\nIn Scope ' + str(i))
+      # print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        print(key, symbol_table[i][key])
+        # print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
@@ -2557,5 +2557,5 @@ def visualize_symbol_table():
       with open("symbol_table_output.json", "a") as outfile:
         outfile.write('In \"' + scope_to_function[i] + "\"")
         outfile.write(json_object+"\n")
-      print(local_vars)
+      # print(local_vars)
 

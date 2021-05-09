@@ -318,7 +318,7 @@ class CodeGen:
         offset = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
-                dprint(var)
+                # dprint(var)
                 offset += get_data_type_size(global_symbol_table[var]['type'])
                 symbols[var].address_desc_mem.append(-offset) #why is the first loc variable at ebp -4 and not at ebp`
 
@@ -410,6 +410,8 @@ class CodeGen:
             if(reg != get_best_location(quad.src1)):
                 print("\tmov " + reg + ", " + get_best_location(quad.src1))
         else:
+            if(len(symbols[quad.src1].address_desc_reg)):
+                del_symbol_reg_exclude(quad.src1)
             print("\tlea " + reg + ", " + get_location_in_memory(quad.src1))
         reg_desc[reg].add(quad.dest)
         symbols[quad.dest].address_desc_reg.add(reg)

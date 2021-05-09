@@ -108,7 +108,7 @@ def get_location_in_memory(symbol, sqb = True):
             return str(symbol)
 
     if(len(symbols[symbol].address_desc_mem) == 0):
-        dprint("not found" + symbol)
+        # dprint("not found" + symbol)
         return symbol
     location = symbols[symbol].address_desc_mem[-1]
     if(not sqb):
