@@ -4,5 +4,5 @@ then
     exit
 fi
 printf "\n-----Program Output-----\n"
-./scripts/run.sh out.asm
+./run.sh out.asm
 printf "\n------------------------"
