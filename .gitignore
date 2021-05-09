@@ -1,6 +1,7 @@
 src/__pycache__
 *.pyc
 src/graph1.dot
+graph1.dot
 src/parser.out
 src/parsetab.py
 src/pydot_graph.png
@@ -19,3 +20,7 @@ graph1.dot
 pydot_graph.png
 out.asm
 src/out.asm
+debug.txt
+new.c
+pydot_graph.png
+
