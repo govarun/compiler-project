@@ -522,7 +522,7 @@ class CodeGen:
             self.param(quad)
         elif(quad.op == "call"):
             self.function_call(quad)
-        elif(quad.op == "real_="):
+        elif(quad.op == "float_="):
             self.real_assign(quad)
         elif(quad.op.endswith("_=")):
             self.assign(quad)
