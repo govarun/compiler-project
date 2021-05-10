@@ -24,7 +24,6 @@ graph1.dot
 pydot_graph.png
 out.asm
 **/out.asm
-scripts/*.o
 debug.txt
 new.c
 pydot_graph.png
