@@ -1,6 +1,7 @@
 import pprint
 from parser import *
 instruction_array = []
+global_instruction_array = []
 leaders = [0]
 nextuse = {}
 live = {}
@@ -8,12 +9,13 @@ symbols = {}
 
 
 class symbol_info:
-    def __init__(self, isArray = False, length = 0, isStruct = False, size = 0):
+    def __init__(self, isArray = False, length = 0, isStruct = False, size = 0, pointsTo = ''):
         self.isArray = isArray
         self.isStruct = isStruct
         self.size = size
         self.length = length
         self.address_desc_mem = []
+        self.pointsTo = pointsTo
         self.address_desc_reg = set()
 
 class Instruction:
@@ -46,7 +48,16 @@ class Instruction:
             self.dest = quad[3]
 
         elif(self.op == "inc" or self.op == "dec"):
-            self.src1 = quad[3]
+            if(global_symbol_table[quad[3]]['type'] == 'float'):
+                if(self.op == 'inc'):
+                    self.op = 'float_+'
+                else:
+                    self.op = 'float_-'
+                self.src1 = quad[3]
+                self.src2 = float_reverse_map["1.0"]
+                self.dest = quad[3]
+            else:    
+               self.src1 = quad[3]
 
         elif(self.op.endswith('bitwisenot')):
             self.src1 = quad[1]
@@ -54,6 +65,7 @@ class Instruction:
 
         elif(self.op == "param"):
             self.src1 = quad[3]
+            self.dest = quad[2]
 
         elif(self.op == "ret"):
             if(quad[3] != ""):
@@ -65,8 +77,18 @@ class Instruction:
         elif(self.op == "call"):
             self.src1 = quad[3]
             self.src2 = quad[2]
+        
+        elif(self.op == "int_float_="):
+            self.op = "int2float"
+            self.src1 = quad[1]
+            self.dest = quad[3]
+        
+        elif(self.op == "float_int_="):
+            self.op = "float2int"
+            self.src1 = quad[1]
+            self.dest = quad[3]
 
-        elif(self.op == "int_=" or self.op == "int_int_="):
+        elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):
@@ -79,7 +101,13 @@ class Instruction:
             self.dest = quad[3]
             self.src1 = quad[1]
 
-        elif(self.op.startswith("int_")):
+        elif(self.op == "float_uminus"):
+            self.dest = quad[3]
+            self.src1 = quad[1]
+            self.src2 = float_reverse_map["-1.0"]
+            self.op = "float_*"
+
+        elif(self.op.startswith("int_") or self.op.startswith("float_")):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2]
@@ -98,6 +126,10 @@ class Instruction:
 
 def find_basic_blocks():
     i = 1
+    for quads in global_emit_array:
+        instruction = Instruction(i,quads)
+        global_instruction_array.append(instruction)
+
     for quads in emit_array:
         instruction = Instruction(i,quads)
         instruction_array.append(instruction)

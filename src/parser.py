@@ -22,6 +22,8 @@ curFuncReturnType = ''
 symbol_table = []
 symbol_table.append({})
 global_symbol_table = {}
+float_constant_values = []
+float_reverse_map = {}
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -40,6 +42,7 @@ scope_to_function = {}
 scope_to_function[0] = 'global'
 nextstat = 0 # next instruction pointer
 emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
+global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
@@ -58,8 +61,17 @@ def pre_append_in_symbol_table():
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
+  tmp = get_new_tmp(dtype = 'float', scope = 0)
+  float_constant_values.append(["1.0",tmp])
+  float_reverse_map["1.0"] = tmp
+  tmp2 = get_new_tmp(dtype = 'float', scope = 0)
+  float_constant_values.append(["-1.0",tmp2])
+  float_reverse_map["-1.0"] = tmp2
+    
+
 symbol_table[0]['NULL'] = {}
 symbol_table[0]['NULL']['type'] = 'void *'
+symbol_table[0]['NULL']['value'] = '0'
 
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
@@ -73,7 +85,13 @@ def give_error():
 def emit(op, s1, s2, dest):
   global emit_array
   global nextstat
-  emit_array.append([str(op), str(s1), str(s2), str(dest)])
+  global currentScope
+  if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
+    global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
+  else:
+    # if(op.startswith('func') and dest == 'main'):
+    #   dest = '_main'
+    emit_array.append([str(op), str(s1), str(s2), str(dest)])
   nextstat += 1
 
 def _new_var():
@@ -82,15 +100,18 @@ def _new_var():
   var_cnt += 1
   return s
 
-def insert_in_sym_table(tmp_name, dtype, value=0):
-  symbol_table[currentScope][tmp_name] = {}
-  symbol_table[currentScope][tmp_name]['type'] = dtype
-  symbol_table[currentScope][tmp_name]['size'] = get_data_type_size(dtype)
-  symbol_table[currentScope][tmp_name]['value'] = value
+def insert_in_sym_table(tmp_name, dtype, value=0, scope = currentScope):
+  symbol_table[scope][tmp_name] = {}
+  symbol_table[scope][tmp_name]['type'] = dtype
+  symbol_table[scope][tmp_name]['size'] = get_data_type_size(dtype)
+  symbol_table[scope][tmp_name]['value'] = value
 
-def get_new_tmp(dtype, value=0):
+def get_new_tmp(dtype, value=0, scope = -1):
+  global currentScope
+  if(scope == -1):
+    scope = currentScope
   tmp_name = _new_var()
-  insert_in_sym_table(tmp_name, dtype, value)
+  insert_in_sym_table(tmp_name, dtype, value, scope)
   return tmp_name
 
 def get_label():
@@ -107,12 +128,14 @@ def int_or_real(dtype):
   arr = dtype.split()
   if ('*' in arr):
     return 'int'
+  if('struct' in arr or 'union' in arr):
+    return 'int'
   if 'long' in arr:
     return 'int' 
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
-    return 'int'
+    return 'float'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
@@ -225,6 +248,7 @@ def get_data_type_size(type_1):
   type_size['float'] = 4
   type_size['double'] = 8
   type_size['void'] = 0
+  type_size['real'] = 4
   if(type_1.endswith('*')):
     return 4
   if( type_1.startswith('struct') or type_1.startswith('union')):
@@ -352,24 +376,54 @@ def p_primary_expression_1(p):
     # place copied automatically
   else:
     p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+    if(p[1] not in float_reverse_map.keys()):
+      tmp = get_new_tmp(dtype = 'int', scope = 0)
+      float_constant_values.append([p[1],tmp])
+      p[0].place = tmp
+      float_reverse_map[p[1]] = tmp
+    else:
+      p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
     
 
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char',children = [], place = p[1])
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype='char', scope=0)
+    float_constant_values.append([p[1], tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
   '''primary_expression : INT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype = 'int', scope = 0)
+    float_constant_values.append([p[1],tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [], place = p[1])
+  
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype = 'float', scope = 0)
+    float_constant_values.append([p[1],tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
-
+  # p[0].val = tmp
+  
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char *'))
@@ -483,7 +537,7 @@ def p_postfix_expression_4(p):
         check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
     for param in reversed(p[3].children):
-      emit('param', '', '', param.place)
+      emit('param', '', p[1].val, param.place)
   retVal = ''
   if(p[1].type != 'void'):
     retVal = get_new_tmp(p[1].type)
@@ -2651,8 +2705,11 @@ def runmain(code):
 
 def print_emit_array(debug = False):
   global emit_array
+  global global_emit_array
   if (debug == False):
     return
+  for i in global_emit_array:
+    print(i)
   for i in emit_array:
     print(i)
 def visualize_symbol_table():
