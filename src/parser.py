@@ -206,7 +206,9 @@ def struct_init(base_addr, scope, struct_name, p, lno):
       array_init(base_addr, 0, lst[i][0], lst[i][4], child, 0, lno)
     elif(lst[i][0].startswith('struct')):
       found_scope = find_scope(lst[i][0])
-      struct_init(base_addr, found_scope, lst[i][0], child, lno)
+      tmp = get_new_tmp('int')
+      emit('int_=', base_addr, '', tmp)
+      struct_init(tmp, found_scope, lst[i][0], child, lno)
     else:
       emit(int_or_real(lst[i][0]) + '_=', child.val, '*', base_addr)
     emit('int_+', base_addr, lst[i][2], base_addr)
