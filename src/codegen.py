@@ -27,7 +27,7 @@ class CodeGen:
     def data_section(self):
         print("section\t.data")
         for vars in local_vars['global']:
-            if vars not in strings.keys():
+            if vars not in strings.keys() and global_symbol_table[vars]['type'] != 'float':
                 print("\t" + vars + "\tdd\t0")
         # print("\tgetInt:\tdb\t\"%d\"\t")
         for name in strings.keys():
@@ -359,17 +359,22 @@ class CodeGen:
                 print("\tpush dword [" + loc + "+" + str(i) + "]")
             return
         location = get_best_location(quad.src1)
-        if(location.startswith('xmm')):
+        if(is_symbol(quad.src1) and global_symbol_table[quad.src1]['type'] == 'float' and quad.dest == 'printf'):
+            if(location.startswith('xmm')):
+                save_reg_to_mem(location)
             print("\tsub\tesp, 8")
             reg1 = get_register(quad,compulsory=True)
             if(is_symbol(quad.src1)):
-                print("\tmov " + reg1 + ", " + get_location_in_memory(quad.src1))
+                print("\tlea " + reg1 + ", " + get_location_in_memory(quad.src1))
             else:
                 print("\tmov " + reg1 + ", " + float_reverse_map[quad.src1])
             print("\tfld dword [" + reg1 + "]")
             print("\tfstp qword [esp]")
+            #after pushing float do we need to add 8 or 4
         else:  
-           print("\tpush " + str(location))
+            if(location.startswith('xmm')):
+                del_symbol_reg_exclude(quad.src1)
+            print("\tpush " + get_best_location(quad.src1))
 
     def function_call(self, quad):
         global param_count, param_size
@@ -523,11 +528,11 @@ class CodeGen:
             self.assign(quad)
         elif(quad.op == "ret"):
             self.function_return(quad)
-        elif(quad.op == "real_+"):
+        elif(quad.op == "float_+"):
             self.real_add(quad)
         elif(quad.op.endswith("+")): # matches with everything other than real_+
             self.add(quad)
-        elif(quad.op == "real_-"):
+        elif(quad.op == "float_-"):
             self.real_sub(quad)
         elif(quad.op.endswith("-")):
             self.sub(quad)

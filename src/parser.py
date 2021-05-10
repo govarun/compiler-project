@@ -84,15 +84,18 @@ def _new_var():
   var_cnt += 1
   return s
 
-def insert_in_sym_table(tmp_name, dtype, value=0):
-  symbol_table[currentScope][tmp_name] = {}
-  symbol_table[currentScope][tmp_name]['type'] = dtype
-  symbol_table[currentScope][tmp_name]['size'] = get_data_type_size(dtype)
-  symbol_table[currentScope][tmp_name]['value'] = value
+def insert_in_sym_table(tmp_name, dtype, value=0, scope = currentScope):
+  symbol_table[scope][tmp_name] = {}
+  symbol_table[scope][tmp_name]['type'] = dtype
+  symbol_table[scope][tmp_name]['size'] = get_data_type_size(dtype)
+  symbol_table[scope][tmp_name]['value'] = value
 
-def get_new_tmp(dtype, value=0):
+def get_new_tmp(dtype, value=0, scope = -1):
+  global currentScope
+  if(scope == -1):
+    scope = currentScope
   tmp_name = _new_var()
-  insert_in_sym_table(tmp_name, dtype, value)
+  insert_in_sym_table(tmp_name, dtype, value, scope)
   return tmp_name
 
 def get_label():
@@ -116,7 +119,7 @@ def int_or_real(dtype):
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
-    return 'real'
+    return 'float'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
@@ -322,7 +325,7 @@ def p_primary_expression_3(p):
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [], place = p[1])
-  tmp = get_new_tmp('float')
+  tmp = get_new_tmp(dtype = 'float', scope = 0)
   float_constant_values.append([p[1],tmp])
   p[0].ast = build_AST(p)
   # p[0].val = tmp
@@ -441,7 +444,7 @@ def p_postfix_expression_4(p):
         check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
     for param in reversed(p[3].children):
-      emit('param', '', '', param.place)
+      emit('param', '', p[1].val, param.place)
   retVal = ''
   if(p[1].type != 'void'):
     retVal = get_new_tmp(p[1].type)

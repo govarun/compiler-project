@@ -202,7 +202,6 @@ def get_best_location(symbol, exclude_reg = []):
         - for symbols in register it gives the register name
         - for remaining symbols it gives the memory location
     '''
-    dprint("symbol " + symbol)
     if not is_symbol(symbol):
         return symbol
     if(symbol in strings.keys()):
