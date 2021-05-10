@@ -325,17 +325,38 @@ def p_primary_expression_1(p):
     # place copied automatically
   else:
     p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+    if(p[1] not in float_reverse_map.keys()):
+      tmp = get_new_tmp(dtype = 'int', scope = 0)
+      float_constant_values.append([p[1],tmp])
+      p[0].place = tmp
+      float_reverse_map[p[1]] = tmp
+    else:
+      p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
     
 
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char',children = [], place = p[1])
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype='char', scope=0)
+    float_constant_values.append([p[1], tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
   '''primary_expression : INT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'int',children = [], place = p[1])
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype = 'int', scope = 0)
+    float_constant_values.append([p[1],tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):

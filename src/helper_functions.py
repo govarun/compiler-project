@@ -77,6 +77,16 @@ class Instruction:
         elif(self.op == "call"):
             self.src1 = quad[3]
             self.src2 = quad[2]
+        
+        elif(self.op == "int_float_="):
+            self.op = "int2float"
+            self.src1 = quad[1]
+            self.dest = quad[3]
+        
+        elif(self.op == "float_int_="):
+            self.op = "float2int"
+            self.src1 = quad[1]
+            self.dest = quad[3]
 
         elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_="):
             self.dest = quad[3]

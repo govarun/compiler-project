@@ -54,8 +54,9 @@ class CodeGen:
 
     def data_section(self):
         print("section\t.data")
+        float_tmp_vars = [lis[1] for lis in float_constant_values]
         for vars in local_vars['global']:
-            if vars not in strings.keys() and global_symbol_table[vars]['type'] != 'float':
+            if vars not in strings.keys() and vars not in float_tmp_vars:
                 if('value' in global_symbol_table[vars].keys()):
                     print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
                 else:
@@ -399,6 +400,20 @@ class CodeGen:
             # if (quad.instr_info['nextuse'][quad.src1] == None):
             #     del_symbol_reg_exclude(quad.src1)
 
+    def int2float(self, quad):
+        best_location = get_best_location(quad.src1)
+        reg = get_register(quad, is_float=True)
+        upd_reg_desc(reg,quad.dest)
+        print("\tcvtsi2ss " + reg + ", " + best_location)
+
+
+    def float2int(self, quad):
+        best_location = get_best_location(quad.src1)
+        reg = get_register(quad, is_float=False)
+        upd_reg_desc(reg, quad.dest)
+        print("\tcvtss2si " + reg + ", " + best_location)
+    
+    
     def deref(self, quad):
         #x = *y assignment
         if(len(symbols[quad.src1].pointsTo)> 0):
@@ -600,6 +615,10 @@ class CodeGen:
             self.param(quad)
         elif(quad.op == "call"):
             self.function_call(quad)
+        elif(quad.op == "int2float"):
+            self.int2float(quad)
+        elif(quad.op == "float2int"):
+            self.float2int(quad)
         elif(quad.op == "float_="):
             self.real_assign(quad)
         elif(quad.op.endswith("_=")):
