@@ -42,6 +42,7 @@ scope_to_function = {}
 scope_to_function[0] = 'global'
 nextstat = 0 # next instruction pointer
 emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
+global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
@@ -70,6 +71,7 @@ def pre_append_in_symbol_table():
 
 symbol_table[0]['NULL'] = {}
 symbol_table[0]['NULL']['type'] = 'void *'
+symbol_table[0]['NULL']['value'] = '0'
 
 ts_unit = Node('START',val = '',type ='' ,children = [])
 
@@ -83,7 +85,13 @@ def give_error():
 def emit(op, s1, s2, dest):
   global emit_array
   global nextstat
-  emit_array.append([str(op), str(s1), str(s2), str(dest)])
+  global currentScope
+  if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
+    global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
+  else:
+    # if(op.startswith('func') and dest == 'main'):
+    #   dest = '_main'
+    emit_array.append([str(op), str(s1), str(s2), str(dest)])
   nextstat += 1
 
 def _new_var():
@@ -2601,8 +2609,11 @@ def runmain(code):
 
 def print_emit_array(debug = False):
   global emit_array
+  global global_emit_array
   if (debug == False):
     return
+  for i in global_emit_array:
+    print(i)
   for i in emit_array:
     print(i)
 def visualize_symbol_table():

@@ -23,12 +23,27 @@ class CodeGen:
             print("extern " + func)
         print("section .text")
         print("\tglobal main")
+        print("main:")
+        print("\tpush ebp")
+        print("\tmov ebp, esp")
+
+        for quad in global_instruction_array:
+            self.generate_asm(quad)
+        print("\tcall _main")
+
+        print("\tmov esp, ebp")
+        print("\tpop ebp")
+        print("\tret")
+        
 
     def data_section(self):
         print("section\t.data")
         for vars in local_vars['global']:
             if vars not in strings.keys() and global_symbol_table[vars]['type'] != 'float':
-                print("\t" + vars + "\tdd\t0")
+                if('value' in global_symbol_table[vars].keys()):
+                    print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
+                else:
+                    print("\t" + vars + "\tdd\t0")
         # print("\tgetInt:\tdb\t\"%d\"\t")
         for name in strings.keys():
             temp_string = (strings[name])[1:-1]
@@ -450,7 +465,10 @@ class CodeGen:
         '''
         Allocate stack space for function local variables
         '''
-        print(quad.src1 + ":")
+        if(quad.src1 == 'main'):
+            print("_main:")
+        else:
+            print(quad.src1 + ":")
         offset = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:

@@ -52,6 +52,7 @@ void quicksort(int arr[] , int left , int right)
 
     quicksort(arr , left , pos-1) ;
     quicksort(arr , pos+1 , right) ;
+    // return;
 }
 
 int main()

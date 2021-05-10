@@ -1,6 +1,7 @@
 import pprint
 from parser import *
 instruction_array = []
+global_instruction_array = []
 leaders = [0]
 nextuse = {}
 live = {}
@@ -115,6 +116,10 @@ class Instruction:
 
 def find_basic_blocks():
     i = 1
+    for quads in global_emit_array:
+        instruction = Instruction(i,quads)
+        global_instruction_array.append(instruction)
+
     for quads in emit_array:
         instruction = Instruction(i,quads)
         instruction_array.append(instruction)
