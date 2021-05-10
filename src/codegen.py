@@ -79,6 +79,12 @@ class CodeGen:
     def mul(self, quad):
         self.bin_operations(quad, 'imul')
 
+    def real_mul(self,quad):
+        self.real_bin_operations(quad, 'mulss')
+
+    def real_div(self,quad):
+        self.real_bin_operations(quad, 'divss')
+
     def band(self, quad):
         self.bin_operations(quad, 'and')
 
@@ -212,6 +218,39 @@ class CodeGen:
         print(lbl2 + ":")
         upd_reg_desc(reg1, quad.dest)
         free_all_regs(quad)
+
+    def relational_float(self,quad):
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True,is_float=True)
+        save_reg_to_mem(reg1)
+        op = quad.op.split("_")[-1]
+        if best_location != reg1:
+            print("\tmovss " + reg1 + ", " + best_location)
+        reg2 = get_best_location(quad.src2)
+        print("\t" + "ucomiss" + ' ' + reg1 + ", " + reg2)
+        lbl = get_label()
+        if(op == "<"):
+            print("\tjb " + lbl)
+        elif(op == ">"):
+            print("\tja " + lbl)
+        elif(op == "=="):
+            print("\tje " + lbl)
+        elif(op == "!="):
+            print("\tjne " + lbl)
+        elif(op == "<="):
+            print("\tjbe " + lbl)
+        elif(op == ">="):
+            print("\tjae " + lbl)
+        reg3 = get_register(quad,compulsory=True)
+        print("\tmov " + reg3 + ", 0")
+        lbl2 = get_label()
+        print("\tjmp " + lbl2)
+        print(lbl + ":") 
+        print("\tmov " + reg3 + ", 1")
+        print(lbl2 + ":")
+        upd_reg_desc(reg3, quad.dest)
+        free_all_regs(quad)
+
 
     def real_assign(self,quad):
         if(quad.src2 is not None):
@@ -534,6 +573,10 @@ class CodeGen:
             self.add(quad)
         elif(quad.op == "float_-"):
             self.real_sub(quad)
+        elif(quad.op == "float_*"):
+            self.real_mul(quad)
+        elif(quad.op == "float_/"):
+            self.real_div(quad)
         elif(quad.op.endswith("-")):
             self.sub(quad)
         elif(quad.op.endswith("*")):
@@ -549,11 +592,16 @@ class CodeGen:
         elif(quad.op.endswith("bitwisenot")):
             self.assign(quad)
             self.bitwisenot(quad)
+        elif(quad.op == "float_uminus"):
+            self.assign(quad)
+            self.real_uminus(quad)
         elif(quad.op.endswith("uminus")):
             self.assign(quad)
             self.uminus(quad)
-        elif(quad.op.split("_")[-1] in relational_op_list):
+        elif(quad.op.split("_")[-1] in relational_op_list and quad.op.startswith("int")):
             self.relational_op(quad)
+        elif(quad.op.split("_")[-1] in relational_op_list and quad.op.startswith("float")):
+            self.relational_float(quad)
         elif(quad.op == "ifgoto"):
             self.ifgoto(quad)
         elif(quad.op == "label"):

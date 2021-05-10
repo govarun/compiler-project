@@ -46,7 +46,16 @@ class Instruction:
             self.dest = quad[3]
 
         elif(self.op == "inc" or self.op == "dec"):
-            self.src1 = quad[3]
+            if(global_symbol_table[quad[3]]['type'] == 'float'):
+                if(self.op == 'inc'):
+                    self.op = 'float_+'
+                else:
+                    self.op = 'float_-'
+                self.src1 = quad[3]
+                self.src2 = float_reverse_map["1.0"]
+                self.dest = quad[3]
+            else:    
+               self.src1 = quad[3]
 
         elif(self.op.endswith('bitwisenot')):
             self.src1 = quad[1]
@@ -79,6 +88,12 @@ class Instruction:
         elif(self.op == "int_uminus"):
             self.dest = quad[3]
             self.src1 = quad[1]
+
+        elif(self.op == "float_uminus"):
+            self.dest = quad[3]
+            self.src1 = quad[1]
+            self.src2 = float_reverse_map["-1.0"]
+            self.op = "float_*"
 
         elif(self.op.startswith("int_") or self.op.startswith("float_")):
             self.dest = quad[3]

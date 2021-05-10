@@ -60,6 +60,14 @@ def pre_append_in_symbol_table():
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
+  tmp = get_new_tmp(dtype = 'float', scope = 0)
+  float_constant_values.append(["1.0",tmp])
+  float_reverse_map["1.0"] = tmp
+  tmp2 = get_new_tmp(dtype = 'float', scope = 0)
+  float_constant_values.append(["-1.0",tmp2])
+  float_reverse_map["-1.0"] = tmp2
+    
+
 symbol_table[0]['NULL'] = {}
 symbol_table[0]['NULL']['type'] = 'void *'
 
@@ -325,12 +333,17 @@ def p_primary_expression_3(p):
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [], place = p[1])
-  tmp = get_new_tmp(dtype = 'float', scope = 0)
-  float_constant_values.append([p[1],tmp])
+  
+  if(p[1] not in float_reverse_map.keys()):
+    tmp = get_new_tmp(dtype = 'float', scope = 0)
+    float_constant_values.append([p[1],tmp])
+    p[0].place = tmp
+    float_reverse_map[p[1]] = tmp
+  else:
+    p[0].place = float_reverse_map[p[1]]
   p[0].ast = build_AST(p)
   # p[0].val = tmp
-  p[0].place = tmp
-  float_reverse_map[p[1]] = tmp
+  
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char *'))
