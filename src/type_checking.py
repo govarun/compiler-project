@@ -113,6 +113,7 @@ def check_func_call_op(func_argument,call_argument,i,lno):
         give_error()  
 
 def check_func_return_type(expression_type,func_return_type,lno):
+  print(expression_type,func_return_type,lno)
   if(expression_type in ['int','char','float'] and func_return_type in ['int','char','float']):
     return
   if(expression_type == func_return_type):
@@ -129,6 +130,6 @@ def check_func_return_type(expression_type,func_return_type,lno):
     else:
       print('warning at line ' + str(lno) + ' implicit pointer conversion')
   else:
-    print('error at line ' + str(p.lineno(1)) + ': function return type is not ' + expression_type)
+    print('error at line ' + str(lno) + ': function return type is not ' + expression_type)
     give_error()
 

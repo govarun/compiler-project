@@ -66,7 +66,7 @@ class Instruction:
             self.src1 = quad[3]
             self.src2 = quad[2]
 
-        elif(self.op == "int_=" or self.op == "int_int_="):
+        elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "real_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):
@@ -79,7 +79,7 @@ class Instruction:
             self.dest = quad[3]
             self.src1 = quad[1]
 
-        elif(self.op.startswith("int_")):
+        elif(self.op.startswith("int_") or self.op.startswith("real_")):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2]

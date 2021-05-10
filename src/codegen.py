@@ -1,6 +1,6 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
@@ -33,6 +33,8 @@ class CodeGen:
         for name in strings.keys():
             temp_string = (strings[name])[1:-1]
             print("\t" + name + ":\tdb\t`" + temp_string + "`, 0")
+        for name in float_constant_values:
+            print("\t" + name[1] + "\tdd\t" + name[0])
 
     def bin_operations(self, quad, op):
         #check where moved back into memory
@@ -48,11 +50,31 @@ class CodeGen:
         free_all_regs(quad)
         upd_reg_desc(reg1, quad.dest)
 
+    def real_bin_operations(self,quad,op):
+
+        best_location = get_best_location(quad.src1)
+        reg1 = get_register(quad, compulsory=True,is_float=True)
+        save_reg_to_mem(reg1)
+        if best_location != reg1:
+            # dprint(best_location + "register printed")
+            print("\tmovss " + reg1 + ", " + best_location)
+        reg2 = get_best_location(quad.src2)
+
+        print("\t" + op + ' ' + reg1 + ", " + reg2)
+        free_all_regs(quad)
+        upd_reg_desc(reg1, quad.dest)
+
     def add(self,quad):
         self.bin_operations(quad, 'add')
 
     def sub(self, quad):
         self.bin_operations(quad, 'sub')
+
+    def real_add(self,quad):
+        self.real_bin_operations(quad,'addss')
+    
+    def real_sub(self,quad):
+        self.real_bin_operations(quad,'subss')
 
     def mul(self, quad):
         self.bin_operations(quad, 'imul')
@@ -191,6 +213,62 @@ class CodeGen:
         upd_reg_desc(reg1, quad.dest)
         free_all_regs(quad)
 
+    def real_assign(self,quad):
+        if(quad.src2 is not None):
+            #*x = y
+            best_location = get_best_location(quad.dest)
+            if(best_location not in reg_desc.keys()):
+                reg = get_register(quad, compulsory = True,is_float=True)
+                print("\tmovss " + reg + ", " + best_location)
+                best_location = reg
+                
+            symbols[quad.dest].address_desc_reg.add(best_location)
+            reg_desc[best_location].add(quad.dest)
+
+            if(not is_number(quad.src1)):
+                loc = get_best_location(quad.src1)
+                if(loc not in reg_desc.keys()):
+                    reg = get_register(quad, compulsory = True, exclude_reg = [best_location],is_float = True)
+                    upd_reg_desc(reg, quad.src1)
+                    print("\tmovss " + reg + ", " + loc)
+                    loc = reg
+                
+                symbols[quad.src1].address_desc_reg.add(loc)
+                reg_desc[loc].add(quad.src1)
+
+                print("\tmovss [" + best_location + "], " + loc)
+            else:
+                print("\tmovss dword [" + best_location + "], " + quad.src1)
+
+            
+        elif (is_number(quad.src1)): # case when src1 is an integral numeric
+            best_location = get_best_location(quad.dest)
+            if (check_type_location(best_location) == "register"):
+                upd_reg_desc(best_location, quad.dest)
+            print("\tmovss " + best_location + ", " + quad.src1)
+        else:
+
+            if(symbols[quad.dest].size <= 4):
+                best_location = get_best_location(quad.src1)
+                # dprint(quad.src1 + " " + best_location + " " + quad.dest)
+                if (best_location not in reg_desc.keys()):
+                    reg = get_register(quad, compulsory = True,is_float=True)
+                    upd_reg_desc(reg, quad.src1)
+                    print("\tmovss " + reg + ", " + best_location)
+                    best_location = reg
+
+                symbols[quad.dest].address_desc_reg.add(best_location)
+                reg_desc[best_location].add(quad.dest)
+                del_symbol_reg_exclude(quad.dest, [best_location])
+            else:
+                loc1 = get_location_in_memory(quad.dest, sqb = False)
+                loc2 = get_location_in_memory(quad.src1, sqb = False)
+                reg = get_register(quad, compulsory = True,is_float=True)
+
+                for i in range(0, symbols[quad.dest].size, 4):
+                    print("\tmovss " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
+                    print("\tmovss dword [" + loc1 + " + " + str(i) + "], " + reg )
+
     def assign(self, quad):
         if(quad.src2 is not None):
             #*x = y
@@ -280,8 +358,18 @@ class CodeGen:
             for i in range(symbols[quad.src1].size - 4, -1, -4):
                 print("\tpush dword [" + loc + "+" + str(i) + "]")
             return
-
-        print("\tpush " + str(get_best_location(quad.src1)))
+        location = get_best_location(quad.src1)
+        if(location.startswith('xmm')):
+            print("\tsub\tesp, 8")
+            reg1 = get_register(quad,compulsory=True)
+            if(is_symbol(quad.src1)):
+                print("\tmov " + reg1 + ", " + get_location_in_memory(quad.src1))
+            else:
+                print("\tmov " + reg1 + ", " + float_reverse_map[quad.src1])
+            print("\tfld dword [" + reg1 + "]")
+            print("\tfstp qword [esp]")
+        else:  
+           print("\tpush " + str(location))
 
     def function_call(self, quad):
         global param_count, param_size
@@ -429,12 +517,18 @@ class CodeGen:
             self.param(quad)
         elif(quad.op == "call"):
             self.function_call(quad)
+        elif(quad.op == "real_="):
+            self.real_assign(quad)
         elif(quad.op.endswith("_=")):
             self.assign(quad)
         elif(quad.op == "ret"):
             self.function_return(quad)
-        elif(quad.op.endswith("+")):
+        elif(quad.op == "real_+"):
+            self.real_add(quad)
+        elif(quad.op.endswith("+")): # matches with everything other than real_+
             self.add(quad)
+        elif(quad.op == "real_-"):
+            self.real_sub(quad)
         elif(quad.op.endswith("-")):
             self.sub(quad)
         elif(quad.op.endswith("*")):

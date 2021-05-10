@@ -22,6 +22,8 @@ curFuncReturnType = ''
 symbol_table = []
 symbol_table.append({})
 global_symbol_table = {}
+float_constant_values = []
+float_reverse_map = {}
 currentScope = 0
 nextScope = 1
 parent = {}
@@ -107,12 +109,14 @@ def int_or_real(dtype):
   arr = dtype.split()
   if ('*' in arr):
     return 'int'
+  if('struct' in arr or 'union' in arr):
+    return 'int'
   if 'long' in arr:
     return 'int' 
   elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
     return 'int'
   else:
-    return 'int'
+    return 'real'
 
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
@@ -174,6 +178,7 @@ def get_data_type_size(type_1):
   type_size['float'] = 4
   type_size['double'] = 8
   type_size['void'] = 0
+  type_size['real'] = 4
   if(type_1.endswith('*')):
     return 4
   if( type_1.startswith('struct') or type_1.startswith('union')):
@@ -317,8 +322,12 @@ def p_primary_expression_3(p):
 def p_primary_expression_4(p):
   '''primary_expression : FLOAT_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'float',children = [], place = p[1])
+  tmp = get_new_tmp('float')
+  float_constant_values.append([p[1],tmp])
   p[0].ast = build_AST(p)
-
+  # p[0].val = tmp
+  p[0].place = tmp
+  float_reverse_map[p[1]] = tmp
 def p_primary_expression_5(p):
   '''primary_expression : STRING_LITERAL'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char *'))
@@ -2565,7 +2574,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=False)
+  print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
