@@ -212,7 +212,11 @@ def array_init(base_addr, offset, dtype, arr, p, lev, lno):
         found_scope = find_scope(dtype)
         struct_init(tmp, found_scope, dtype, child, lno)
       else:
-        emit(int_or_real(dtype) + '_=', child.place, '*', tmp)  
+        tmp2 = child.place
+        if(dtype != child.type):
+          tmp2 = get_new_tmp(dtype)
+          change_data_type_emit(child.type, dtype, child.place, tmp2)
+        emit(int_or_real(dtype) + '_=', tmp2, '*', tmp)  
     else:
       array_init(base_addr, tmp, dtype, arr, child, lev+1, lno)
     i += 1
@@ -233,7 +237,11 @@ def struct_init(base_addr, scope, struct_name, p, lno):
       emit('int_=', base_addr, '', tmp)
       struct_init(tmp, found_scope, lst[i][0], child, lno)
     else:
-      emit(int_or_real(lst[i][0]) + '_=', child.place, '*', base_addr)
+      tmp2 = child.place
+      if(lst[i][0] != child.type):
+        tmp2 = get_new_tmp(lst[i][0])
+        change_data_type_emit(child.type, lst[i][0], child.place, tmp2)
+      emit(int_or_real(lst[i][0]) + '_=', tmp2, '*', base_addr)
     emit('int_+', base_addr, lst[i][2], base_addr)
     i = i+1
 
