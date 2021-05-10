@@ -418,7 +418,14 @@ class CodeGen:
         #x = *y assignment
         if(len(symbols[quad.src1].pointsTo)> 0):
             sym = symbols[quad.src1].pointsTo
-            del_symbol_reg_exclude(sym)
+            to_save = []
+            while len(sym) > 0:
+                to_save.append(sym)
+                sym = symbols[sym].pointsTo
+
+            for i in range (len(to_save) -1, -1, -1):
+                del_symbol_reg_exclude(to_save[i])
+
         best_location = get_best_location(quad.src1)
         if (check_type_location(best_location) in ["memory", "data", "number"]):
             reg = get_register(quad, compulsory = True)
