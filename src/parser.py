@@ -210,7 +210,7 @@ def struct_init(base_addr, scope, struct_name, p, lno):
       emit('int_=', base_addr, '', tmp)
       struct_init(tmp, found_scope, lst[i][0], child, lno)
     else:
-      emit(int_or_real(lst[i][0]) + '_=', child.val, '*', base_addr)
+      emit(int_or_real(lst[i][0]) + '_=', child.place, '*', base_addr)
     emit('int_+', base_addr, lst[i][2], base_addr)
     i = i+1
 
