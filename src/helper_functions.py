@@ -8,12 +8,13 @@ symbols = {}
 
 
 class symbol_info:
-    def __init__(self, isArray = False, length = 0, isStruct = False, size = 0):
+    def __init__(self, isArray = False, length = 0, isStruct = False, size = 0, pointsTo = ''):
         self.isArray = isArray
         self.isStruct = isStruct
         self.size = size
         self.length = length
         self.address_desc_mem = []
+        self.pointsTo = pointsTo
         self.address_desc_reg = set()
 
 class Instruction:

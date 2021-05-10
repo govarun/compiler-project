@@ -286,7 +286,7 @@ class CodeGen:
                 upd_reg_desc(best_location, quad.dest)
             print("\tmovss " + best_location + ", " + quad.src1)
         else:
-
+            symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
             if(symbols[quad.dest].size <= 4):
                 best_location = get_best_location(quad.src1)
                 # dprint(quad.src1 + " " + best_location + " " + quad.dest)
@@ -342,7 +342,8 @@ class CodeGen:
                 upd_reg_desc(best_location, quad.dest)
             print("\tmov " + best_location + ", " + quad.src1)
         else:
-
+            #a = b
+            symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
             if(symbols[quad.dest].size <= 4):
                 best_location = get_best_location(quad.src1)
                 # dprint(quad.src1 + " " + best_location + " " + quad.dest)
@@ -369,6 +370,9 @@ class CodeGen:
 
     def deref(self, quad):
         #x = *y assignment
+        if(len(symbols[quad.src1].pointsTo)> 0):
+            sym = symbols[quad.src1].pointsTo
+            del_symbol_reg_exclude(sym)
         best_location = get_best_location(quad.src1)
         if (check_type_location(best_location) in ["memory", "data", "number"]):
             reg = get_register(quad, compulsory = True)
@@ -548,6 +552,7 @@ class CodeGen:
             if(len(symbols[quad.src1].address_desc_reg)):
                 del_symbol_reg_exclude(quad.src1)
             print("\tlea " + reg + ", " + get_location_in_memory(quad.src1))
+        symbols[quad.dest].pointsTo = quad.src1
         reg_desc[reg].add(quad.dest)
         symbols[quad.dest].address_desc_reg.add(reg)
 
