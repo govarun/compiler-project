@@ -27,8 +27,24 @@ class CodeGen:
         print("\tpush ebp")
         print("\tmov ebp, esp")
 
+        for var in local_vars['global']:
+            # symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
+            if(symbols[var].isArray):
+                quad = Instruction(0, ['', '', '', ''])
+                reg = get_register(quad, compulsory = True)
+                print("\tmov " + reg + ", " + str(symbols[var].length))
+                # if(symbols[var].isStruct):
+                print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
+
+                # print("\tshl " + reg + ", 2")
+                print("\tpush " + reg)
+                print("\tcall malloc")
+                print("\tadd esp, 4")
+                print("\tmov [" + str(var) + "] , eax")
+
         for quad in global_instruction_array:
             self.generate_asm(quad)
+        save_caller_status()
         print("\tcall _main")
 
         print("\tmov esp, ebp")
