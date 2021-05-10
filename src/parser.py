@@ -2118,7 +2118,7 @@ def p_initializer(p):
       p[0].ast = build_AST(p)
     else:
       p[0] = Node(name = 'Initializer')
-      if(p[2].sqb):
+      if(p[2].sqb or not p[2].name.startswith('Initial')):
         p[0].children = [p[2]]
       else:
         p[0] = p[2]
