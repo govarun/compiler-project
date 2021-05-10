@@ -9,9 +9,9 @@ for file in "$1"/*; do
     cat "$file" >> new.c
     gcc -w new.c
     rm new.c
+    echo "------------ Testing: $file ------------"
     ./a.out > gccOutput.txt
     ./compile_test.sh "$file"
-    echo "------------ Testing: $file ------------"
     # DIFF = $(diff gccOutput.txt codeOutput.txt)
     # if [ $DIFF != "" ]
     # then 

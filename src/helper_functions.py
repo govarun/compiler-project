@@ -159,6 +159,37 @@ def is_number(number):
     return False
 
 def gen_next_use_and_live():
+
+    sz = len(global_instruction_array)
+    for j in range(0, sz): # doing forwards pass and filling default values
+        cur_instr = global_instruction_array[j]
+        src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
+        for operand in [src1, src2, dest]:
+            if (operand != None and not operand.isnumeric()):
+                live[operand] = False
+                nextuse[operand] = None
+
+    for j in range(sz-1, -1, -1): # backward pass to set next use and live
+        # print(block_end, block_start, j)
+        cur_instr = global_instruction_array[j]
+        src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
+        
+        if (dest != None and not dest.isnumeric() and is_symbol(dest)):
+            cur_instr.instr_info['live'][dest] = live[dest]
+            cur_instr.instr_info['nextuse'][dest] = nextuse[dest]
+            live[dest] = False
+            nextuse[dest] = None
+        if (src2 != None and not src2.isnumeric() and is_symbol(src2)):
+            cur_instr.instr_info['live'][src2] = live[src2]
+            cur_instr.instr_info['nextuse'][src2] = nextuse[src2]
+            live[src2] = True
+            nextuse[src2] = j
+        if (src1 != None and not src1.isnumeric() and is_symbol(src1)):
+            cur_instr.instr_info['live'][src1] = live[src1]
+            cur_instr.instr_info['nextuse'][src1] = nextuse[src1]
+            live[src1] = True
+            nextuse[src1] = j
+
     for i in range(len(leaders) - 1):
         ignore_instr_list = ['param']
         block_start = leaders[i] # just the instruction next to the leader
