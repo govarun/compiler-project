@@ -194,8 +194,8 @@ int main()
     del_val(4) ; // check by changing this to 5 and 4
     print_list() ;
 
-    printf("%d : \n", find(5)) ;
-    printf("%d : \n", find(2)) ;
+    // printf("%d : \n", find(5)) ;
+    // printf("%d : \n", find(2)) ;
     find(3) ;
     return 0 ;
 }

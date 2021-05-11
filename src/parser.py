@@ -214,7 +214,7 @@ def array_init(base_addr, offset, dtype, arr, p, lev, lno):
       emit('int_+', tmp, base_addr, tmp)
       if(dtype.startswith('struct')):
         found_scope = find_scope(dtype)
-        struct_init(tmp, found_scope, dtype, child, lno)
+        struct_init(tmp, '',found_scope, dtype, child, lno)
       else:
         tmp2 = child.place
         if(dtype != child.type):
@@ -225,8 +225,13 @@ def array_init(base_addr, offset, dtype, arr, p, lev, lno):
       array_init(base_addr, tmp, dtype, arr, child, lev+1, lno)
     i += 1
 
-def struct_init(base_addr, scope, struct_name, p, lno):
+def struct_init(base_addr, name, scope, struct_name, p, lno):
   lst = symbol_table[scope][struct_name]['field_list']
+  if(struct_name == p.type):
+    if(len(name) > 0):
+      emit('int_=', p.place, '', name)
+    else:
+      emit('int_=', p.place, '*', base_addr)
   if(len(lst) != len(p.children)):
     print("Compilation error at " + str(lno) + ", incorrect initializer")
     # give_error()
@@ -239,7 +244,7 @@ def struct_init(base_addr, scope, struct_name, p, lno):
       found_scope = find_scope(lst[i][0])
       tmp = get_new_tmp('int')
       emit('int_=', base_addr, '', tmp)
-      struct_init(tmp, found_scope, lst[i][0], child, lno)
+      struct_init(tmp, '', found_scope, lst[i][0], child, lno)
     else:
       tmp2 = child.place
       if(lst[i][0] != child.type):
@@ -1513,7 +1518,7 @@ def p_temp_declaration(p):
           emit('addr', child.children[0].place, '', base_addr)
         else:
           base_addr = child.children[0].addr
-        struct_init(base_addr, found_scope, p[1].type, child.children[1], p.lineno(1))
+        struct_init(base_addr, child.children[0].place, found_scope, p[1].type, child.children[1], p.lineno(1))
       elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
@@ -2637,7 +2642,11 @@ def p_jump_statement(p):
       check_func_return_type(p[2].type,curFuncReturnType,p.lineno(1))
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
-      emit('ret', '', '', p[2].place)
+      tmp = p[2].place
+      if(curFuncReturnType != p[2].type):
+        tmp = get_new_tmp(curFuncReturnType)
+        change_data_type_emit(p[2].type, curFuncReturnType, p[2].place, tmp)
+      emit('ret', '', '', tmp)
 
 def p_jump_statement_1(p):
   '''jump_statement : BREAK SEMICOLON'''
