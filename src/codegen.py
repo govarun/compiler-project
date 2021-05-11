@@ -343,30 +343,47 @@ class CodeGen:
     def assign(self, quad):
         if(quad.src2 is not None):
             #*x = y
-            best_location = get_best_location(quad.dest)
-            if(best_location not in reg_desc.keys()):
-                reg = get_register(quad, compulsory = True)
-                print("\tmov " + reg + ", " + best_location)
-                best_location = reg
-                
-            symbols[quad.dest].address_desc_reg.add(best_location)
-            reg_desc[best_location].add(quad.dest)
+            
+            if(quad.src1 in symbols.keys() and symbols[quad.src1].size > 4):
+                loc1 = get_best_location(quad.dest)
+                loc2 = get_location_in_memory(quad.src1, sqb = False)
 
-            if(not is_number(quad.src1)):
-                loc = get_best_location(quad.src1)
-                if(loc not in reg_desc.keys()):
-                    reg = get_register(quad, compulsory = True, exclude_reg = [best_location])
-                    upd_reg_desc(reg, quad.src1)
-                    print("\tmov " + reg + ", " + loc)
-                    loc = reg
-                
-                symbols[quad.src1].address_desc_reg.add(loc)
-                reg_desc[loc].add(quad.src1)
+                if(loc1 not in reg_desc.keys()):
+                    reg2 = get_register(quad)
+                    print("\tmov " + reg2 + ", "+ loc1)
+                    loc1 = reg2
 
-                print("\tmov [" + best_location + "], " + loc)
+                reg = get_register(quad, exclude_reg = [loc1])
+
+                for i in range(0, symbols[quad.src1].size, 4):
+                    print("\tmov " + reg +  ", dword [" + loc2 + " + " + str(i) + "] " )
+                    print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg)
+
+
             else:
-                print("\tmov dword [" + best_location + "], " + quad.src1)
+                best_location = get_best_location(quad.dest)
+                if(best_location not in reg_desc.keys()):
+                    reg = get_register(quad, compulsory = True)
+                    print("\tmov " + reg + ", " + best_location)
+                    best_location = reg
+                    
+                symbols[quad.dest].address_desc_reg.add(best_location)
+                reg_desc[best_location].add(quad.dest)
 
+                if(not is_number(quad.src1)):
+                    loc = get_best_location(quad.src1)
+                    if(loc not in reg_desc.keys()):
+                        reg = get_register(quad, compulsory = True, exclude_reg = [best_location])
+                        upd_reg_desc(reg, quad.src1)
+                        print("\tmov " + reg + ", " + loc)
+                        loc = reg
+                    
+                    symbols[quad.src1].address_desc_reg.add(loc)
+                    reg_desc[loc].add(quad.src1)
+
+                    print("\tmov [" + best_location + "], " + loc)
+                else:
+                    print("\tmov dword [" + best_location + "], " + quad.src1)
             
         elif (is_number(quad.src1)): # case when src1 is an integral numeric
             best_location = get_best_location(quad.dest)

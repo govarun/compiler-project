@@ -1514,7 +1514,7 @@ def p_temp_declaration(p):
         found_scope = find_scope(p[1].type)
         base_addr = ''
         if(len(child.children[0].addr) == 0):
-          base_addr = get_new_tmp(p[1].type)
+          base_addr = get_new_tmp('int')
           emit('addr', child.children[0].place, '', base_addr)
         else:
           base_addr = child.children[0].addr
