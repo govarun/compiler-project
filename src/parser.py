@@ -588,7 +588,6 @@ def p_postfix_expression_4(p):
       if(p[1].val not in pre_append_in_symbol_table_list):
         check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
-    print("Heloooooo", p[1].val)
     if (p[1].val == 'printf'):
       if (p[3].children[0].type != "char *"):
         print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
@@ -602,7 +601,6 @@ def p_postfix_expression_4(p):
         print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
         give_error()
       for i in range(len(p[3].children)):
-        print("type here: ", p[3].children[i].type)
         if (i == 0):
           continue
         if (p[3].children[i].type not in type_dict[types_children[i - 1]]):
