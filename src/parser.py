@@ -52,6 +52,7 @@ func_arguments = {}
 local_vars['global'] = []
 strings = {}
 functionScope = {}
+relational_op_list = ["<",">","<=",">=","==","!="] 
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
@@ -140,7 +141,10 @@ def int_or_real(dtype):
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
-  return_tmp = get_new_tmp(higher_data_type)
+  if(operator in relational_op_list):
+    return_tmp = get_new_tmp('int')
+  else:
+    return_tmp = get_new_tmp(higher_data_type)
   p0.place = return_tmp
   if (int_or_real(p1.type) != higher_data_type):
     tmp = get_new_tmp(higher_data_type)
@@ -2727,10 +2731,10 @@ def visualize_symbol_table():
     outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0 and i in scope_to_function.keys()):
-      # print('\nIn Scope ' + str(i))
+      print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        # print(key, symbol_table[i][key])
+        print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
