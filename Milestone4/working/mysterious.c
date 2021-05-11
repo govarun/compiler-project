@@ -12,8 +12,8 @@ int main()
     int e = (x+a < y) ;
     int f = (x+a > y) ;
     int g = (y-x < z) ;
-    /*int h = (y-x == z) ;
-    int i = (y-x > z) ;*/
+    int h = (y-x == z) ;
+    int i = (y-x > z) ;
     printf("%d %d %d %d %d %d %d %d %d\n",aa,b,c,d,e,f,g,h,i) ;
     return 0 ;
 }

@@ -1314,7 +1314,10 @@ def p_assignment_expression(p):
         print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
         give_error()
       else:
-        emit('int_=', p[3].place, '', p[1].place)
+        if(len(p[1].addr) == 0  ):
+          emit(int_or_real(p[1].type) + '_=', p[3].place, '', p[1].place)
+        else:
+          emit(int_or_real(p[1].type) + '_=', p[3].place, '*', p[1].addr)
       return
     
     if p[2].val == '=':
@@ -1466,7 +1469,7 @@ def p_temp_declaration(p):
         else:
           base_addr = child.children[0].addr
         array_init(base_addr, 0, act_data_type, child.children[0].array, child.children[1], 0, p.lineno(1))
-      elif(p[1].type.startswith('struct')):
+      elif(p[1].type.startswith('struct') and not act_data_type.endswith('*')):
         found_scope = find_scope(p[1].type)
         base_addr = ''
         if(len(child.children[0].addr) == 0):

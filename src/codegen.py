@@ -513,7 +513,7 @@ class CodeGen:
         offset = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
-                # dprint(var)
+                # dprint(var + " " + str(-offset))
                 offset += get_data_type_size(global_symbol_table[var]['type'])
                 symbols[var].address_desc_mem.append(-offset) #why is the first loc variable at ebp -4 and not at ebp`
 
