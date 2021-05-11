@@ -97,13 +97,14 @@ void del_end()
 {
     struct node* curr = head ;
     struct node* next ;
+    struct node* next_node ;
     if(curr == 0)
     {
         printf("empty_list\n") ;
         return ;
     }
 
-    struct node* next_node = (curr -> next) ;
+    next_node = (curr -> next) ;
     if(next_node == 0)
     {
         head = 0 ;
