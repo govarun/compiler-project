@@ -453,6 +453,18 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct, place = p[1].place)
+  if(p[1].type.endswith('*')):
+    p[0].type = p[1].type[:-2]
+    tmp = p[1].place
+    tmp1 = get_new_tmp('int')
+    tmp2 = get_new_tmp('int')
+    emit('int_*', p[3].place, get_data_type_size(p[1].type), tmp2)
+    emit('int_+', tmp, tmp2, tmp1)
+    tmp3 = get_new_tmp(p[0].type)
+    emit('*', tmp1, '', tmp3)
+    p[0].place = tmp3
+    p[0].addr = tmp1
+    return
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
   p[0].level = p[1].level - 1
