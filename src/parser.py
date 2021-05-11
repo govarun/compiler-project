@@ -5,6 +5,7 @@ import sys
 import pydot
 import copy
 import json
+import re
 
 # Get the token map from the lexer.  This is required.
 import lexer
@@ -121,6 +122,23 @@ def get_label():
   label_cnt += 1
   return s
 
+def parse_format_string(format_str):
+  c_reg_exp='''\
+  %                                  # literal "%"
+  (?:                                # first option
+  (?:[-+0 #]{0,5})                   # optional flags
+  (?:\d+|\*)?                        # width
+  (?:\.(?:\d+|\*))?                  # precision
+  (?:h|l|ll|w|I|I32|I64)?            # size
+  ([cCdiouxXeEfgGaAnpsSZ])             # type
+  ) |                                # OR
+  %%                                # literal "%%"
+  '''
+  types=[]
+  for match in re.finditer(c_reg_exp, format_str, flags = re.X):
+      types.append(match.group(1))
+  types = [type for type in types if type is not None]
+  return types
 
 # def handle_pointer(arr):
 #   return 'int'
@@ -560,6 +578,26 @@ def p_postfix_expression_4(p):
       if(p[1].val not in pre_append_in_symbol_table_list):
         check_func_call_op(arguments,curType,i,p[1].lno)
       i += 1
+    print("Heloooooo", p[1].val)
+    if (p[1].val == 'printf'):
+      if (p[3].children[0].type != "char *"):
+        print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
+        give_error()
+      type_dict = {"x": ["int", "int *",  "char", "char *", "float*"],\
+                "d": ["int"],\
+                "f": ["float"],\
+                "c": ["char"] }
+      types_children = parse_format_string(p[3].children[0].val) # DOUBT
+      if (len(types_children) != len(p[3].children) - 1):
+        print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
+        give_error()
+      for i in range(len(p[3].children)):
+        print("type here: ", p[3].children[i].type)
+        if (i == 0):
+          continue
+        if (p[3].children[i].type not in type_dict[types_children[i - 1]]):
+          print("Compilation Error at line " + str(p[1].lno) + " Incompatible arguments for printf function call")
+          give_error()
     for param in reversed(p[3].children):
       emit('param', '', p[1].val, param.place)
   retVal = ''

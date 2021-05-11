@@ -1,20 +1,26 @@
-# for i in range(10, 9, -1):
-#     print(i)
+import re
 
-#     upd_reg_desc(reg1, quad.src1)
+def parse_format_string(format_str):
+    c_reg_exp='''\
+    %                                  # literal "%"
+    (?:                                # first option
+    (?:[-+0 #]{0,5})                   # optional flags
+    (?:\d+|\*)?                        # width
+    (?:\.(?:\d+|\*))?                  # precision
+    (?:h|l|ll|w|I|I32|I64)?            # size
+    ([cCdiouxXeEfgGaAnpsSZ])             # type
+    ) |                                # OR
+    %%                                # literal "%%"
+    '''
+    types=[]
+    type_dict = {"x": ["int", "int *", "char *", "float*"],\
+                "d": ["int"],\
+                "f": ["float"]}
+    for match in re.finditer(c_reg_exp, format_str, flags = re.X):
+        types.append(match.group(1))
+    types = [type for type in types if type is not None]
+    return types
 
-#     def upd_reg_desc(reg, symbol):
-#     '''
-#         Stores the symbol exclusively in one register, and removes it from other registers
-#     '''
-#     save_reg_to_mem(reg)
-#     if not is_symbol(symbol):
-#         return
-#     for register in symbols[symbol].address_desc_reg:
-#         if register != reg:
-#             reg_desc[register].remove(symbol)
-#     symbols[symbol].address_desc_reg.clear()
-#     symbols[symbol].address_desc_reg.add(reg)
-#     reg_desc[reg].add(symbol)
-s = "-12232344545"
-print(s.is_instance(s, ))
+# format_str = "Hello \%d %f hhe %x jksdj %lld %llx %ld"
+format_str = "Hello %%d %%d %%d %d %x %%d%f"
+print(parse_format_string(format_str))
