@@ -1,7 +1,7 @@
 import lexer
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
-    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = ''):
+    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = '',virtual_func_name = ''):
     self.name = name
     self.val = val
     self.type = type
@@ -19,6 +19,7 @@ class Node:
     self.label = label
     self.tind = tind
     self.addr = addr
+    self.virtual_func_name = virtual_func_name
     if children:
       self.children = children
     else:
@@ -111,6 +112,23 @@ def check_func_call_op(func_argument,call_argument,i,lno):
     else:
         print("error at line " + str(lno), ": Type mismatch in argument " + str(i+1) + " of function call, " + 'actual type : ' + func_argument + ', called with : ' + call_argument)   
         give_error()  
+
+def check_func_call_op_without_error(func_argument,call_argument,i,lno):
+    if(func_argument == call_argument):
+        return 1
+    # if(func_argument)
+    if(func_argument in ['int','float','char']):
+        if(call_argument in ['int','char','float']):
+            return 1
+        return 0
+    elif(func_argument.endswith('*')):
+        if(not call_argument.endswith('*')):
+            return 0
+        else:
+            return 1
+    else:
+        return 0  
+    return 1
 
 def check_func_return_type(expression_type,func_return_type,lno):
   print(expression_type,func_return_type,lno)
