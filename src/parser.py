@@ -1932,7 +1932,7 @@ def p_direct_declarator_1(p):
         tempList = []
         for child in p[3].children:
           tempList.append(child.type)
-        tempList.sort()
+        # tempList.sort()
         for i in range(int(function_overloaded_map[p[1].val]) + 1):
           prev_name = p[1].val + '_' + str(i)
           # print("I am here")
@@ -1940,7 +1940,7 @@ def p_direct_declarator_1(p):
           if(len(prevList) != len(tempList)):
             continue
           else:
-            prevList.sort()
+            # prevList.sort()
             # print(prevList,tempList)
             if(prevList == tempList):
               print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
