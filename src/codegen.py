@@ -259,6 +259,7 @@ class CodeGen:
         if best_location != reg1:
             print("\tmovss " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
+        reg3 = get_register(quad,compulsory=True)
         print("\t" + "ucomiss" + ' ' + reg1 + ", " + reg2)
         lbl = get_label()
         if(op == "<"):
@@ -273,7 +274,6 @@ class CodeGen:
             print("\tjbe " + lbl)
         elif(op == ">="):
             print("\tjae " + lbl)
-        reg3 = get_register(quad,compulsory=True)
         print("\tmov " + reg3 + ", 0")
         lbl2 = get_label()
         print("\tjmp " + lbl2)
@@ -411,7 +411,8 @@ class CodeGen:
         best_location = get_best_location(quad.src1)
         reg = get_register(quad, is_float=False)
         upd_reg_desc(reg, quad.dest)
-        print("\tcvtss2si " + reg + ", " + best_location)
+        print("\tcvttss2si " + reg + ", " + best_location)
+        #cvtt or cvt? -> [X] Doubt
     
     
     def deref(self, quad):
@@ -446,6 +447,8 @@ class CodeGen:
     def param(self, quad):
         global param_count
         global param_size
+        if(param_count == 0):
+            save_caller_status()
         param_count += 1
         param_size += 4
         if(is_symbol(quad.src1) and symbols[quad.src1].size > 4):
