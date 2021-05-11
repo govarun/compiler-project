@@ -592,10 +592,10 @@ def p_postfix_expression_4(p):
       if (p[3].children[0].type != "char *"):
         print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
         give_error()
-      type_dict = {"x": ["int", "int *",  "char", "char *", "float*"],\
-                "d": ["int"],\
+      type_dict = {"x": ["int", "int *",  "char", "char *", "float *"],\
+                "d": ["int", "int *",  "char", "char *", "float *"],\
                 "f": ["float"],\
-                "c": ["char"] }
+                "c": ["int", "char"] }
       types_children = parse_format_string(p[3].children[0].val) # DOUBT
       if (len(types_children) != len(p[3].children) - 1):
         print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
@@ -604,8 +604,9 @@ def p_postfix_expression_4(p):
         if (i == 0):
           continue
         if (p[3].children[i].type not in type_dict[types_children[i - 1]]):
-          print("Compilation Error at line " + str(p[1].lno) + " Incompatible arguments for printf function call")
-          give_error()
+          tmp = get_new_tmp(type_dict[types_children[i - 1]][0])
+          change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
+          p[3].children[i].place = tmp
     for param in reversed(p[3].children):
       emit('param', '', p[1].val, param.place)
   retVal = ''
