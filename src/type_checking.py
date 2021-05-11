@@ -1,7 +1,7 @@
 import lexer
 class Node:
   def __init__(self,name = '',val = '',lno = 0,type = '',children = '',scope = 0, array = [], maxDepth = 0,isFunc = 0,
-    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = '', sqb = False):
+    parentStruct = '', level = 0,ast = None, place = None, quad = None, expr = [], label = [], tind = '', addr = '', sqb = False, is_unary=0):
     self.name = name
     self.val = val
     self.type = type
@@ -20,6 +20,7 @@ class Node:
     self.tind = tind
     self.addr = addr
     self.sqb = sqb
+    self.is_unary = is_unary
     if children:
       self.children = children
     else:
