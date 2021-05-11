@@ -1,7 +1,7 @@
 float eps = 1e-2 ;
 int main()
 {
-    int x = 150*eps ;
+    int x = 200*eps ;
     printf("eps = %f, mult = %f, x = %d\n", eps , 150*eps, x) ;
     return 0 ;
 }
