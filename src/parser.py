@@ -201,13 +201,19 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
   else:
-    if(p1.type.endswith('*') or p3.type.endswith('*')):
+    if(p1.type.endswith('*') or p3.type.endswith('*') or p1.level > 0 or p3.level > 0):
       tmp = get_new_tmp('int')
-      if(p1.type.endswith('*')):
-        emit('int_*',p3.place,get_data_type_size(p1.type[:-2]),tmp)
+      if(p1.type.endswith('*') or p1.level > 0):
+        data_type = p1.type
+        if data_type.endswith('*'):
+          data_type = data_type[:-2]
+        emit('int_*',p3.place,get_data_type_size(data_type),tmp)
         emit(int_or_real(p3.type) + '_' + operator, p1.place, tmp, p0.place)
       else:
-        emit('int_*',p1.place,get_data_type_size(p3.type[:-2]),tmp)
+        data_type = p3.type
+        if data_type.endswith('*'):
+          data_type = data_type[:-2]
+        emit('int_*',p1.place,get_data_type_size(data_type),tmp)
         emit(int_or_real(p1.type) + '_' + operator, tmp, p3.place, p0.place)
     else:
       emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
@@ -526,7 +532,7 @@ def p_postfix_expression_2(p):
           emit('int_=', p[3].place, '', temp_ind)
         else:
           v1 = get_new_tmp('int')
-          emit('int_*', p[1].tind, curr_list[4][d-1], v1)
+          emit('int_*', p[1].tind, curr_list[4][d], v1)
           emit('int_+', v1, p[3].place, temp_ind)
   elif(tempScope != -1):
     d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
@@ -534,7 +540,7 @@ def p_postfix_expression_2(p):
       emit('int_=', p[3].place, '', temp_ind)
     else:
       v1 = get_new_tmp('int')
-      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
+      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d], v1)
       emit('int_+', v1, p[3].place, temp_ind)
     
 
@@ -688,6 +694,7 @@ def p_postfix_expression_4(p):
     #   retVal = get_new_tmp(p[0].type)
     # emit('call', len(p[3].children), retVal, func_to_be_called)
     # p[0].place = retVal
+    len_arg_list = len(symbol_table[0][func_to_be_called]['argumentList'])-1
     p[0].type = symbol_table[0][func_to_be_called]['type']
     for param in reversed(p[3].children):
       if(p[1].val in mathFuncs):
@@ -695,6 +702,12 @@ def p_postfix_expression_4(p):
           tmp = get_new_tmp('float')
           change_data_type_emit(param.type, 'float', param.place, tmp)
           param.place = tmp
+      elif(func_to_be_called not in pre_append_in_symbol_table_list):
+        if(param.type != symbol_table[0][func_to_be_called]['argumentList'][len_arg_list]):
+          tmp = get_new_tmp(symbol_table[0][func_to_be_called]['argumentList'][len_arg_list])
+          change_data_type_emit(param.type, symbol_table[0][func_to_be_called]['argumentList'][len_arg_list], param.place, tmp)
+          param.place = tmp
+        len_arg_list -= 1
       emit('param', '', func_to_be_called, param.place)
     retVal = ''
     if(p[0].type != 'void'):
@@ -2432,7 +2445,7 @@ def p_initializer(p):
       p[0] = p[1]
       p[0].ast = build_AST(p)
     else:
-      p[0] = Node(name = 'Initializer')
+      p[0] = Node(name = 'Initializer',val = '',type = '', lno = p[2].lno, children = [])
       if(p[2].sqb or not p[2].name.startswith('Initial')):
         p[0].children = [p[2]]
       else:
