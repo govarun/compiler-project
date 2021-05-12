@@ -381,8 +381,9 @@ class CodeGen:
                         print("\tmov " + reg + ", " + loc)
                         loc = reg
                     
-                    symbols[quad.src1].address_desc_reg.add(loc)
-                    reg_desc[loc].add(quad.src1)
+                    if(quad.src1 not in strings):
+                        symbols[quad.src1].address_desc_reg.add(loc)
+                        reg_desc[loc].add(quad.src1)
 
                     print("\tmov [" + best_location + "], " + loc)
                 else:
@@ -445,8 +446,9 @@ class CodeGen:
                     print("\tmov " + byte_trans[reg] + ", " + loc)
                     loc = reg
                 
-                symbols[quad.src1].address_desc_reg.add(loc)
-                reg_desc[loc].add(quad.src1)
+                if(quad.src1 not in strings):
+                    symbols[quad.src1].address_desc_reg.add(loc)
+                    reg_desc[loc].add(quad.src1)
 
                 print("\tmov byte [" + best_location + "], " + byte_trans[loc])
             else:

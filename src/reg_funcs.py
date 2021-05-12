@@ -259,6 +259,8 @@ def upd_reg_desc(reg, symbol):
     '''
         Stores the symbol exclusively in one register, and removes it from other registers
     '''
+    if(symbol in strings):
+        return
     save_reg_to_mem(reg)
     if not is_symbol(symbol):
         return
