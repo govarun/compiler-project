@@ -688,18 +688,40 @@ class CodeGen:
         print("\tret")
 
     def ifgoto(self,quad):
-        best_location = get_best_location(quad.src1)
-        reg1 = get_register(quad, compulsory=True)
-        save_reg_to_mem(reg1)
-        if best_location != reg1:
-            print("\tmov " + reg1 + ", " + best_location)
-        print("\tcmp " + reg1 + ", 0")
-        save_caller_status()
-        if(quad.src2.startswith("n")):
-            print("\tjne " + quad.dest)
+        if global_symbol_table[quad.src1]['type'] == 'int':
+            best_location = get_best_location(quad.src1)
+            reg1 = get_register(quad, compulsory=True)
+            save_reg_to_mem(reg1)
+            if best_location != reg1:
+                print("\tmov " + reg1 + ", " + best_location)
+            print("\tcmp " + reg1 + ", 0")
+            save_caller_status()
+            if(quad.src2.startswith("n")):
+                print("\tjne " + quad.dest)
+            else:
+                print("\tje " + quad.dest)
+        elif global_symbol_table[quad.src1]['type'] == 'char':
+            best_location = get_best_location(quad.src1, byte=True)
+            reg1 = byte_trans[get_register(quad, compulsory=True)]
+            if best_location != reg1:
+                print("\tmov " + reg1 + ", " + best_location)
+            print("\tcmp " + reg1 + ", 0")
+            save_caller_status()
+            if(quad.src2.startswith("n")):
+                print("\tjne " + quad.dest)
+            else:
+                print("\tje " + quad.dest)
         else:
-            print("\tje " + quad.dest)
-        
+            best_location = get_best_location(quad.src1)
+            reg1 = get_register(quad, compulsory=True, is_float=True)
+            if best_location != reg1:
+                print("\tmovss " + reg1 + ", " + best_location)
+            print("\tucomiss " + reg1 + ", " + get_location_in_memory(float_reverse_map['0.0']))
+            save_caller_status()
+            if(quad.src2.startswith("n")):
+                print("\tjne " + quad.dest)
+            else:
+                print("\tje " + quad.dest)
         # reg2 = get_best_location(quad.src2)
         # print("\t" + op + ' ' + reg1 + ", " + reg2)
         # upd_reg_desc(reg1, quad.dest)
@@ -761,8 +783,6 @@ class CodeGen:
             self.function_return(quad)
         elif(quad.op == "float_+"):
             self.real_add(quad)
-        elif(quad.op == "char_+"):
-            self.char_add(quad)
         elif(quad.op.endswith("+")): # matches with everything other than real_+
             self.add(quad)
         elif(quad.op == "float_-"):
@@ -771,12 +791,6 @@ class CodeGen:
             self.real_mul(quad)
         elif(quad.op == "float_/"):
             self.real_div(quad)
-        elif(quad.op == "char_-"):
-            self.char_sub(quad)
-        elif(quad.op == "char_*"):
-            self.char_mul(quad)
-        elif(quad.op == "char_/"):
-            self.char_div(quad)
         elif(quad.op.endswith("-")):
             self.sub(quad)
         elif(quad.op.endswith("*")):

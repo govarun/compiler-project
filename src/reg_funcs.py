@@ -218,7 +218,7 @@ def get_best_location(symbol, exclude_reg = [], byte = False):
             if (reg not in exclude_reg):
                 # dprint("returring" + reg)
                 if byte:
-                    return byte_trans(reg)
+                    return byte_trans[reg]
                 else:
                     return reg
     if(byte):

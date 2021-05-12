@@ -75,6 +75,9 @@ def pre_append_in_symbol_table():
   tmp2 = get_new_tmp(dtype = 'float', scope = 0)
   float_constant_values.append(["-1.0",tmp2])
   float_reverse_map["-1.0"] = tmp2
+  tmp3 = get_new_tmp(dtype = 'float', scope = 0)
+  float_constant_values.append(["0.0",tmp3])
+  float_reverse_map["0.0"] = tmp3
     
 
 symbol_table[0]['NULL'] = {}
@@ -186,7 +189,16 @@ def handle_binary_emit(p0, p1, p2, p3):
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
   else:
-    emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
+    if p1.type == 'char':
+      tmp1 = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p1.place, tmp1)  
+      tmp2 = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p3.place, tmp2) 
+      tmp3 = get_new_tmp('int')
+      emit( 'int_' + operator, tmp1, tmp2, tmp3)
+      change_data_type_emit('int','char', tmp3, p0.place)
+    else: 
+      emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
   return p0, p1, p2, p3
 
 def handle_binary_emit_sub_add(p0, p1, p2, p3):
@@ -223,7 +235,15 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
           data_type = data_type[:-2]
         emit('int_*',p1.place,get_data_type_size(data_type),tmp)
         emit('int_' + operator, tmp, p3.place, p0.place)
-    else:
+    elif p1.type == 'char':
+      tmp1 = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p1.place, tmp1)  
+      tmp2 = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p3.place, tmp2) 
+      tmp3 = get_new_tmp('int')
+      emit( 'int_' + operator, tmp1, tmp2, tmp3)
+      change_data_type_emit('int','char',tmp3,p0.place)
+    else: 
       emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
   return p0, p1, p2, p3
 
