@@ -47,7 +47,8 @@ global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'abs']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'abs', 'sin', 'cos']
+mathFuncs = ['pow', 'abs', 'sin', 'cos']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
@@ -60,6 +61,8 @@ def pre_append_in_symbol_table():
     symbol_table[0][symbol]['isFunc'] = 1
     symbol_table[0][symbol]['argumentList'] = ['int']
     symbol_table[0][symbol]['type'] = 'int'
+    if(symbol in mathFuncs):
+      symbol_table[0][symbol]['type'] = 'float'
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
@@ -609,6 +612,11 @@ def p_postfix_expression_4(p):
           change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
           p[3].children[i].place = tmp
     for param in reversed(p[3].children):
+      if(p[1].val in mathFuncs):
+        if(param.type != 'float'):
+          tmp = get_new_tmp('float')
+          change_data_type_emit(param.type, 'float', param.place, tmp)
+          param.place = tmp
       emit('param', '', p[1].val, param.place)
   retVal = ''
   if(p[1].type != 'void'):

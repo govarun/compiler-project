@@ -1,6 +1,6 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map, mathFuncs
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
@@ -476,7 +476,7 @@ class CodeGen:
                 print("\tpush dword [" + loc + "+" + str(i) + "]")
             return
         location = get_best_location(quad.src1)
-        if(is_symbol(quad.src1) and global_symbol_table[quad.src1]['type'] == 'float' and quad.dest == 'printf'):
+        if((is_symbol(quad.src1) and global_symbol_table[quad.src1]['type'] == 'float' and quad.dest == 'printf') or quad.dest in mathFuncs):
             if(location.startswith('xmm')):
                 save_reg_to_mem(location)
             print("\tsub\tesp, 8")
@@ -507,7 +507,10 @@ class CodeGen:
             param_count += 1
         print("\tcall " + quad.src1)
 
-        if(len(quad.src2) and symbols[quad.src2].size <= 4):
+        if(quad.src1 in mathFuncs):
+            del_symbol_reg_exclude(quad.src2)
+            print("\tfstp dword " + get_location_in_memory(quad.src2))
+        elif(len(quad.src2) and symbols[quad.src2].size <= 4):
             print("\tmov " + get_best_location(quad.src2) + ", eax")
         print("\tadd esp, " + str(param_size))
         param_count = 0
