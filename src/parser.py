@@ -5,6 +5,7 @@ import sys
 import pydot
 import copy
 import json
+import re
 
 # Get the token map from the lexer.  This is required.
 import lexer
@@ -48,18 +49,23 @@ global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'abs']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'fabs', 'sin', 'cos', 'sqrt']
+mathFuncs = ['pow', 'fabs', 'sin', 'cos', 'sqrt']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
 strings = {}
 functionScope = {}
+relational_op_list = ["<",">","<=",">=","==","!="] 
+jump_mark = 0
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
     symbol_table[0][symbol]['isFunc'] = 1
     symbol_table[0][symbol]['argumentList'] = ['int']
     symbol_table[0][symbol]['type'] = 'int'
+    if(symbol in mathFuncs):
+      symbol_table[0][symbol]['type'] = 'float'
     func_arguments[symbol] = ['char *','int']
     local_vars[symbol] = []
 
@@ -88,6 +94,11 @@ def emit(op, s1, s2, dest):
   global emit_array
   global nextstat
   global currentScope
+  global jump_mark
+  if(jump_mark and not op.startswith('label') and not op.startswith('func')):
+    return
+  else:
+    jump_mark = 0
   if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
     global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
   else:
@@ -122,6 +133,23 @@ def get_label():
   label_cnt += 1
   return s
 
+def parse_format_string(format_str):
+  c_reg_exp='''\
+  %                                  # literal "%"
+  (?:                                # first option
+  (?:[-+0 #]{0,5})                   # optional flags
+  (?:\d+|\*)?                        # width
+  (?:\.(?:\d+|\*))?                  # precision
+  (?:h|l|ll|w|I|I32|I64)?            # size
+  ([cCdiouxXeEfgGaAnpsSZ])             # type
+  ) |                                # OR
+  %%                                # literal "%%"
+  '''
+  types=[]
+  for match in re.finditer(c_reg_exp, format_str, flags = re.X):
+      types.append(match.group(1))
+  types = [type for type in types if type is not None]
+  return types
 
 # def handle_pointer(arr):
 #   return 'int'
@@ -142,7 +170,10 @@ def int_or_real(dtype):
 def handle_binary_emit(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
-  return_tmp = get_new_tmp(higher_data_type)
+  if(operator in relational_op_list):
+    return_tmp = get_new_tmp('int')
+  else:
+    return_tmp = get_new_tmp(higher_data_type)
   p0.place = return_tmp
   if (int_or_real(p1.type) != higher_data_type):
     tmp = get_new_tmp(higher_data_type)
@@ -170,13 +201,19 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
   else:
-    if(p1.type.endswith('*') or p3.type.endswith('*')):
+    if(p1.type.endswith('*') or p3.type.endswith('*') or p1.level > 0 or p3.level > 0):
       tmp = get_new_tmp('int')
-      if(p1.type.endswith('*')):
-        emit('int_*',p3.place,get_data_type_size(p3.type),tmp)
+      if(p1.type.endswith('*') or p1.level > 0):
+        data_type = p1.type
+        if data_type.endswith('*'):
+          data_type = data_type[:-2]
+        emit('int_*',p3.place,get_data_type_size(data_type),tmp)
         emit(int_or_real(p3.type) + '_' + operator, p1.place, tmp, p0.place)
       else:
-        emit('int_*',p1.place,get_data_type_size(p1.type),tmp)
+        data_type = p3.type
+        if data_type.endswith('*'):
+          data_type = data_type[:-2]
+        emit('int_*',p1.place,get_data_type_size(data_type),tmp)
         emit(int_or_real(p1.type) + '_' + operator, tmp, p3.place, p0.place)
     else:
       emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
@@ -187,6 +224,71 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
 def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
   emit(int_or_real(source_dtype) + '_' + int_or_real(dest_dtype) + '_' + '=', source_place, '', dest_place)
   #Note: here dest would be the LHS of the expression, but to maintain sanity it is inserted in right
+
+def array_init(base_addr, offset, dtype, arr, p, lev, lno):
+  # print(lno)pe + " array")
+  if(len(p.children)  > arr[lev]):
+    print("Compilation error at " + str(p.lno) + ", incorrect initializer")
+    give_error()
+    return
+  i = 0
+  for child in p.children:
+    if(lev == len(arr) - 1 and len(child.children) > 0 and not (dtype.startswith('struct') or dtype.startswith('union'))):
+      print("Compilation error at " + str(p.lno) + ", incorrect initializer")
+      give_error()
+      return
+    elif(lev < len(arr) - 1 and len(child.children) == 0):
+      print("Compilation error at " + str(p.lno) + ", incorrect initializer")
+      give_error()
+      return
+    tmp = get_new_tmp(dtype)
+    emit('int_*', offset, arr[lev], tmp)
+    emit('int_+', tmp, i, tmp)
+    if(lev == len(arr) - 1):
+      emit('int_*', tmp, get_data_type_size(dtype), tmp)
+      emit('int_+', tmp, base_addr, tmp)
+      if((dtype.startswith('struct') or dtype.startswith('union'))):
+        found_scope = find_scope(dtype)
+        struct_init(tmp, '',found_scope, dtype, child, lno)
+      else:
+        tmp2 = child.place
+        if(dtype != child.type):
+          tmp2 = get_new_tmp(dtype)
+          change_data_type_emit(child.type, dtype, child.place, tmp2)
+        emit(int_or_real(dtype) + '_=', tmp2, '*', tmp)  
+    else:
+      array_init(base_addr, tmp, dtype, arr, child, lev+1, lno)
+    i += 1
+
+def struct_init(base_addr, name, scope, struct_name, p, lno):
+  lst = symbol_table[scope][struct_name]['field_list']
+  if(struct_name == p.type):
+    if(len(name) > 0):
+      emit('int_=', p.place, '', name)
+    else:
+      emit('int_=', p.place, '*', base_addr)
+    return
+  if(len(lst) != len(p.children)):
+    print("Compilation error at " + str(p.lno) + ", incorrect initializer")
+    give_error()
+    return
+  i = 0
+  for child in p.children:
+    if(len(lst[i]) == 5):
+      array_init(base_addr, 0, lst[i][0], lst[i][4], child, 0, lno)
+    elif(lst[i][0].startswith('struct') or lst[i][0].startswith('union')):
+      found_scope = find_scope(lst[i][0])
+      tmp = get_new_tmp('int')
+      emit('int_=', base_addr, '', tmp)
+      struct_init(tmp, '', found_scope, lst[i][0], child, lno)
+    else:
+      tmp2 = child.place
+      if(lst[i][0] != child.type):
+        tmp2 = get_new_tmp(lst[i][0])
+        change_data_type_emit(child.type, lst[i][0], child.place, tmp2)
+      emit(int_or_real(lst[i][0]) + '_=', tmp2, '*', base_addr)
+    emit('int_+', base_addr, lst[i][2], base_addr)
+    i = i+1
 
 def get_data_type_size(type_1):
   if (type_1 == '' or type_1 == 'virtual_func'):
@@ -335,6 +437,7 @@ def p_primary_expression_1(p):
       float_reverse_map[p[1]] = tmp
     else:
       p[0].place = float_reverse_map[p[1]]
+    p[0].is_unary = 1
   p[0].ast = build_AST(p)
     
 
@@ -348,6 +451,7 @@ def p_primary_expression_2(p):
     float_reverse_map[p[1]] = tmp
   else:
     p[0].place = float_reverse_map[p[1]]
+  p[0].is_unary = 1
   p[0].ast = build_AST(p)
 
 def p_primary_expression_3(p):
@@ -360,6 +464,7 @@ def p_primary_expression_3(p):
     float_reverse_map[p[1]] = tmp
   else:
     p[0].place = float_reverse_map[p[1]]
+  p[0].is_unary = 1
   p[0].ast = build_AST(p)
 
 def p_primary_expression_4(p):
@@ -373,6 +478,7 @@ def p_primary_expression_4(p):
     float_reverse_map[p[1]] = tmp
   else:
     p[0].place = float_reverse_map[p[1]]
+  p[0].is_unary = 1
   p[0].ast = build_AST(p)
   # p[0].val = tmp
   
@@ -381,7 +487,7 @@ def p_primary_expression_5(p):
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char *',children = [], place = get_new_tmp('char *'))
   strings[p[0].place] = p[1]
   p[0].ast = build_AST(p)
-
+  p[0].is_unary=1
 ########################
 
 def p_postfix_expression_1(p):
@@ -393,6 +499,18 @@ def p_postfix_expression_2(p):
   '''postfix_expression : postfix_expression LSQUAREBRACKET expression RSQUAREBRACKET'''
   # check if value should be p[1].val
   p[0] = Node(name = 'ArrayExpression',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1],p[3]],isFunc=p[1].isFunc, parentStruct = p[1].parentStruct, place = p[1].place)
+  if(p[1].type.endswith('*') and p[1].level == 0):
+    p[0].type = p[1].type[:-2]
+    tmp = p[1].place
+    tmp1 = get_new_tmp('int')
+    tmp2 = get_new_tmp('int')
+    emit('int_*', p[3].place, get_data_type_size(p[1].type), tmp2)
+    emit('int_+', tmp, tmp2, tmp1)
+    tmp3 = get_new_tmp(p[0].type)
+    emit('*', tmp1, '', tmp3)
+    p[0].place = tmp3
+    p[0].addr = tmp1
+    return
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(p[3].val)
   p[0].level = p[1].level - 1
@@ -414,7 +532,7 @@ def p_postfix_expression_2(p):
           emit('int_=', p[3].place, '', temp_ind)
         else:
           v1 = get_new_tmp('int')
-          emit('int_*', p[1].tind, curr_list[4][d-1], v1)
+          emit('int_*', p[1].tind, curr_list[4][d], v1)
           emit('int_+', v1, p[3].place, temp_ind)
   elif(tempScope != -1):
     d = len(symbol_table[tempScope][p[0].val]['array']) - 1 - p[0].level
@@ -422,7 +540,7 @@ def p_postfix_expression_2(p):
       emit('int_=', p[3].place, '', temp_ind)
     else:
       v1 = get_new_tmp('int')
-      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d-1], v1)
+      emit('int_*', p[1].tind, symbol_table[tempScope][p[0].val]['array'][d], v1)
       emit('int_+', v1, p[3].place, temp_ind)
     
 
@@ -479,20 +597,39 @@ def p_postfix_expression_3(p):
     retVal = get_new_tmp(p[0].type)
   emit('call', 0, retVal, func_to_be_called)
   p[0].place = retVal
+  p[0].is_unary = 1
 
 
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0, place = p[1].place)
-  # print(p[1].val)
   p[0].ast = build_AST(p)
   func_to_be_called = ''
   if(p[1].val in pre_append_in_symbol_table_list):
     func_to_be_called = p[1].val
-  # print(symbol_table[-1])
-  # print(function_overloaded_map)
+  if (p[1].val == 'printf'):
+    if (p[3].children[0].type != "char *"):
+      print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
+      give_error()
+    type_dict = {"x": ["int", "int *",  "char", "char *", "float *"],\
+              "d": ["int", "int *",  "char", "char *", "float *"],\
+              "f": ["float"],\
+              "c": ["int", "char"] }
+    types_children = parse_format_string(p[3].children[0].val) # DOUBT
+    if (len(types_children) != len(p[3].children) - 1):
+      print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
+      give_error()
+    for i in range(len(p[3].children)):
+      if (i == 0):
+        continue
+      if(types_children[i-1] not in type_dict.keys()):
+        continue
+      if(p[3].children[i].type not in type_dict[types_children[i - 1]]):
+        tmp = get_new_tmp(type_dict[types_children[i - 1]][0])
+        change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
+        p[3].children[i].place = tmp
+
   if(p[1].val not in symbol_table[0].keys()):
-    # print(symbol_table[-1][p[1].val])
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error()
   elif(p[1].val not in function_overloaded_map.keys() and func_to_be_called == ''):
@@ -500,14 +637,18 @@ def p_postfix_expression_4(p):
     give_error()
   elif(p[1].val not in pre_append_in_symbol_table_list):
     # print(p[1].val)
+    actual_len = len(p[3].children)
     for i in range(function_overloaded_map[p[1].val] + 1):
-      # print("no 1")
+
       cur_func_name = p[1].val + '_' + str(i)
       j = 0
       flag = 0
+
+      if(len(symbol_table[0][cur_func_name]['argumentList']) != actual_len):
+        continue
+    
       for arguments in symbol_table[0][cur_func_name]['argumentList']:
         curType = p[3].children[j].type
-        curIsArray = p[3].children[j].array
         if(curType == ''):
           j += 1
           continue
@@ -520,13 +661,14 @@ def p_postfix_expression_4(p):
         break
 
     if(func_to_be_called == ''):  
-      for i in range(function_overloaded_map[p[1].val]):
+      for i in range(function_overloaded_map[p[1].val] + 1):
         cur_func_name = p[1].val + '_' + str(i)
         j = 0
         flag = 0
+        if(actual_len != len(symbol_table[0][cur_func_name]['argumentList'])):
+          continue
         for arguments in symbol_table[0][cur_func_name]['argumentList']:
           curType = p[3].children[j].type
-          curIsArray = p[3].children[j].array
           if(curType == ''):
             j += 1
             continue
@@ -539,37 +681,40 @@ def p_postfix_expression_4(p):
           func_to_be_called = cur_func_name
           break
 
-
-  # if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
-  #   print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
-  #   give_error()
-  # elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children) and p[1].val not in pre_append_in_symbol_table_list):
-  #   print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
-  #   give_error()
   if(func_to_be_called == ''):
     print('COMPILATION ERROR at line : ' + str(p[1].lno) + ': incorrect arguments for function call')
     give_error()
   else:
-    # i = 0
-    # for arguments in symbol_table[0][p[1].val]['argumentList']:
-    #   curType = p[3].children[i].type
-    #   curIsArray = p[3].children[i].array
-    #   # print('here',curType)
-    #   if(curType == ''):
-    #     i += 1
-    #     continue
-    #   if(p[1].val not in pre_append_in_symbol_table_list):
-    #     check_func_call_op(arguments,curType,i,p[1].lno)
-    #   i += 1
+    # for param in reversed(p[3].children):
+    #   emit('param', '', func_to_be_called, param.place)
+    # retVal = ''
+    
+    # # print(p[0].type + " degiuddef " + p[1].val)
+    # if(p[0].type != 'void'):
+    #   retVal = get_new_tmp(p[0].type)
+    # emit('call', len(p[3].children), retVal, func_to_be_called)
+    # p[0].place = retVal
+    len_arg_list = len(symbol_table[0][func_to_be_called]['argumentList'])-1
+    p[0].type = symbol_table[0][func_to_be_called]['type']
     for param in reversed(p[3].children):
+      if(p[1].val in mathFuncs):
+        if(param.type != 'float'):
+          tmp = get_new_tmp('float')
+          change_data_type_emit(param.type, 'float', param.place, tmp)
+          param.place = tmp
+      elif(func_to_be_called not in pre_append_in_symbol_table_list):
+        if(param.type != symbol_table[0][func_to_be_called]['argumentList'][len_arg_list]):
+          tmp = get_new_tmp(symbol_table[0][func_to_be_called]['argumentList'][len_arg_list])
+          change_data_type_emit(param.type, symbol_table[0][func_to_be_called]['argumentList'][len_arg_list], param.place, tmp)
+          param.place = tmp
+        len_arg_list -= 1
       emit('param', '', func_to_be_called, param.place)
-  retVal = ''
-  p[0].type = symbol_table[0][func_to_be_called]['type']
-  # print(p[0].type + " degiuddef " + p[1].val)
-  if(p[0].type != 'void'):
-    retVal = get_new_tmp(p[0].type)
-  emit('call', len(p[3].children), retVal, func_to_be_called)
-  p[0].place = retVal
+    retVal = ''
+    if(p[0].type != 'void'):
+      retVal = get_new_tmp(p[0].type)
+    emit('call', len(p[3].children), retVal, func_to_be_called)
+    p[0].place = retVal
+    p[0].is_unary = 1
   
   #check if function argument_list_expression matches with the actual one
   
@@ -586,8 +731,8 @@ def p_postfix_expression_5(p):
 
   if (not p[1].name.startswith('Period')):
     struct_scope = find_scope(p[1].val , p[1].lno)
-    if struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys():
-      print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared")
+    if (struct_scope == -1 or p[1].val not in symbol_table[struct_scope].keys()) and len(p[1].array) == 0:
+      print("COMPILATION ERROR at line " + str(p[1].lno) + " : " + p[1].val + " not declared " )
       give_error()
 
   p[0] = Node(name = 'PeriodOrArrowExpression',val = p[3],lno = p[1].lno,type = p[1].type,children = [])
@@ -597,7 +742,7 @@ def p_postfix_expression_5(p):
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " +  " on " + struct_name)
     give_error()
     return
-  if(not struct_name.startswith('struct')):
+  if(not (struct_name.startswith('struct') or struct_name.startswith('union'))):
     print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
     give_error()
     return
@@ -679,7 +824,7 @@ def p_postfix_expression_6(p):
       tmp2 = get_new_tmp(p[1].type)
       emit(int_or_real(p[1].type) + "_-", p[1].place, '1', tmp2)
       emit(int_or_real(p[1].type) + "_=", tmp2, '*', p[1].addr)
-
+  p[0].is_unary = 1
 #################
 
 def p_argument_expression_list(p):
@@ -714,6 +859,7 @@ def p_unary_expression_1(p):
     tempNode = Node(name = '',val = p[1],lno = p[2].lno,type = '',children = '')
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [tempNode,p[2]], place = p[2].place)
     p[0].ast = build_AST(p)
+    p[0].is_unary = 1
     #Can't think of a case where this is invalid
     found_scope = find_scope(p[2].val, p[2].lno)
     if (found_scope != -1) and ((p[2].isFunc >= 1) or ('struct' in p[2].type.split())):
@@ -757,6 +903,7 @@ def p_unary_expression_2(p):
     else:
       emit('addr',p[2].place,'',tmp)
     p[0].place = tmp
+    p[0].is_unary = 1
   elif(p[1].val == '*'):
     if(not p[2].type.endswith('*') and (p[2].level) == 0):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ' cannot dereference variable of type ' + p[2].type)
@@ -772,11 +919,13 @@ def p_unary_expression_2(p):
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
     emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
+    p[0].is_unary = 1
   elif(p[1].val == '~'):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
     emit(int_or_real(p[2].type) + '_' + 'bitwisenot', p[2].place, '', p[0].place)
+    p[0].is_unary = 1
   elif(p[1].val == '!'):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
@@ -789,28 +938,32 @@ def p_unary_expression_2(p):
     emit('label', '', '', l1)
     emit('int_=', '1', '', p[0].place)
     emit('label', '', '', l2)
+    p[0].is_unary = 1
   else:
     p[0] = Node(name = 'UnaryOperation',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [], place = p[2].place)
     p[0].ast = build_AST(p)
+    p[0].is_unary = 1
   # TODO: check if function can have these
   # TODO: Handle '~' and '!' in 3ac
 
 def p_unary_expression_3(p):
   '''unary_expression : SIZEOF unary_expression'''
-  p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
+  p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = 'int',children = [p[2]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
   tmp = get_new_tmp('int')
   p[0].place = tmp
+  p[0].is_unary = 1
   emit('int_=',get_data_type_size(p[2].type),'',p[0].place)
 
 def p_unary_expression_4(p):
   '''unary_expression : SIZEOF LPAREN type_name RPAREN'''
-  p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = p[3].type,children = [p[3]])
+  p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = 'int',children = [p[3]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
   tmp = get_new_tmp('int')
   p[0].place = tmp
+  p[0].is_unary = 1
   emit('int_=',get_data_type_size(p[3].type),'',p[0].place)
 
 #########################
@@ -1269,6 +1422,9 @@ def p_assignment_expression(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
+    if p[1].is_unary == 1:
+      print('COMPILATION ERROR at line ' + str(p[1].lno) + ', left side of assignment expression cannot be an expression')
+      give_error()
     if(p[1].type == '' or p[3].type == ''):
       p[0] = Node(name = 'AssignmentOperation',val = '',lno = p[1].lno,type = 'int',children = [])
       p[0].ast = build_AST(p)
@@ -1276,7 +1432,7 @@ def p_assignment_expression(p):
     if p[1].type == '-1' or p[3].type == '-1':
       return
     if('const' in p[1].type.split()):
-      print('Error, modifying a variable declared with const keyword at line ' + str(p[1].lno))
+      print('COMPILATION ERROR, modifying a variable declared with const keyword at line ' + str(p[1].lno))
       give_error()
     if('struct' in p[1].type.split() and 'struct' not in p[3].type.split() and '*' not in p[1].type.split()):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
@@ -1284,6 +1440,14 @@ def p_assignment_expression(p):
     elif('struct' not in p[1].type.split() and 'struct' in p[3].type.split()):
       print('COMPILATION ERROR at line ' + str(p[1].lno) + ', cannot assign variable of type ' + p[3].type + ' to ' + p[1].type)
       give_error()
+    elif(p[1].type.endswith('*') and not (p[3].type.endswith('*'))):
+      if(p[3].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
+    elif(p[3].type.endswith('*') and not (p[1].type.endswith('*'))):
+      if(p[1].type == 'float'):
+        print(p[1].lno , 'COMPILATION ERROR : Incompatible data type with ' + extract_if_tuple(p[2]) +  ' operator')
+        give_error()
     elif(p[1].type.split()[-1] != p[3].type.split()[-1]):
       print('Warning at line ' + str(p[1].lno) + ': type mismatch in assignment')
     tempScope = find_scope(p[1].val, p.lineno(1))
@@ -1318,7 +1482,10 @@ def p_assignment_expression(p):
         print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch in assignment")
         give_error()
       else:
-        emit('int_=', p[3].place, '', p[1].place)
+        if(len(p[1].addr) == 0  ):
+          emit(int_or_real(p[1].type) + '_=', p[3].place, '', p[1].place)
+        else:
+          emit(int_or_real(p[1].type) + '_=', p[3].place, '*', p[1].addr)
       return
     
     if p[2].val == '=':
@@ -1343,18 +1510,40 @@ def p_assignment_expression(p):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[1].type, higher_data_type, p[1].place, tmp)
         emit(higher_data_type + '_' + operator, tmp, p[3].place, tmp)
-        change_data_type_emit(higher_data_type, p[1].type, tmp, p[1].place)
+        if(len(p[1].addr) == 0):
+          change_data_type_emit(higher_data_type, p[1].type, tmp, p[1].place)
+        else:
+          tmp2 = get_new_tmp(higher_data_type)
+          change_data_type_emit(higher_data_type, p[1].type, tmp, tmp2)
+          emit(int_or_real(p[1].type) + '_=', tmp2, '*', p[1].addr)
+          tmp = tmp2
       elif (int_or_real(p[3].type) != higher_data_type):
         tmp = get_new_tmp(higher_data_type)
         change_data_type_emit(p[3].type, higher_data_type, p[3].place, tmp)
-        emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
-      else:
+        # emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
         if(len(p[1].addr) == 0  ):
-          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, p[1].place)
+          emit(higher_data_type + '_' + operator, p[1].place, tmp, p[1].place)
         else:
-          tmp = get_new_tmp(p[0].type)
-          emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, tmp)
+          # tmp = get_new_tmp(p[0].type)
+          emit(int_or_real(p[1].type) + '_' + operator, tmp, p[1].place, tmp)
           emit(int_or_real(p[1].type) + '_=' , tmp, '*', p[1].addr)
+      else:
+        if((operator == '+' or operator == '-') and p[1].type.endswith('*')):
+          tmp = get_new_tmp('int')
+          emit('int_*',p[3].place,get_data_type_size(p[1].type[:-2]), tmp)
+          if(len(p[1].addr) == 0  ):
+            emit(int_or_real(p[1].type) + '_' + operator, tmp, p[1].place, p[1].place)
+          else:
+            tmp2 = get_new_tmp(p[0].type)
+            emit(int_or_real(p[1].type) + '_' + operator, tmp, p[1].place, tmp2)
+            emit(int_or_real(p[1].type) + '_=' , tmp2, '*', p[1].addr)
+        else:
+          if(len(p[1].addr) == 0  ):
+            emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, p[1].place)
+          else:
+            tmp = get_new_tmp(p[0].type)
+            emit(int_or_real(p[1].type) + '_' + operator, p[3].place, p[1].place, tmp)
+            emit(int_or_real(p[1].type) + '_=' , tmp, '*', p[1].addr)
         
     if(len(p[1].addr) == 0):
       p[0].place = p[1].place
@@ -1392,6 +1581,7 @@ def p_expression(p):
     p[0] = p[1]
     p[0].children.append(p[3])
     p[0].ast = build_AST(p)
+    p[0].is_unary=1
 
 def p_constant_expression(p):
   '''constant_expression : conditional_expression'''
@@ -1407,6 +1597,7 @@ def p_temp_declaration(p):
   # a = 1
   p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
+  # print(str(p[0].lno) + " ok")
   flag = 1
   if('void' in p[1].type.split()):
     flag = 0
@@ -1449,6 +1640,23 @@ def p_temp_declaration(p):
       if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
         give_error()
+      elif(len(child.children[0].array) > 0):
+        base_addr = ''
+        if(len(child.children[0].addr) == 0):
+          base_addr = get_new_tmp(p[1].type)
+          emit('addr', child.children[0].place, '', base_addr)
+        else:
+          base_addr = child.children[0].addr
+        array_init(base_addr, 0, act_data_type, child.children[0].array, child.children[1], 0, p.lineno(1))
+      elif((p[1].type.startswith('struct') or p[1].type.startswith('union')) and not act_data_type.endswith('*')):
+        found_scope = find_scope(p[1].type)
+        base_addr = ''
+        if(len(child.children[0].addr) == 0):
+          base_addr = get_new_tmp('int')
+          emit('addr', child.children[0].place, '', base_addr)
+        else:
+          base_addr = child.children[0].addr
+        struct_init(base_addr, child.children[0].place, found_scope, p[1].type, child.children[1], p.lineno(1))
       elif (int_or_real(child.children[1].type) != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
@@ -1479,7 +1687,8 @@ def p_temp_declaration(p):
       symbol_table[currentScope][child.val]['size'] *= totalEle
       offset[currentScope] += symbol_table[currentScope][child.val]['size']
       # TODO : Confirm with others about two possible approaches
-
+  print(p[1].type)
+  print(p[1])
   if p[1].type.startswith('typedef'):
     typecast[p[2].children[0].val] = p[1].type.split(' ', 1)[1]
 
@@ -1600,7 +1809,6 @@ def p_declaration_specifiers(p):
       give_error()
     curType.pop()
     curType.append(p[1].type + ' ' + p[2].type)
-    
     ty = ""
     if len(p[1].type) > 0:
       ty = p[1].type + ' ' + p[2].type
@@ -1637,12 +1845,12 @@ def p_init_declarator(p):
   else:
     p[0] = Node(name = 'InitDeclarator',val = '',type = p[1].type,lno = p.lineno(1), children = [p[1],p[3]], array = p[1].array,isFunc=p[1].isFunc)
     p[0].ast = build_AST(p)
-    if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
-      print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
-      give_error()
-    if(p[1].level != p[3].level):
-      print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
-      give_error()
+    # if(len(p[1].array) > 0 and (p[3].maxDepth == 0 or p[3].maxDepth > len(p[1].array))):
+    #   print('COMPILATION ERROR at line ' + str(p.lineno(1)) + ' , invalid initializer')
+    #   give_error()
+    # if(p[1].level != p[3].level):
+    #   print("COMPILATION ERROR at line ", str(p[1].lno), ", type mismatch")
+    #   give_error()
     # print(p[3].name, "fn name:p_init_declarator")
     # emit(["=",[p[3].place, ], [], [p[1].place], find_scope(p[1].val)]) # a = 5 ,  a = t1
 
@@ -1701,14 +1909,9 @@ def p_struct_or_union_specifier(p):
   p[0] = Node(name = 'StructOrUnionSpecifier', val = '', type = '', lno = p[1].lno , children = [])
   if len(p) == 4 and p[1].name == 'StructOrUnionType':
     val_name = p[1].type
+    p[0].type = val_name
     p[0].ast = build_AST(p)
-    # if val_name in symbol_table[currentScope].keys():
-    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
     valptr_name = val_name + ' *'
-    # symbol_table[currentScope][val_name] = {}
-    # symbol_table[currentScope][val_name]['type'] = val_name
-    # symbol_table[currentScope][valptr_name] = {}
-    # symbol_table[currentScope][valptr_name]['type'] = valptr_name
     temp_list = []
     curr_offset = 0
     max_size = 0
@@ -1741,7 +1944,6 @@ def p_struct_or_union_specifier(p):
     symbol_table[currentScope][val_name]['size'] = curr_offset
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
     symbol_table[currentScope][valptr_name]['size'] = 4
-
   elif len(p) == 2:
     p[0].type = p[1].type
     p[0].ast = build_AST(p)
@@ -1762,14 +1964,6 @@ def p_struct_or_union_type(p):
     val_name = p[1].type + ' ' + p[2]
     p[0].type = val_name
     p[0].val = p[0].type
-    # if(val_name in symbol_table[currentScope].keys()):
-    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' struct already declared')
-    #   give_error()
-    # valptr_name = val_name + ' *'
-    # symbol_table[currentScope][val_name] = {}
-    # symbol_table[currentScope][val_name]['type'] = val_name
-    # symbol_table[currentScope][valptr_name] = {}
-    # symbol_table[currentScope][valptr_name]['type'] = valptr_name 
   else:
     p[0] = Node(name = 'StructOrUnionType', val = '', type = p[1], lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
@@ -2019,7 +2213,7 @@ def p_direct_declarator_1(p):
 
 def p_direct_declarator_2(p):
   '''direct_declarator : direct_declarator LSQUAREBRACKET INT_CONST RSQUAREBRACKET'''
-  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [])
+  p[0] = Node(name = 'ArrayDeclarator', val = p[1].val, type = '', lno = p.lineno(1),  children = [], place = p[1].place)
   p[0].ast = build_AST(p)
   p[0].array = copy.deepcopy(p[1].array)
   p[0].array.append(int(p[3][0]))
@@ -2251,8 +2445,13 @@ def p_initializer(p):
       p[0] = p[1]
       p[0].ast = build_AST(p)
     else:
-      p[0] = p[2]
+      p[0] = Node(name = 'Initializer',val = '',type = '', lno = p[2].lno, children = [])
+      if(p[2].sqb or not p[2].name.startswith('Initial')):
+        p[0].children = [p[2]]
+      else:
+        p[0] = p[2]
       p[0].name = 'Initializer'
+      p[0].sqb = True
     if(len(p) == 4):
       p[0].maxDepth = p[2].maxDepth + 1
       p[0].ast = build_AST(p)
@@ -2264,7 +2463,8 @@ def p_initializer_list(p):
   | initializer_list COMMA initializer
   '''
   if(len(p) == 2):
-    p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth)
+    # p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth, sqb = p[1].sqb)
+    p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
     p[0] = Node(name = 'InitializerList', val = '', type = '', children = [], lno = p.lineno(1))
@@ -2636,7 +2836,13 @@ def p_jump_statement(p):
       check_func_return_type(p[2].type,curFuncReturnType,p.lineno(1))
       p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])   
       p[0].ast = build_AST(p) 
-      emit('ret', '', '', p[2].place)
+      tmp = p[2].place
+      if(curFuncReturnType != p[2].type):
+        tmp = get_new_tmp(curFuncReturnType)
+        change_data_type_emit(p[2].type, curFuncReturnType, p[2].place, tmp)
+      emit('ret', '', '', tmp)
+    global jump_mark
+    jump_mark = 1
 
 def p_jump_statement_1(p):
   '''jump_statement : BREAK SEMICOLON'''
@@ -2647,11 +2853,12 @@ def p_jump_statement_1(p):
   if(loopingDepth == 0 and switchDepth == 0):
     print(p[0].lno, 'break not inside loop')
   emit('goto','','',breakStack[-1])
+  global jump_mark
+  jump_mark = 1
 
 def p_jump_statement_2(p):
   '''jump_statement : CONTINUE SEMICOLON'''
   global loopingDepth
-
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
 
@@ -2659,11 +2866,16 @@ def p_jump_statement_2(p):
     print(p[0].lno, 'continue not inside loop')
 
   emit('goto','','',continueStack[-1])
+  global jump_mark
+  jump_mark = 1
 
 def p_jump_statement_3(p):
   '''jump_statement : GOTO ID SEMICOLON'''
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = []) 
   p[0].ast = build_AST(p)   
+  emit('goto', '', '', p[2])
+  global jump_mark
+  jump_mark = 1
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
@@ -2798,9 +3010,9 @@ def visualize_symbol_table():
       temp_list = {}
       for key in symbol_table[i].keys():
         # print(key, symbol_table[i][key])
-        if(not key.startswith('struct')):
+        if(not (key.startswith('struct') or key.startswith('union'))):
           temp_list[key] = symbol_table[i][key]
-        if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
+        if(not ((key.startswith('struct') or key.startswith('union')) or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
           newkey = key + "_" + str(i)
           # if(key not in ignore_function_ahead):
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]

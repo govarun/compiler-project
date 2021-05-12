@@ -4,13 +4,13 @@ struct node{
     struct node* next ;
 };
 
-struct node* head = 0 ;
+struct node* head;
 
 
 void print_list()
 {
     struct node* curr = head ;
-    while(curr != 0)
+    while(curr != NULL)
     {
         printf("%d ", (curr -> data)) ;
         curr = (curr -> next) ;
@@ -34,15 +34,15 @@ void add_end(int val)
     struct node* new_node = (struct node*)malloc(sizeof(struct node)) ;
     struct node* next  ; // there should be no error because of this
     (new_node -> data) = val ;
-    if(curr == 0)
+    if(curr == NULL)
     {
         head = new_node ;
-        (new_node -> next) = 0 ;
+        (new_node -> next) = NULL ;
         return ;
     }
     next = (curr -> next) ;
 
-    while(next != 0)
+    while(next != NULL)
     {
         curr = next ;
         next = (next -> next) ;
@@ -50,7 +50,7 @@ void add_end(int val)
     }
 
     (curr -> next) = new_node ;
-    (new_node -> next) = 0 ;
+    (new_node -> next) = NULL ;
     return ;
 }
 
@@ -60,7 +60,7 @@ void add_after(int key , int val)
     struct node* new_node = (struct node*)malloc(sizeof(struct node)) ;
     (new_node -> data) = val ;
 
-    while(curr != 0)
+    while(curr != NULL)
     {
         if((curr -> data) == key)
         {
@@ -79,7 +79,7 @@ void add_after(int key , int val)
 void del_start()
 {
     struct node* curr = head ;
-    if(curr == 0)
+    if(curr == NULL)
     {
         printf("empty_list\n") ;
         return ;
@@ -97,26 +97,27 @@ void del_end()
 {
     struct node* curr = head ;
     struct node* next ;
-    if(curr == 0)
+    struct node* next_node ;
+    if(curr == NULL)
     {
         printf("empty_list\n") ;
         return ;
     }
 
-    struct node* next_node = (curr -> next) ;
-    if(next_node == 0)
+    next_node = (curr -> next) ;
+    if(next_node == NULL)
     {
-        head = 0 ;
+        head = NULL ;
         free(curr) ;
         return ;
     }
 
-    while((next_node -> next) != 0)
+    while((next_node -> next) != NULL)
     {
         curr = next_node ;
         (next_node) = (next_node -> next) ;
     }
-    (curr -> next) = 0 ;
+    (curr -> next) = NULL ;
     free(next_node) ;
     return ;
 }
@@ -124,7 +125,7 @@ void del_end()
 void del_val(int val)
 {
     struct node* prev = head , *curr ;
-    if(prev == 0)
+    if(prev == NULL)
     {
         printf("element not present\n") ;
         return ;
@@ -138,7 +139,7 @@ void del_val(int val)
 
     curr = (prev -> next) ;
 
-    while(curr != 0)
+    while(curr != NULL)
     {
         if((curr -> data) == val)
         {
@@ -159,7 +160,7 @@ void del_val(int val)
 struct node* find(int val)
 {
     struct node* curr = head ;
-    while(curr != 0)
+    while(curr != NULL)
     {
         if((curr -> data) == val)
         {
@@ -168,12 +169,12 @@ struct node* find(int val)
         curr = (curr -> next) ;
     }
     printf("element not present\n") ;
-    return 0;
+    return NULL;
 }
 
 int main()
 {
-    
+    head = NULL;
 
     add_end(3) ;
     print_list() ;
@@ -193,8 +194,8 @@ int main()
     del_val(4) ; // check by changing this to 5 and 4
     print_list() ;
 
-    printf("%d : \n", find(5)) ;
-    printf("%d : \n", find(2)) ;
+    // printf("%d : \n", find(5)) ;
+    // printf("%d : \n", find(2)) ;
     find(3) ;
     return 0 ;
 }
