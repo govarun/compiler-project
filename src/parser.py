@@ -484,15 +484,13 @@ def p_postfix_expression_3(p):
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0, place = p[1].place)
-  # print(p[1].val)
   p[0].ast = build_AST(p)
   func_to_be_called = ''
   if(p[1].val in pre_append_in_symbol_table_list):
     func_to_be_called = p[1].val
-  # print(symbol_table[-1])
-  # print(function_overloaded_map)
+
   if(p[1].val not in symbol_table[0].keys()):
-    # print(symbol_table[-1][p[1].val])
+
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error()
   elif(p[1].val not in function_overloaded_map.keys() and func_to_be_called == ''):
@@ -500,14 +498,17 @@ def p_postfix_expression_4(p):
     give_error()
   elif(p[1].val not in pre_append_in_symbol_table_list):
     # print(p[1].val)
+    actual_len = len(p[3].children)
     for i in range(function_overloaded_map[p[1].val] + 1):
-      # print("no 1")
+
       cur_func_name = p[1].val + '_' + str(i)
       j = 0
       flag = 0
+
+      if(len(symbol_table[0][cur_func_name]['argumentList']) != actual_len):
+        continue
       for arguments in symbol_table[0][cur_func_name]['argumentList']:
         curType = p[3].children[j].type
-        curIsArray = p[3].children[j].array
         if(curType == ''):
           j += 1
           continue
@@ -520,13 +521,14 @@ def p_postfix_expression_4(p):
         break
 
     if(func_to_be_called == ''):  
-      for i in range(function_overloaded_map[p[1].val]):
+      for i in range(function_overloaded_map[p[1].val] + 1):
         cur_func_name = p[1].val + '_' + str(i)
         j = 0
         flag = 0
+        if(actual_len != len(symbol_table[0][cur_func_name]['argumentList'])):
+          continue
         for arguments in symbol_table[0][cur_func_name]['argumentList']:
           curType = p[3].children[j].type
-          curIsArray = p[3].children[j].array
           if(curType == ''):
             j += 1
             continue
@@ -539,37 +541,19 @@ def p_postfix_expression_4(p):
           func_to_be_called = cur_func_name
           break
 
-
-  # if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
-  #   print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
-  #   give_error()
-  # elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children) and p[1].val not in pre_append_in_symbol_table_list):
-  #   print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
-  #   give_error()
   if(func_to_be_called == ''):
     print('COMPILATION ERROR at line : ' + str(p[1].lno) + ': incorrect arguments for function call')
     give_error()
   else:
-    # i = 0
-    # for arguments in symbol_table[0][p[1].val]['argumentList']:
-    #   curType = p[3].children[i].type
-    #   curIsArray = p[3].children[i].array
-    #   # print('here',curType)
-    #   if(curType == ''):
-    #     i += 1
-    #     continue
-    #   if(p[1].val not in pre_append_in_symbol_table_list):
-    #     check_func_call_op(arguments,curType,i,p[1].lno)
-    #   i += 1
     for param in reversed(p[3].children):
       emit('param', '', func_to_be_called, param.place)
-  retVal = ''
-  p[0].type = symbol_table[0][func_to_be_called]['type']
-  # print(p[0].type + " degiuddef " + p[1].val)
-  if(p[0].type != 'void'):
-    retVal = get_new_tmp(p[0].type)
-  emit('call', len(p[3].children), retVal, func_to_be_called)
-  p[0].place = retVal
+    retVal = ''
+    p[0].type = symbol_table[0][func_to_be_called]['type']
+    # print(p[0].type + " degiuddef " + p[1].val)
+    if(p[0].type != 'void'):
+      retVal = get_new_tmp(p[0].type)
+    emit('call', len(p[3].children), retVal, func_to_be_called)
+    p[0].place = retVal
   
   #check if function argument_list_expression matches with the actual one
   
