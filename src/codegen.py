@@ -527,14 +527,21 @@ class CodeGen:
     def deref(self, quad):
         #x = *y assignment
         if(len(symbols[quad.src1].pointsTo)> 0):
-            sym = symbols[quad.src1].pointsTo
-            to_save = []
-            while len(sym) > 0:
-                to_save.append(sym)
-                sym = symbols[sym].pointsTo
+            del_symbol_reg_exclude(symbols[quad.src1].pointsTo)
+            # sym = symbols[quad.src1].pointsTo
+            # to_save = []
+            # while len(sym) > 0:
+            #     to_save.append(sym)
+            #     sym = symbols[sym].pointsTo
 
-            for i in range (len(to_save) -1, -1, -1):
-                del_symbol_reg_exclude(to_save[i])
+            # for i in range (len(to_save) -1, -1, -1):
+            #     del_symbol_reg_exclude(to_save[i])
+        
+        sym = symbols[quad.src1].pointsTo 
+        if(len(sym) > 0):
+            symbols[quad.dest].pointsTo = symbols[sym].pointsTo
+        else:
+            symbols[quad.dest].pointsTo = ''
 
         best_location = get_best_location(quad.src1)
         if (check_type_location(best_location) in ["memory", "data", "number"]):
