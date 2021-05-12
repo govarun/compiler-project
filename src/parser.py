@@ -211,17 +211,17 @@ def change_data_type_emit(source_dtype, dest_dtype, source_place, dest_place):
 def array_init(base_addr, offset, dtype, arr, p, lev, lno):
   # print(lno)pe + " array")
   if(len(p.children)  > arr[lev]):
-    print("Compilation error at " + str(lno) + ", incorrect initializer")
+    print("Compilation error at " + str(p.lno) + ", incorrect initializer")
     give_error()
     return
   i = 0
   for child in p.children:
     if(lev == len(arr) - 1 and len(child.children) > 0 and not dtype.startswith('struct')):
-      print("Compilation error at " + str(lno) + ", incorrect initializer")
+      print("Compilation error at " + str(p.lno) + ", incorrect initializer")
       give_error()
       return
     elif(lev < len(arr) - 1 and len(child.children) == 0):
-      print("Compilation error at " + str(lno) + ", incorrect initializer")
+      print("Compilation error at " + str(p.lno) + ", incorrect initializer")
       give_error()
       return
     tmp = get_new_tmp(dtype)
@@ -250,9 +250,10 @@ def struct_init(base_addr, name, scope, struct_name, p, lno):
       emit('int_=', p.place, '', name)
     else:
       emit('int_=', p.place, '*', base_addr)
+    return
   if(len(lst) != len(p.children)):
-    print("Compilation error at " + str(lno) + ", incorrect initializer")
-    # give_error()
+    print("Compilation error at " + str(p.lno) + ", incorrect initializer")
+    give_error()
     return
   i = 0
   for child in p.children:
@@ -847,7 +848,7 @@ def p_unary_expression_2(p):
 
 def p_unary_expression_3(p):
   '''unary_expression : SIZEOF unary_expression'''
-  p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]])
+  p[0] = Node(name = 'SizeOf',val = p[2].val,lno = p[2].lno,type = 'int',children = [p[2]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
   tmp = get_new_tmp('int')
@@ -857,7 +858,7 @@ def p_unary_expression_3(p):
 
 def p_unary_expression_4(p):
   '''unary_expression : SIZEOF LPAREN type_name RPAREN'''
-  p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = p[3].type,children = [p[3]])
+  p[0] = Node(name = 'SizeOf',val = p[3].val,lno = p[3].lno,type = 'int',children = [p[3]])
   p[0].ast = build_AST(p)
   # TODO: Handle 3ac
   tmp = get_new_tmp('int')
@@ -2801,7 +2802,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=True)
+  print_emit_array(debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
@@ -2826,10 +2827,10 @@ def visualize_symbol_table():
     outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0 and i in scope_to_function.keys()):
-      print('\nIn Scope ' + str(i))
+      # print('\nIn Scope ' + str(i))
       temp_list = {}
       for key in symbol_table[i].keys():
-        print(key, symbol_table[i][key])
+        # print(key, symbol_table[i][key])
         if(not key.startswith('struct')):
           temp_list[key] = symbol_table[i][key]
         if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):

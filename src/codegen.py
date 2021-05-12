@@ -289,8 +289,9 @@ class CodeGen:
             #*x = y
             best_location = get_best_location(quad.dest)
             if(best_location not in reg_desc.keys()):
-                reg = get_register(quad, compulsory = True,is_float=True)
-                print("\tmovss " + reg + ", " + best_location)
+                reg = get_register(quad, compulsory = True)
+                print("\tmov " + reg + ", " + best_location)
+                #what if best_location is xmm?
                 best_location = reg
                 
             symbols[quad.dest].address_desc_reg.add(best_location)
