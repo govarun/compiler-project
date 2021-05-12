@@ -93,7 +93,7 @@ def emit(op, s1, s2, dest):
   global nextstat
   global currentScope
   global jump_mark
-  if(jump_mark and not op.startswith('label')):
+  if(jump_mark and not op.startswith('label') and not op.startswith('func')):
     return
   else:
     jump_mark = 0
