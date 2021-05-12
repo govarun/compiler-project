@@ -5,7 +5,7 @@ struct point{
 
 int dist(struct point p1 , struct point p2)
 {
-    return (p2.x - p1.x + p2.y - p1.y) ;
+    return (p2.x + p1.x + p2.y + p1.y) ;
 }
 
 int main()

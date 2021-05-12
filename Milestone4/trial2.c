@@ -1,18 +1,14 @@
-struct point{
-    float x , y ;
-} ;
-
-struct point make_point(float x , float y)
+int int_return(int a , float b)
 {
-    struct point p;
-    (p.x) = x ;
-    (p.y) = y ;
-    return p ;
+    
+    return a*b ;
 }
 int main()
 {
-    float x = 1 , y = 2 ;
-    struct point p = make_point(x , y) ;
-    printf("(%f , %f)\n", p.x , p.y) ;
+    int a = 5 ;
+    float b = 5 ;
+    int arr[1][1] ;
+    arr[0][0] = int_return(a , b) ;
+    printf("val = %d\n", arr[0][0]) ;
     return 0 ;
 }
