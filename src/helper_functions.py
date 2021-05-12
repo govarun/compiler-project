@@ -243,7 +243,7 @@ def runmain():
             if('array' in global_symbol_table[key].keys()):
                 len = global_symbol_table[key]['size']//get_data_type_size(global_symbol_table[key]['type'])
                 symbols[key] = symbol_info(isArray = True, length = len)
-            elif(global_symbol_table[key]['type'].startswith('struct')):
+            elif(global_symbol_table[key]['type'].startswith('struct') or global_symbol_table[key]['type'].startswith('union')):
                 symbols[key] = symbol_info(isStruct = True, size = get_data_type_size(global_symbol_table[key]['type']))
             else:
                 symbols[key] = symbol_info(size = get_data_type_size(global_symbol_table[key]['type']))

@@ -225,7 +225,7 @@ def array_init(base_addr, offset, dtype, arr, p, lev, lno):
     return
   i = 0
   for child in p.children:
-    if(lev == len(arr) - 1 and len(child.children) > 0 and not dtype.startswith('struct')):
+    if(lev == len(arr) - 1 and len(child.children) > 0 and not (dtype.startswith('struct') or dtype.startswith('union'))):
       print("Compilation error at " + str(p.lno) + ", incorrect initializer")
       give_error()
       return
@@ -239,7 +239,7 @@ def array_init(base_addr, offset, dtype, arr, p, lev, lno):
     if(lev == len(arr) - 1):
       emit('int_*', tmp, get_data_type_size(dtype), tmp)
       emit('int_+', tmp, base_addr, tmp)
-      if(dtype.startswith('struct')):
+      if((dtype.startswith('struct') or dtype.startswith('union'))):
         found_scope = find_scope(dtype)
         struct_init(tmp, '',found_scope, dtype, child, lno)
       else:
@@ -268,7 +268,7 @@ def struct_init(base_addr, name, scope, struct_name, p, lno):
   for child in p.children:
     if(len(lst[i]) == 5):
       array_init(base_addr, 0, lst[i][0], lst[i][4], child, 0, lno)
-    elif(lst[i][0].startswith('struct')):
+    elif(lst[i][0].startswith('struct') or lst[i][0].startswith('union')):
       found_scope = find_scope(lst[i][0])
       tmp = get_new_tmp('int')
       emit('int_=', base_addr, '', tmp)
@@ -656,7 +656,7 @@ def p_postfix_expression_5(p):
     print("COMPILATION ERROR at line " + str(p[1].lno) + " : invalid operator " +  " on " + struct_name)
     give_error()
     return
-  if(not struct_name.startswith('struct')):
+  if(not (struct_name.startswith('struct') or struct_name.startswith('union'))):
     print("COMPILATION ERROR at line " + str(p[1].lno) + ", " + p[1].val + " is not a struct")
     give_error()
     return
@@ -1562,7 +1562,7 @@ def p_temp_declaration(p):
         else:
           base_addr = child.children[0].addr
         array_init(base_addr, 0, act_data_type, child.children[0].array, child.children[1], 0, p.lineno(1))
-      elif(p[1].type.startswith('struct') and not act_data_type.endswith('*')):
+      elif((p[1].type.startswith('struct') or p[1].type.startswith('union')) and not act_data_type.endswith('*')):
         found_scope = find_scope(p[1].type)
         base_addr = ''
         if(len(child.children[0].addr) == 0):
@@ -2853,9 +2853,9 @@ def visualize_symbol_table():
       temp_list = {}
       for key in symbol_table[i].keys():
         # print(key, symbol_table[i][key])
-        if(not key.startswith('struct')):
+        if(not (key.startswith('struct') or key.startswith('union'))):
           temp_list[key] = symbol_table[i][key]
-        if(not (key.startswith('struct') or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
+        if(not ((key.startswith('struct') or key.startswith('union')) or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
           newkey = key + "_" + str(i)
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
           # print(newkey, global_symbol_table[newkey])
