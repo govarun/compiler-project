@@ -1,6 +1,6 @@
 from reg_funcs import *
 from helper_functions import *
-from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map, mathFuncs
+from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map, mathFuncs, ignore_function_ahead
 import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
@@ -26,7 +26,8 @@ class CodeGen:
         print("main:")
         print("\tpush ebp")
         print("\tmov ebp, esp")
-
+        # dprint('here')
+        # dprint(local_vars['global'])
         for var in local_vars['global']:
             # symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
             if(symbols[var].isArray):
@@ -56,8 +57,9 @@ class CodeGen:
         print("section\t.data")
         float_tmp_vars = [lis[1] for lis in float_constant_values]
         for vars in local_vars['global']:
-            if vars not in strings.keys() and vars not in float_tmp_vars:
+            if vars not in strings.keys() and vars not in float_tmp_vars and vars not in ignore_function_ahead:
                 if('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
+
                     print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
                 else:
                     print("\t" + vars + "\tdd\t0")
@@ -527,7 +529,7 @@ class CodeGen:
         '''
         Allocate stack space for function local variables
         '''
-        if(quad.src1 == 'main'):
+        if(quad.src1 == 'main_0'):
             print("_main:")
         else:
             print(quad.src1 + ":")
@@ -560,6 +562,8 @@ class CodeGen:
         counter = 0
         if(get_data_type_size(symbol_table[0][quad.src1]['type']) > 4):
             counter += 4
+        # dprint('here')
+        # dprint(func_arguments[quad.src1])
         for var in func_arguments[quad.src1]:
             symbols[var].address_desc_mem.append(counter + 8)
             if(symbols[var].isArray):

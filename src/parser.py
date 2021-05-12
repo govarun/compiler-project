@@ -25,8 +25,10 @@ symbol_table.append({})
 global_symbol_table = {}
 float_constant_values = []
 float_reverse_map = {}
+ignore_function_ahead = []
 currentScope = 0
 nextScope = 1
+function_overloaded_map = {}
 parent = {}
 parent[0] = 0
 offset = {}
@@ -283,7 +285,7 @@ def struct_init(base_addr, name, scope, struct_name, p, lno):
     i = i+1
 
 def get_data_type_size(type_1):
-  if (type_1 == ''):
+  if (type_1 == '' or type_1 == 'virtual_func'):
     return 0
   type_size = {}
   type_size['char'] = 4
@@ -397,6 +399,7 @@ def p_primary_expression_0(p):
   '''primary_expression : ID'''
   p[0] = Node(name = 'PrimaryExpression',val = p[1],lno = p.lineno(1),type = '',children = [], place = p[1])
   temp = find_if_ID_is_declared(p[1],p.lineno(1))
+  # print(p[1],temp)
   if(temp != -1):
     p[0].place = p[0].place + '_' + str(temp)
     # if('type' in symbol_table[temp][p[1]]):
@@ -562,16 +565,31 @@ def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]],isFunc=0, place = p[1].place)
   p[0].ast = build_AST(p)
+  func_to_be_called = ''
+  if(p[1].val in pre_append_in_symbol_table_list):
+    func_to_be_called = p[1].val
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error() 
-  elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
-    print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call") 
+  elif(p[1].val not in function_overloaded_map.keys() and func_to_be_called == ''):
+    print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error()
+  elif(p[1].val not in pre_append_in_symbol_table_list):
+    for i in range(function_overloaded_map[p[1].val] + 1):  
+      cur_func_name = p[1].val + '_' + str(i)
+      # print(cur_func_name)
+      if(len(symbol_table[0][cur_func_name]['argumentList']) == 0):
+        func_to_be_called = cur_func_name
+        break
+  if(func_to_be_called == ''):
+    print('COMPILATION ERROR at line : ' + str(p[1].lno) + ': incorrect arguments for function call')
+    give_error()
+  else:
+    p[0].type = symbol_table[0][func_to_be_called]['type']
   retVal = ''
-  if(p[1].type != 'void'):
-    retVal = get_new_tmp(p[1].type)
-  emit('call', 0, retVal, p[1].val)
+  if(p[0].type != 'void'):
+    retVal = get_new_tmp(p[0].type)
+  emit('call', 0, retVal, func_to_be_called)
   p[0].place = retVal
   p[0].is_unary = 1
 
@@ -579,57 +597,112 @@ def p_postfix_expression_3(p):
 def p_postfix_expression_4(p):
   '''postfix_expression : postfix_expression LPAREN argument_expression_list RPAREN'''
   p[0] = Node(name = 'FunctionCall2',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [],isFunc=0, place = p[1].place)
-  # print(p[1].val)
   p[0].ast = build_AST(p)
-  if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
+  func_to_be_called = ''
+  if(p[1].val in pre_append_in_symbol_table_list):
+    func_to_be_called = p[1].val
+  if (p[1].val == 'printf'):
+    if (p[3].children[0].type != "char *"):
+      print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
+      give_error()
+    type_dict = {"x": ["int", "int *",  "char", "char *", "float *"],\
+              "d": ["int", "int *",  "char", "char *", "float *"],\
+              "f": ["float"],\
+              "c": ["int", "char"] }
+    types_children = parse_format_string(p[3].children[0].val) # DOUBT
+    if (len(types_children) != len(p[3].children) - 1):
+      print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
+      give_error()
+    for i in range(len(p[3].children)):
+      if (i == 0):
+        continue
+      if(types_children[i-1] not in type_dict.keys()):
+        continue
+      if(p[3].children[i].type not in type_dict[types_children[i - 1]]):
+        tmp = get_new_tmp(type_dict[types_children[i - 1]][0])
+        change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
+        p[3].children[i].place = tmp
+
+  if(p[1].val not in symbol_table[0].keys()):
     print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error()
-  elif(len(symbol_table[0][p[1].val]['argumentList']) != len(p[3].children) and p[1].val not in pre_append_in_symbol_table_list):
-    print("Syntax Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
+  elif(p[1].val not in function_overloaded_map.keys() and func_to_be_called == ''):
+    print('COMPILATION ERROR at line :' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
+    give_error()
+  elif(p[1].val not in pre_append_in_symbol_table_list):
+    # print(p[1].val)
+    actual_len = len(p[3].children)
+    for i in range(function_overloaded_map[p[1].val] + 1):
+
+      cur_func_name = p[1].val + '_' + str(i)
+      j = 0
+      flag = 0
+
+      if(len(symbol_table[0][cur_func_name]['argumentList']) != actual_len):
+        continue
+    
+      for arguments in symbol_table[0][cur_func_name]['argumentList']:
+        curType = p[3].children[j].type
+        if(curType == ''):
+          j += 1
+          continue
+        if(arguments != curType):
+          flag = 1
+          break
+        j += 1
+      if(flag == 0):
+        func_to_be_called = cur_func_name
+        break
+
+    if(func_to_be_called == ''):  
+      for i in range(function_overloaded_map[p[1].val] + 1):
+        cur_func_name = p[1].val + '_' + str(i)
+        j = 0
+        flag = 0
+        if(actual_len != len(symbol_table[0][cur_func_name]['argumentList'])):
+          continue
+        for arguments in symbol_table[0][cur_func_name]['argumentList']:
+          curType = p[3].children[j].type
+          if(curType == ''):
+            j += 1
+            continue
+          if(check_func_call_op_without_error(arguments,curType,j,p[1].lno) == 0):
+            flag = 1
+            break
+          j += 1
+
+        if(flag == 0):
+          func_to_be_called = cur_func_name
+          break
+
+  if(func_to_be_called == ''):
+    print('COMPILATION ERROR at line : ' + str(p[1].lno) + ': incorrect arguments for function call')
     give_error()
   else:
-    i = 0
-    for arguments in symbol_table[0][p[1].val]['argumentList']:
-      curType = p[3].children[i].type
-      curIsArray = p[3].children[i].array
-      # print('here',curType)
-      if(curType == ''):
-        continue
-      if(p[1].val not in pre_append_in_symbol_table_list):
-        check_func_call_op(arguments,curType,i,p[1].lno)
-      i += 1
-    if (p[1].val == 'printf'):
-      if (p[3].children[0].type != "char *"):
-        print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
-        give_error()
-      type_dict = {"x": ["int", "int *",  "char", "char *", "float *"],\
-                "d": ["int", "int *",  "char", "char *", "float *"],\
-                "f": ["float"],\
-                "c": ["int", "char"] }
-      types_children = parse_format_string(p[3].children[0].val) # DOUBT
-      if (len(types_children) != len(p[3].children) - 1):
-        print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
-        give_error()
-      for i in range(len(p[3].children)):
-        if (i == 0):
-          continue
-        if (p[3].children[i].type not in type_dict[types_children[i - 1]]):
-          tmp = get_new_tmp(type_dict[types_children[i - 1]][0])
-          change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
-          p[3].children[i].place = tmp
+    # for param in reversed(p[3].children):
+    #   emit('param', '', func_to_be_called, param.place)
+    # retVal = ''
+    
+    # # print(p[0].type + " degiuddef " + p[1].val)
+    # if(p[0].type != 'void'):
+    #   retVal = get_new_tmp(p[0].type)
+    # emit('call', len(p[3].children), retVal, func_to_be_called)
+    # p[0].place = retVal
+    p[0].type = symbol_table[0][func_to_be_called]['type']
     for param in reversed(p[3].children):
       if(p[1].val in mathFuncs):
         if(param.type != 'float'):
           tmp = get_new_tmp('float')
           change_data_type_emit(param.type, 'float', param.place, tmp)
           param.place = tmp
-      emit('param', '', p[1].val, param.place)
-  retVal = ''
-  if(p[1].type != 'void'):
-    retVal = get_new_tmp(p[1].type)
-  emit('call', len(p[3].children), retVal, p[1].val)
-  p[0].place = retVal
-  p[0].is_unary = 1
+      emit('param', '', func_to_be_called, param.place)
+    retVal = ''
+    if(p[0].type != 'void'):
+      retVal = get_new_tmp(p[0].type)
+    emit('call', len(p[3].children), retVal, func_to_be_called)
+    p[0].place = retVal
+    p[0].is_unary = 1
+  
   #check if function argument_list_expression matches with the actual one
   
 
@@ -2023,10 +2096,10 @@ def p_direct_declarator_1(p):
                         | direct_declarator lopenparen identifier_list RPAREN
   '''
   global curFuncReturnType
+  
   if(len(p) == 2):
     p[0] = Node(name = 'ID', val = p[1], type = '', lno = p.lineno(1), children = [], place = p[1])
     p[0].ast = build_AST(p)
-
   elif(len(p) == 4):
     p[0] = p[2]
     p[0].ast = build_AST(p)
@@ -2035,35 +2108,73 @@ def p_direct_declarator_1(p):
     p[0].ast = build_AST(p)
     p[0].children = p
   if(len (p) == 5 and p[3].name == 'ParameterList'):
-    func_arguments[p[1].val] = []
-    for child in p[3].children:
-      func_arguments[p[1].val].append(child.val)
+    # if(p[1].val in symbol_table[0].keys()):
+    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    #   give_error()
     # print(func_arguments[p[1].val])
       # print(child.val)
     p[0].children = p[3].children
     p[0].type = curType[-1]
-    if(p[1].val in symbol_table[parent[currentScope]].keys()):
-      if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
+    prev_func_name = ''
+    if(p[1].val in function_overloaded_map.keys()):
+      prev_func_name = p[1].val + '_' + str(function_overloaded_map[p[1].val])
+
+    if(prev_func_name != ''):
+    # if(p[1].val in symbol_table[parent[currentScope]].keys()):
+      if('isFunc' not in symbol_table[0][prev_func_name] or symbol_table[0][prev_func_name]['isFunc'] == 1):
         # print(symbol_table[parent[currentScope]][p[1].val]['isFunc'])
         # print(symbol_table[parent[currentScope]][p[1].val])
-        print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
-        give_error()
+        tempList = []
+        for child in p[3].children:
+          tempList.append(child.type)
+        # tempList.sort()
+        for i in range(int(function_overloaded_map[p[1].val]) + 1):
+          prev_name = p[1].val + '_' + str(i)
+          # print("I am here")
+          prevList = copy.deepcopy(symbol_table[0][prev_name]['argumentList'])
+          if(len(prevList) != len(tempList)):
+            continue
+          else:
+            # prevList.sort()
+            # print(prevList,tempList)
+            if(prevList == tempList):
+              print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+              give_error()
+              return
       else:
-        if(p[1].val in functionScope.keys()):
-          scope_to_function.pop(functionScope[p[1].val])
-        functionScope[p[1].val] = currentScope
-        scope_to_function[currentScope] = p[1].val
-        local_vars[p[1].val] = []
+        if(prev_func_name in functionScope.keys()):
+          scope_to_function.pop(functionScope[prev_func_name])
+        functionScope[prev_func_name] = currentScope
+        scope_to_function[currentScope] = prev_func_name
+        local_vars[prev_func_name] = []
         iterator = 0
         for child in p[3].children:
-          if(child.type != symbol_table[0][p[1].val]['argumentList'][iterator]):
+          if(child.type != symbol_table[0][prev_func_name]['argumentList'][iterator]):
             print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' argument ' + str(iterator+1) +' does not match function declaration')
             give_error()
           iterator += 1
-      return 
-    symbol_table[parent[currentScope]][p[1].val] = {}
+        p[0].virtual_func_name = prev_func_name
+        func_arguments[prev_func_name] = []
+        for child in p[3].children:
+          func_arguments[prev_func_name].append(child.val)
+        return 
     
-    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 2
+    cur_func_name = p[1].val + '_0'
+    if(p[1].val in function_overloaded_map.keys()):
+      cur_func_name = p[1].val + '_' + str(int(function_overloaded_map[p[1].val]) + 1)
+    func_arguments[cur_func_name] = []
+    # print('printing 1')
+    
+    for child in p[3].children:
+      func_arguments[cur_func_name].append(child.val)
+      # print('printing name ' + cur_func_name)
+    # print(cur_func_name)
+    symbol_table[parent[currentScope]][cur_func_name] = {}
+    symbol_table[0][p[1].val] = {}
+    symbol_table[0][p[1].val]['type'] = 'virtual_func'
+    symbol_table[0][p[1].val]['isFunc'] = 2
+    symbol_table[parent[currentScope]][cur_func_name]['isFunc'] = 2
+    ignore_function_ahead.append(cur_func_name)
     p[0].isFunc = 2
     tempList = []
     for child in p[3].children:
@@ -2071,14 +2182,19 @@ def p_direct_declarator_1(p):
       # if(child.level > 0):
       #   tempType = child.type + " *"
       tempList.append(tempType)
-    symbol_table[parent[currentScope]][p[1].val]['argumentList'] = tempList
-    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1-len(tempList)]
+    symbol_table[parent[currentScope]][cur_func_name]['argumentList'] = tempList
+    symbol_table[parent[currentScope]][cur_func_name]['type'] = curType[-1-len(tempList)]
     curFuncReturnType = copy.deepcopy(curType[-1-len(tempList)])
-    if(p[1].val in functionScope.keys()):
-      scope_to_function.pop(functionScope[p[1].val])
-    functionScope[p[1].val] = currentScope
-    scope_to_function[currentScope] = p[1].val
-    local_vars[p[1].val] = []
+    if(cur_func_name in functionScope.keys()):
+      scope_to_function.pop(functionScope[cur_func_name])
+    functionScope[cur_func_name] = currentScope
+    scope_to_function[currentScope] = cur_func_name
+    local_vars[cur_func_name] = []
+    p[0].virtual_func_name = cur_func_name
+    if(p[1].val in function_overloaded_map):
+      function_overloaded_map[p[1].val] += 1
+    else:
+      function_overloaded_map[p[1].val] = 0
     # emit('func', '', '', p[1].val)
 
 
@@ -2096,31 +2212,58 @@ def p_direct_declarator_3(p):
   p[0].ast = build_AST(p)
   global curFuncReturnType
   if(p[3] == ')'):
-    func_arguments[p[1].val] = []
-    if(p[1].val in symbol_table[parent[currentScope]].keys()):
+    # if(p[1].val in symbol_table[0].keys()):
+    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    #   return
+    prev_func_name = ''
+    if(p[1].val in function_overloaded_map.keys()):
+      prev_func_name = p[1].val + '_' + str(function_overloaded_map[p[1].val])
+
+    if(prev_func_name != ''):
       # print('check')
-      if('isFunc' not in symbol_table[0][p[1].val] or symbol_table[0][p[1].val]['isFunc'] == 1):
-        print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
-        give_error()
+      if('isFunc' not in symbol_table[0][prev_func_name] or symbol_table[0][prev_func_name]['isFunc'] == 1):
+        for i in range(int(function_overloaded_map[p[1].val]) + 1):
+          prev_name = p[1].val + '_' + str(i)
+          prevList = copy.deepcopy(symbol_table[0][prev_name]['argumentList'])
+          if(len(prevList) == 0):
+            print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+            give_error()
+            return
       else:
-        if(p[1].val in functionScope.keys()):
-          scope_to_function.pop(functionScope[p[1].val])
-        functionScope[p[1].val] = currentScope
-        scope_to_function[currentScope] = p[1].val
-        local_vars[p[1].val] = []
-      return 
-    symbol_table[parent[currentScope]][p[1].val] = {}
-    symbol_table[parent[currentScope]][p[1].val]['type'] = curType[-1]
+        if(prev_func_name in functionScope.keys()):
+          scope_to_function.pop(functionScope[prev_func_name])
+        functionScope[prev_func_name] = currentScope
+        scope_to_function[currentScope] = prev_func_name
+        local_vars[prev_func_name] = []
+        p[0].virtual_func_name = prev_func_name
+        func_arguments[prev_func_name] = []
+        return 
+    cur_func_name = p[1].val + '_0'
+    if(p[1].val in function_overloaded_map.keys()):
+      cur_func_name = p[1].val + '_' + str(int(function_overloaded_map[p[1].val]) + 1)
+    func_arguments[cur_func_name] = []
+    p[0].virtual_func_name = cur_func_name
+    symbol_table[parent[currentScope]][cur_func_name] = {}
+    symbol_table[0][p[1].val] = {}
+    symbol_table[0][p[1].val]['type'] = 'virtual_func'
+    symbol_table[parent[currentScope]][cur_func_name]['type'] = curType[-1]
     curFuncReturnType = copy.deepcopy(curType[-1])
-    symbol_table[parent[currentScope]][p[1].val]['isFunc'] = 2
+    symbol_table[parent[currentScope]][cur_func_name]['isFunc'] = 2
+    symbol_table[0][p[1].val]['isFunc'] = 2
+    ignore_function_ahead.append(cur_func_name)
     p[0].isFunc = 2
-    symbol_table[parent[currentScope]][p[1].val]['argumentList'] = []
-    if(p[1].val in functionScope.keys()):
-      scope_to_function.pop(functionScope[p[1].val])
-    functionScope[p[1].val] = currentScope
-    scope_to_function[currentScope] = p[1].val
-    local_vars[p[1].val] = []
-    print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
+    symbol_table[parent[currentScope]][cur_func_name]['argumentList'] = []
+    if(cur_func_name in functionScope.keys()):
+      scope_to_function.pop(functionScope[cur_func_name])
+    functionScope[cur_func_name] = currentScope
+    scope_to_function[currentScope] = cur_func_name
+    local_vars[cur_func_name] = []
+    p[0].virtual_func_name = cur_func_name
+    if(p[1].val in function_overloaded_map):
+      function_overloaded_map[p[1].val] += 1
+    else:
+      function_overloaded_map[p[1].val] = 0
+    # print(symbol_table[parent[currentScope]][p[1].val],p[1].val,parent[currentScope])
     # emit('func', '', '', p[1].val)
   else:
     p[0].array = copy.deepcopy(p[1].array)
@@ -2750,21 +2893,18 @@ def p_function_definition_1(p):
     #                        | declarator function_compound_statement   
     #p[0] = Node()
     # p[0] = build_AST(p)  
-    if(len(p) == 3):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
-    elif(len(p) == 4):
-      p[0] = Node(name = 'FuncDeclWithoutType',val = p[1].val,type = 'int', lno = p[1].lno, children = [])
-    else:
-      # no need to keep type in AST
-      p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
-      symbol_table[0][p[2].val]['isFunc'] = 1
+    p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
+    
+    cur_func_name = p[2].val + '_' + str(function_overloaded_map[p[2].val])
+
+    symbol_table[0][cur_func_name]['isFunc'] = 1
     p[0].ast = build_AST(p)
     if p[1].type == 'void' and emit_array[-1][0] != 'ret':
       emit('ret','','','')
     elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
       print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
       give_error()
-    emit('funcEnd', '', '', p[2].val)
+    emit('funcEnd', '', '', p[2].virtual_func_name)
 
 
 def p_function_definition_2(p):
@@ -2772,17 +2912,20 @@ def p_function_definition_2(p):
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
   # print(p[2].val)
-  symbol_table[0][p[2].val]['isFunc'] = 1
+  
+  cur_func_name = p[2].val + '_' + str(function_overloaded_map[p[2].val])
+  # print(cur_func_name)
+  symbol_table[0][cur_func_name]['isFunc'] = 1
   if p[1].type == 'void' and emit_array[-1][0] != 'ret':
       emit('ret','','','')
   elif p[1].type != 'void' and emit_array[-1][0] != 'ret':
       print("COMPILATION ERROR at line "+str(p[1].lno)+": Function reaches end of control without return statement")
       give_error()
-  emit('funcEnd', '', '', p[2].val)
+  emit('funcEnd', '', '', p[2].virtual_func_name)
 
 def p_FuncMark1(p):
   '''FuncMark1 : '''
-  emit('func', '', '', p[-1].val)
+  emit('func', '', '', p[-1].virtual_func_name)
 
 def p_openbrace(p):
   '''openbrace : LCURLYBRACKET'''
@@ -2842,6 +2985,7 @@ def print_emit_array(debug = False):
     print(i)
   for i in emit_array:
     print(i)
+  print(function_overloaded_map)
 def visualize_symbol_table():
   global syn_error_count
   global scopeName
@@ -2857,8 +3001,9 @@ def visualize_symbol_table():
           temp_list[key] = symbol_table[i][key]
         if(not ((key.startswith('struct') or key.startswith('union')) or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
           newkey = key + "_" + str(i)
+          # if(key not in ignore_function_ahead):
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
-          # print(newkey, global_symbol_table[newkey])
+          print(newkey, global_symbol_table[newkey])
           if(newkey not in local_vars[scope_to_function[i]]):
             local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
@@ -2869,7 +3014,7 @@ def visualize_symbol_table():
           if(key not in strings.keys()):
             local_vars[scope_to_function[i]].append(key)
           global_symbol_table[key] = symbol_table[i][key]
-          # print(key, global_symbol_table[key])
+          print(key, global_symbol_table[key])
       json_object = json.dumps(temp_list, indent = 4)
       # print(json_object)
       with open("symbol_table_output.json", "a") as outfile:

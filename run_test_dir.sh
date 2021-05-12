@@ -7,9 +7,9 @@
 for file in "$1"/*; do
     cat template.c > new.c
     cat "$file" >> new.c
+    echo "------------ Testing: $file ------------"
     gcc -w new.c
     rm new.c
-    echo "------------ Testing: $file ------------"
     ./a.out > gccOutput.txt
     ./compile_test.sh "$file"
     # DIFF = $(diff gccOutput.txt codeOutput.txt)
