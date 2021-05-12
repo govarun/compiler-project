@@ -47,14 +47,15 @@ global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'abs', 'sin', 'cos']
-mathFuncs = ['pow', 'abs', 'sin', 'cos']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'fabs', 'sin', 'cos', 'sqrt']
+mathFuncs = ['pow', 'fabs', 'sin', 'cos', 'sqrt']
 local_vars = {}
 func_arguments = {}
 local_vars['global'] = []
 strings = {}
 functionScope = {}
 relational_op_list = ["<",">","<=",">=","==","!="] 
+jump_mark = 0
 def pre_append_in_symbol_table():
   for symbol in pre_append_in_symbol_table_list:
     symbol_table[0][symbol] = {}
@@ -91,6 +92,11 @@ def emit(op, s1, s2, dest):
   global emit_array
   global nextstat
   global currentScope
+  global jump_mark
+  if(jump_mark and not op.startswith('label') and not op.startswith('func')):
+    return
+  else:
+    jump_mark = 0
   if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
     global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
   else:
@@ -2679,6 +2685,8 @@ def p_jump_statement(p):
         tmp = get_new_tmp(curFuncReturnType)
         change_data_type_emit(p[2].type, curFuncReturnType, p[2].place, tmp)
       emit('ret', '', '', tmp)
+    global jump_mark
+    jump_mark = 1
 
 def p_jump_statement_1(p):
   '''jump_statement : BREAK SEMICOLON'''
@@ -2689,11 +2697,12 @@ def p_jump_statement_1(p):
   if(loopingDepth == 0 and switchDepth == 0):
     print(p[0].lno, 'break not inside loop')
   emit('goto','','',breakStack[-1])
+  global jump_mark
+  jump_mark = 1
 
 def p_jump_statement_2(p):
   '''jump_statement : CONTINUE SEMICOLON'''
   global loopingDepth
-
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
 
@@ -2701,11 +2710,16 @@ def p_jump_statement_2(p):
     print(p[0].lno, 'continue not inside loop')
 
   emit('goto','','',continueStack[-1])
+  global jump_mark
+  jump_mark = 1
 
 def p_jump_statement_3(p):
   '''jump_statement : GOTO ID SEMICOLON'''
   p[0] = Node(name = 'JumpStatement',val = '',type = '', lno = p.lineno(1), children = []) 
   p[0].ast = build_AST(p)   
+  emit('goto', '', '', p[2])
+  global jump_mark
+  jump_mark = 1
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
@@ -2810,7 +2824,7 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
-  print_emit_array(debug=False)
+  print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
