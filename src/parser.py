@@ -162,8 +162,10 @@ def int_or_real(dtype):
     return 'int'
   if 'long' in arr:
     return 'int' 
-  elif ( ('int' in arr) or ('char' in arr) or ('short' in arr) ):
+  elif ( ('int' in arr) or ('short' in arr) ):
     return 'int'
+  elif ('char' in arr):
+    return 'char'
   else:
     return 'float'
 
@@ -190,13 +192,15 @@ def handle_binary_emit(p0, p1, p2, p3):
 def handle_binary_emit_sub_add(p0, p1, p2, p3):
   operator = extract_if_tuple(p2)
   higher_data_type = int_or_real(get_higher_data_type(p1.type , p3.type))
+  if(p1.type.endswith('*') or p3.type.endswith('*') or p1.level > 0 or p3.level > 0):
+    higher_data_type = 'int'
   return_tmp = get_new_tmp(higher_data_type)
   p0.place = return_tmp
-  if (int_or_real(p1.type) != higher_data_type):
+  if (int_or_real(p1.type) != higher_data_type and p1.level == 0):
     tmp = get_new_tmp(higher_data_type)
     change_data_type_emit(p1.type, higher_data_type, p1.place, tmp)
     emit(higher_data_type + '_' + operator, tmp, p3.place, p0.place)
-  elif (int_or_real(p3.type) != higher_data_type):
+  elif (int_or_real(p3.type) != higher_data_type and p3.level == 0):
     tmp = get_new_tmp(higher_data_type)
     change_data_type_emit(p3.type, higher_data_type, p3.place, tmp)
     emit(higher_data_type + '_' + operator, p1.place, tmp, p0.place)
@@ -204,17 +208,21 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
     if(p1.type.endswith('*') or p3.type.endswith('*') or p1.level > 0 or p3.level > 0):
       tmp = get_new_tmp('int')
       if(p1.type.endswith('*') or p1.level > 0):
+        if(p3.type.startswith('float')):
+          print("COMPILATION ERROR at line " + str(p1.lno) + ", cannot add float to pointer variable")
         data_type = p1.type
         if data_type.endswith('*'):
           data_type = data_type[:-2]
         emit('int_*',p3.place,get_data_type_size(data_type),tmp)
-        emit(int_or_real(p3.type) + '_' + operator, p1.place, tmp, p0.place)
+        emit('int_' + operator, p1.place, tmp, p0.place)
       else:
+        if(p1.type.startswith('float')):
+          print("COMPILATION ERROR at line " + str(p1.lno) + ", cannot add float to pointer variable")
         data_type = p3.type
         if data_type.endswith('*'):
           data_type = data_type[:-2]
         emit('int_*',p1.place,get_data_type_size(data_type),tmp)
-        emit(int_or_real(p1.type) + '_' + operator, tmp, p3.place, p0.place)
+        emit('int_' + operator, tmp, p3.place, p0.place)
     else:
       emit(int_or_real(p1.type) + '_' + operator, p1.place, p3.place, p0.place)
   return p0, p1, p2, p3
@@ -294,7 +302,7 @@ def get_data_type_size(type_1):
   if (type_1 == '' or type_1 == 'virtual_func'):
     return 0
   type_size = {}
-  type_size['char'] = 4
+  type_size['char'] = 1
   type_size['short'] = 2
   type_size['int'] = 4
   type_size['long'] = 8
@@ -611,10 +619,10 @@ def p_postfix_expression_4(p):
     if (p[3].children[0].type != "char *"):
       print("COMPILATION ERROR at line :" + str(p[1].lno) + " Incompatible first argument to printf")
       give_error()
-    type_dict = {"x": ["int", "int *",  "char", "char *", "float *"],\
-              "d": ["int", "int *",  "char", "char *", "float *"],\
+    type_dict = {"x": ["int", "int *", "char *", "float *"],\
+              "d": ["int", "int *", "char *", "float *"],\
               "f": ["float"],\
-              "c": ["int", "char"] }
+              "c": ["char"] }
     types_children = parse_format_string(p[3].children[0].val) # DOUBT
     if (len(types_children) != len(p[3].children) - 1):
       print("Compilation Error at line " + str(p[1].lno) + " Incorrect number of arguments for function call")
@@ -625,6 +633,8 @@ def p_postfix_expression_4(p):
       if(types_children[i-1] not in type_dict.keys()):
         continue
       if(p[3].children[i].type not in type_dict[types_children[i - 1]]):
+        if(p[3].children[i].level > 0 and types_children[i-1] in ["x", "d"]):
+          continue
         tmp = get_new_tmp(type_dict[types_children[i - 1]][0])
         change_data_type_emit(p[3].children[i].type, type_dict[types_children[i - 1]][0], p[3].children[i].place, tmp)
         p[3].children[i].place = tmp
@@ -2998,7 +3008,7 @@ def print_emit_array(debug = False):
     print(i)
   for i in emit_array:
     print(i)
-  print(function_overloaded_map)
+  # print(function_overloaded_map)
 def visualize_symbol_table():
   global syn_error_count
   global scopeName
@@ -3016,7 +3026,7 @@ def visualize_symbol_table():
           newkey = key + "_" + str(i)
           # if(key not in ignore_function_ahead):
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
-          print(newkey, global_symbol_table[newkey])
+          # print(newkey, global_symbol_table[newkey])
           if(newkey not in local_vars[scope_to_function[i]]):
             local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
@@ -3027,7 +3037,7 @@ def visualize_symbol_table():
           if(key not in strings.keys()):
             local_vars[scope_to_function[i]].append(key)
           global_symbol_table[key] = symbol_table[i][key]
-          print(key, global_symbol_table[key])
+          # print(key, global_symbol_table[key])
       json_object = json.dumps(temp_list, indent = 4)
       # print(json_object)
       with open("symbol_table_output.json", "a") as outfile:

@@ -2,8 +2,11 @@
 	.intel_syntax noprefix
 	.text
 	.section	.rodata
+.LC0:
+	.string	"Hello World Its not working"
+	.string	""
 .LC1:
-	.string	"%f"
+	.string	"%s"
 	.text
 	.globl	main
 	.type	main, @function
@@ -23,28 +26,16 @@ main:
 	.cfi_escape 0xf,0x3,0x75,0x78,0x6
 	.cfi_escape 0x10,0x3,0x2,0x75,0x7c
 	sub	esp, 16
-	call	__x86.get_pc_thunk.bx
-	add	ebx, OFFSET FLAT:_GLOBAL_OFFSET_TABLE_
-	mov	DWORD PTR -20[ebp], 2
-	fld	DWORD PTR .LC0@GOTOFF[ebx]
-	fstp	DWORD PTR -16[ebp]
-	fld	DWORD PTR -16[ebp]
-	fld	DWORD PTR -16[ebp]
-	lea	esp, -8[esp]
-	fstp	QWORD PTR [esp]
-	lea	esp, -8[esp]
-	fstp	QWORD PTR [esp]
-	call	pow@PLT
-	add	esp, 16
-	fstp	DWORD PTR -16[ebp]
-	fld	DWORD PTR -16[ebp]
-	fstp	DWORD PTR -12[ebp]
-	fld	DWORD PTR -12[ebp]
-	sub	esp, 4
-	lea	esp, -8[esp]
-	fstp	QWORD PTR [esp]
-	lea	eax, .LC1@GOTOFF[ebx]
-	push	eax
+	call	__x86.get_pc_thunk.ax
+	add	eax, OFFSET FLAT:_GLOBAL_OFFSET_TABLE_
+	mov	BYTE PTR -13[ebp], 97
+	lea	edx, .LC0@GOTOFF[eax]
+	mov	DWORD PTR -12[ebp], edx
+	sub	esp, 8
+	push	DWORD PTR -12[ebp]
+	lea	edx, .LC1@GOTOFF[eax]
+	push	edx
+	mov	ebx, eax
 	call	printf@PLT
 	add	esp, 16
 	mov	eax, 0
@@ -62,18 +53,14 @@ main:
 	.cfi_endproc
 .LFE0:
 	.size	main, .-main
-	.section	.rodata
-	.align 4
-.LC0:
-	.long	1073741824
-	.section	.text.__x86.get_pc_thunk.bx,"axG",@progbits,__x86.get_pc_thunk.bx,comdat
-	.globl	__x86.get_pc_thunk.bx
-	.hidden	__x86.get_pc_thunk.bx
-	.type	__x86.get_pc_thunk.bx, @function
-__x86.get_pc_thunk.bx:
+	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat
+	.globl	__x86.get_pc_thunk.ax
+	.hidden	__x86.get_pc_thunk.ax
+	.type	__x86.get_pc_thunk.ax, @function
+__x86.get_pc_thunk.ax:
 .LFB1:
 	.cfi_startproc
-	mov	ebx, DWORD PTR [esp]
+	mov	eax, DWORD PTR [esp]
 	ret
 	.cfi_endproc
 .LFE1:

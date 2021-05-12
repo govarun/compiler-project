@@ -5,6 +5,7 @@ import sys
 
 # 32 bit register descriptors
 reg_desc = {}
+byte_trans = {}
 reg_desc["eax"] = set()
 reg_desc["ebx"] = set()
 reg_desc["ecx"] = set()
@@ -19,6 +20,12 @@ reg_desc["xmm4"] = set()
 reg_desc["xmm5"] = set()
 reg_desc["xmm6"] = set()
 reg_desc["xmm7"] = set()
+byte_trans["eax"] = "al"
+byte_trans["ebx"] = "bl"
+byte_trans["ecx"] = "cl"
+byte_trans["edx"] = "dl"
+byte_trans["esi"] = "sil"
+byte_trans["edi"] = "dil"
 
 def dprint(str):
     '''
@@ -195,7 +202,7 @@ def save_caller_status():
         reg_desc[reg].clear()
 
 
-def get_best_location(symbol, exclude_reg = []):
+def get_best_location(symbol, exclude_reg = [], byte = False):
     '''
         Gives the best location for a symbol:
         - for global symbols it gives it in data section
@@ -210,9 +217,14 @@ def get_best_location(symbol, exclude_reg = []):
         for reg in symbols[symbol].address_desc_reg:
             if (reg not in exclude_reg):
                 # dprint("returring" + reg)
-                return reg
-
-    return "dword " + get_location_in_memory(symbol)
+                if byte:
+                    return byte_trans(reg)
+                else:
+                    return reg
+    if(byte):
+        return "byte " + get_location_in_memory(symbol)
+    else:
+        return "dword " + get_location_in_memory(symbol)
 
 def check_type_location(location):
     if is_number(location):

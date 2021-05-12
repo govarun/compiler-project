@@ -420,6 +420,60 @@ class CodeGen:
             # if (quad.instr_info['nextuse'][quad.src1] == None):
             #     del_symbol_reg_exclude(quad.src1)
 
+    def char_assign(self, quad):
+        if(quad.src2 is not None):
+            #*x = y
+            # pts = symbols[quad.src1].pointsTo
+            # if(len(pts) > 0):
+
+            best_location = get_best_location(quad.dest)
+            if(best_location not in reg_desc.keys()):
+                reg = get_register(quad, compulsory = True)
+                print("\tmov " + reg + ", " + best_location)
+                best_location = reg
+                
+            symbols[quad.dest].address_desc_reg.add(best_location)
+            reg_desc[best_location].add(quad.dest)
+
+            if(is_symbol(quad.src1)):
+                loc = get_best_location(quad.src1)
+                if(loc not in reg_desc.keys()):
+                    loc = get_best_location(quad.src1, byte = True)
+                    reg = get_register(quad, compulsory = True, exclude_reg = [best_location, "esi", "edi"])
+                    upd_reg_desc(reg, quad.src1)
+                    print("\txor " + reg + ", " + reg)
+                    print("\tmov " + byte_trans[reg] + ", " + loc)
+                    loc = reg
+                
+                symbols[quad.src1].address_desc_reg.add(loc)
+                reg_desc[loc].add(quad.src1)
+
+                print("\tmov byte [" + best_location + "], " + byte_trans[loc])
+            else:
+                print("\tmov byte [" + best_location + "], " + quad.src1)
+            
+        # elif (is_number(quad.src1)): # case when src1 is an integral numeric
+        #     best_location = get_best_location(quad.dest)
+        #     if (check_type_location(best_location) == "register"):
+        #         upd_reg_desc(best_location, quad.dest)
+        #     print("\tmov " + best_location + ", " + quad.src1)
+        else:
+            #a = b
+            symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
+            best_location = get_best_location(quad.src1)
+            # dprint(quad.src1 + " " + best_location + " " + quad.dest)
+            if (best_location not in reg_desc.keys()):
+                best_location = get_best_location(quad.src1, byte = True)
+                reg = get_register(quad, compulsory = True, exclude_reg = ["esi", "edi"])
+                upd_reg_desc(reg, quad.src1)
+                print("\txor " + reg + ", " + reg)
+                print("\tmov " + byte_trans[reg] + ", " + best_location)
+                best_location = reg
+
+            symbols[quad.dest].address_desc_reg.add(best_location)
+            reg_desc[best_location].add(quad.dest)
+            del_symbol_reg_exclude(quad.dest, [best_location])
+
     def int2float(self, quad):
         best_location = get_best_location(quad.src1)
         reg = get_register(quad, is_float=True)
@@ -434,6 +488,39 @@ class CodeGen:
         print("\tcvttss2si " + reg + ", " + best_location)
         #cvtt or cvt? -> [X] Doubt
     
+    def char2int(self, quad):
+        reg = get_register(quad, exclude_reg = ["esi", "edi"])
+        loc = get_best_location(quad.src1, byte = True)
+        print("\txor " + reg  + ", " + reg)
+        print("\tmov " + byte_trans[reg] + ", " + loc)
+        upd_reg_desc(reg, quad.dest)
+    
+    def char2float(self, quad):
+        reg = get_register(quad,  exclude_reg = ["esi", "edi"])
+        loc = get_best_location(quad.src1, byte = True)
+        print("\txor " + reg + ", " + reg)
+        print("\tmov " + byte_trans[reg] +", " + loc)
+        dest_reg = get_register(quad, float = True)
+        upd_reg_desc(dest_reg, quad.dest)
+        print("\tcvtsi2ss " + dest_reg + ", " + reg)
+
+    def int2char(self, quad):
+        reg1 = get_register(quad,  exclude_reg = ["esi", "edi"])
+        reg2 = get_register(quad, exclude_reg = [reg1, "esi", "edi"])
+        print("\tmov " + reg1 +", " + get_best_location(quad.src1))
+        upd_reg_desc(reg2, quad.dest)
+        print("\txor " + reg2 + ", " + reg2)
+        print("\tmov " + byte_trans[reg2] + ", " + byte_trans[reg1])
+
+    def float2char(self, quad):
+        reg = get_register(quad, float = True)
+        print("\tmov " + reg + ", " + get_best_location(quad.src1))
+        reg1 = get_register(quad)
+        print("\tcvttss2si " + reg1  + ", " + reg)
+        reg2 = get_register(quad, exclude_reg = [reg1, "esi", "edi"])
+        print("\txor " + reg2 + ", " + reg2)
+        print("\tmov " + byte_trans[reg2] + ", " + byte_trans[reg1])
+        upd_reg_desc(reg2, quad.dest)
     
     def deref(self, quad):
         #x = *y assignment
@@ -537,7 +624,7 @@ class CodeGen:
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
                 # dprint(var + " " + str(-offset))
-                offset += get_data_type_size(global_symbol_table[var]['type'])
+                offset += max(get_data_type_size(global_symbol_table[var]['type']), 4)
                 symbols[var].address_desc_mem.append(-offset) #why is the first loc variable at ebp -4 and not at ebp`
 
         print("\tpush ebp")
@@ -654,14 +741,26 @@ class CodeGen:
             self.int2float(quad)
         elif(quad.op == "float2int"):
             self.float2int(quad)
+        elif(quad.op == "char2int"):
+            self.char2int(quad)
+        elif(quad.op == "int2char"):
+            self.int2char(quad)
+        elif(quad.op == "char2float"):
+            self.char2float(quad)
+        elif(quad.op == "float2char"):
+            pass
         elif(quad.op == "float_="):
             self.real_assign(quad)
+        elif(quad.op == "char_="):
+            self.char_assign(quad)
         elif(quad.op.endswith("_=")):
             self.assign(quad)
         elif(quad.op == "ret"):
             self.function_return(quad)
         elif(quad.op == "float_+"):
             self.real_add(quad)
+        elif(quad.op == "char_+"):
+            self.char_add(quad)
         elif(quad.op.endswith("+")): # matches with everything other than real_+
             self.add(quad)
         elif(quad.op == "float_-"):
@@ -670,6 +769,12 @@ class CodeGen:
             self.real_mul(quad)
         elif(quad.op == "float_/"):
             self.real_div(quad)
+        elif(quad.op == "char_-"):
+            self.char_sub(quad)
+        elif(quad.op == "char_*"):
+            self.char_mul(quad)
+        elif(quad.op == "char_/"):
+            self.char_div(quad)
         elif(quad.op.endswith("-")):
             self.sub(quad)
         elif(quad.op.endswith("*")):

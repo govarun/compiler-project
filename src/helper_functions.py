@@ -12,7 +12,7 @@ class symbol_info:
     def __init__(self, isArray = False, length = 0, isStruct = False, size = 0, pointsTo = ''):
         self.isArray = isArray
         self.isStruct = isStruct
-        self.size = size
+        self.size = ((size + 3)//4)*4
         self.length = length
         self.address_desc_mem = []
         self.pointsTo = pointsTo
@@ -87,8 +87,23 @@ class Instruction:
             self.op = "float2int"
             self.src1 = quad[1]
             self.dest = quad[3]
+        
+        elif(self.op == "char_int_="):
+            self.op = "char2int"
+            self.src1 = quad[1]
+            self.dest = quad[3]
 
-        elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_="):
+        elif(self.op == "char_float_="):
+            self.op = "char2float"
+            self.src1 = quad[1]
+            self.dest = quad[3]
+        
+        elif(self.op == "int_char_="):
+            self.op = "int2char"
+            self.src1 = quad[1]
+            self.dest = quad[3]
+
+        elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_=" or self.op == "char_=" or self.op == "char_char_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):
@@ -107,7 +122,7 @@ class Instruction:
             self.src2 = float_reverse_map["-1.0"]
             self.op = "float_*"
 
-        elif(self.op.startswith("int_") or self.op.startswith("float_")):
+        elif(self.op.startswith("int_") or self.op.startswith("float_") or self.op.startswith("char_")):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2]
