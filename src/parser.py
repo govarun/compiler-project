@@ -453,17 +453,31 @@ def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
   p[0] = Node(name = 'FunctionCall1',val = p[1].val,lno = p[1].lno,type = p[1].type,children = [p[1]],isFunc=0, place = p[1].place)
   p[0].ast = build_AST(p)
+  func_to_be_called = ''
+  if(p[1].val in pre_append_in_symbol_table_list):
+    func_to_be_called = p[1].val
   if(p[1].val not in symbol_table[0].keys() or 'isFunc' not in symbol_table[0][p[1].val].keys()):
     print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error() 
-  elif(len(symbol_table[0][p[1].val]['argumentList']) != 0):
-    print("Syntax Error at line",p[1].lno,"Incorrect number of arguments for function call") 
+  elif(p[1].val not in function_overloaded_map.keys() and func_to_be_called == ''):
+    print('COMPILATION ERROR at line ' + str(p[1].lno) + ': no function with name ' + p[1].val + ' declared')
     give_error()
+  elif(p[1].val not in pre_append_in_symbol_table_list):
+    for i in range(function_overloaded_map[p[1].val] + 1):  
+      cur_func_name = p[1].val + '_' + str(i)
+      # print(cur_func_name)
+      if(len(symbol_table[0][cur_func_name]['argumentList']) == 0):
+        func_to_be_called = cur_func_name
+        break
+  if(func_to_be_called == ''):
+    print('COMPILATION ERROR at line : ' + str(p[1].lno) + ': incorrect arguments for function call')
+    give_error()
+  else:
+    p[0].type = symbol_table[0][func_to_be_called]['type']
   retVal = ''
-  # p[0].type = symbol_table[0][func_to_be_called]['type']
-  if(p[1].type != 'void'):
-    retVal = get_new_tmp(p[1].type)
-  emit('call', 0, retVal, p[1].val)
+  if(p[0].type != 'void'):
+    retVal = get_new_tmp(p[0].type)
+  emit('call', 0, retVal, func_to_be_called)
   p[0].place = retVal
 
 
@@ -2017,19 +2031,18 @@ def p_direct_declarator_3(p):
   p[0].ast = build_AST(p)
   global curFuncReturnType
   if(p[3] == ')'):
-    if(p[1].val in symbol_table[0].keys()):
-      print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
-      return
+    # if(p[1].val in symbol_table[0].keys()):
+    #   print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
+    #   return
     prev_func_name = ''
     if(p[1].val in function_overloaded_map.keys()):
       prev_func_name = p[1].val + '_' + str(function_overloaded_map[p[1].val])
 
-    func_arguments[p[1].val] = []
     if(prev_func_name != ''):
       # print('check')
       if('isFunc' not in symbol_table[0][prev_func_name] or symbol_table[0][prev_func_name]['isFunc'] == 1):
         for i in range(int(function_overloaded_map[p[1].val]) + 1):
-          prev_name = p[1] + '_' + str(i)
+          prev_name = p[1].val + '_' + str(i)
           prevList = copy.deepcopy(symbol_table[0][prev_name]['argumentList'])
           if(len(prevList) == 0):
             print('COMPILATION ERROR : near line ' + str(p[1].lno) + ' function already declared')
@@ -2042,6 +2055,7 @@ def p_direct_declarator_3(p):
         scope_to_function[currentScope] = prev_func_name
         local_vars[prev_func_name] = []
         p[0].virtual_func_name = prev_func_name
+        func_arguments[prev_func_name] = []
         return 
     cur_func_name = p[1].val + '_0'
     if(p[1].val in function_overloaded_map.keys()):
