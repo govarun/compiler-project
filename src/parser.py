@@ -44,6 +44,7 @@ continueStack = []
 breakStack = []
 scope_to_function = {}
 scope_to_function[0] = 'global'
+top_label = {}
 nextstat = 0 # next instruction pointer
 emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
 global_emit_array = []
@@ -103,6 +104,13 @@ def emit(op, s1, s2, dest):
     return
   else:
     jump_mark = 0
+    
+  if(op.startswith('label')):
+    if len(emit_array) > 0 and emit_array[-1][0].startswith('label'):
+      top_label[dest] = emit_array[-1][3]
+      return
+    else:
+      top_label[dest] = dest
   if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
     global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
   else:
@@ -3042,6 +3050,9 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
+  for v in emit_array:
+    if v[0] == 'goto' or v[0] == 'ifgoto':
+      v[3] = top_label[v[3]]
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
