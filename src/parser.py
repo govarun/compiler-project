@@ -1768,89 +1768,8 @@ def p_declaration(p):
   '''
   
   if(len(p) == 3):
-    
-    # if(p[2].isFunc > 0):
-    #   currentScope = parent[currentScope]
-    #   print(currentScope)
     p[0] = p[1]
     p[0].ast = build_AST(p)
-  # else:
-    # if p[1].type.startswith('typedef'):
-    #   keywords[p[2].children[0].val] = keywords[p[1].type.split()[-1]]
-    # # print('here')
-    # if(p[2].isFunc > 0):
-    #   currentScope = parent[currentScope]
-    #   print(currentScope)
-    # # a = 1
-    # p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
-    # p[0].ast = build_AST(p)
-    # flag = 1
-    # if('void' in p[1].type.split()):
-    #   flag = 0
-    # for child in p[2].children:
-
-    #   if(child.name == 'InitDeclarator'):
-    #     if(p[1].type.startswith('typedef')):
-    #       print("COMPILATION ERROR at line " + str(p[1].lno) + ": typedef intialized")
-    #       continue
-    #     if(child.children[0].val in symbol_table[currentScope].keys()):
-    #       print('here1')
-    #       print(p.lineno(1), 'COMPILATION ERROR : ' + child.children[0].val + ' already declared')
-    #     symbol_table[currentScope][child.children[0].val] = {}
-    #     symbol_table[currentScope][child.children[0].val]['type'] = p[1].type
-    #     symbol_table[currentScope][child.children[0].val]['value'] = child.children[1].val
-    #     symbol_table[currentScope][child.children[0].val]['size'] = get_data_type_size(p[1].type)
-    #     symbol_table[currentScope][child.children[0].val]['offset'] = offset[currentScope]
-    #     totalEle = 1
-    #     if(len(child.children[0].array) > 0):
-    #       symbol_table[currentScope][child.children[0].val]['array'] = child.children[0].array
-    #       for i in child.children[0].array:
-    #         totalEle = totalEle*i
-    #     if(len(child.children[0].type) > 0):
-    #       symbol_table[currentScope][child.children[0].val]['type'] = p[1].type + ' ' + child.children[0].type 
-    #       symbol_table[currentScope][child.children[0].val]['size'] = 8
-    #     elif(flag == 0):
-    #       print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[0].val + " cannot have type void")
-    #     symbol_table[currentScope][child.children[0].val]['size'] *= totalEle
-    #     offset[currentScope] += symbol_table[currentScope][child.children[0].val]['size']
-    #     # 3AC Code 
-    #     child.children[0].place = child.children[0].val
-    #     # print(child.children[1].val)
-    #     operator = '='
-    #     data_type = int_or_real(p[1].type)
-    #     if (int_or_real(child.children[1].type) != data_type):
-    #       tmp = get_new_tmp(data_type)
-    #       change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
-    #       emit(data_type + '_' + operator, tmp, '', child.children[0].place)
-    #     else:
-    #       emit(int_or_real(p[1].type) + '_' + operator, child.children[1].place, '', child.children[0].place)
-    #   else:
-    #     if(child.val in symbol_table[currentScope].keys() and 'isFunc' in symbol_table[currentScope][child.val]):
-    #       continue
-    #     if(child.val in symbol_table[currentScope].keys() and 'isFunc' not in symbol_table[currentScope][child.val]):
-    #       print(p.lineno(1), 'COMPILATION ERROR : ' + child.val + ' already declared')
-    #     symbol_table[currentScope][child.val] = {}
-    #     symbol_table[currentScope][child.val]['type'] = p[1].type
-    #     symbol_table[currentScope][child.val]['size'] = get_data_type_size(p[1].type)
-    #     symbol_table[currentScope][child.val]['offset'] = offset[currentScope]
-    #     totalEle = 1
-    #     if(len(child.array) > 0):
-    #       symbol_table[currentScope][child.val]['array'] = child.array
-    #       for i in child.array:
-    #         totalEle = totalEle*i
-    #     if(len(child.type) > 0):
-    #       symbol_table[currentScope][child.val]['type'] = p[1].type + ' ' + child.type
-    #       symbol_table[currentScope][child.val]['size'] = 8
-    #     elif(flag == 0):
-    #       print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.val + " cannot have type void")
-    #     symbol_table[currentScope][child.val]['size'] *= totalEle
-    #     offset[currentScope] += symbol_table[currentScope][child.val]['size']
-    #     # TODO : Confirm with others about two possible approaches
-    #     # if(p[1].type.startswith('struct')):
-    #     #   found_scope = find_if_ID_is_declared(p[1].type, p.lineno(1))
-    #     #   if found_scope != -1:
-    #     #     symbol_table[currentScope][child.val]['field_list'] = symbol_table[found_scope][p[1].type]['field_list']
-
 
 # TODO : change the below to support long, short etc.
 def p_declaration_specifiers(p):

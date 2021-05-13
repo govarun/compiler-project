@@ -5,12 +5,13 @@ import sys
 diction = {"&&" : "and", "||" : "or", "|" : "or", "&" : "and", "^" : "xor"}
 param_count = 0
 param_size = 0
-relational_op_list = ["<",">","<=",">=","==","!="] 
+relational_op_list = ["<",">","<=",">=","==","!="]
+
+# This code file is responsible for generating the assembly code from the 3ac code
+# The functions here have been called from helper_functions.py
 
 def dprint(str):
-    '''
-    Function for debugging
-    '''
+    # Function for debugging
     sys.stdout.close()
     sys.stdout = sys.__stdout__
     print(str)
@@ -19,25 +20,23 @@ def dprint(str):
 
 class CodeGen:
     def gen_top_headers(self):
+        # generating top headers for asm
         for func in pre_append_in_symbol_table_list:
+            # import all external functions
             print("extern " + func)
         print("section .text")
         print("\tglobal main")
         print("main:")
         print("\tpush ebp")
         print("\tmov ebp, esp")
-        # dprint('here')
-        # dprint(local_vars['global'])
+
         for var in local_vars['global']:
-            # symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
             if(symbols[var].isArray):
+                # global array declaration
                 quad = Instruction(0, ['', '', '', ''])
                 reg = get_register(quad, compulsory = True)
                 print("\tmov " + reg + ", " + str(symbols[var].length))
-                # if(symbols[var].isStruct):
                 print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
-
-                # print("\tshl " + reg + ", 2")
                 print("\tpush " + reg)
                 print("\tcall malloc")
                 print("\tadd esp, 4")
@@ -45,56 +44,55 @@ class CodeGen:
 
         for quad in global_instruction_array:
             self.generate_asm(quad)
+        # main declares the global variables then calls _main, which has actual code
         save_caller_status()
         print("\tcall _main")
-
         print("\tmov esp, ebp")
         print("\tpop ebp")
         print("\tret")
-        
+
 
     def data_section(self):
         print("section\t.data")
         float_tmp_vars = [lis[1] for lis in float_constant_values]
         for vars in local_vars['global']:
+            # data section has all the global variables
             if vars not in strings.keys() and vars not in float_tmp_vars and vars not in ignore_function_ahead:
+                # the strings and floats are printed next
                 if(symbols[vars].isStruct):
                     print("\t" + vars + "\ttimes\t" + str(symbols[vars].size) + "\tdb\t0")
                 elif('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
                     print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
                 else:
                     print("\t" + vars + "\tdd\t0")
-        # print("\tgetInt:\tdb\t\"%d\"\t")
         for name in strings.keys():
             temp_string = (strings[name])[1:-1]
             print("\t" + name + ":\tdb\t`" + temp_string + "`, 0")
         for name in float_constant_values:
             print("\t" + name[1] + "\tdd\t" + str(name[0]))
 
-    def bin_operations(self, quad, op):
-        #check where moved back into memory
 
+    def bin_operations(self, quad, op):
+        # asm for binary operations
+        # check the function definitions for free_all_regs, upd_reg_desc, for what they are doing
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
         save_reg_to_mem(reg1)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
-
         print("\t" + op + ' ' + reg1 + ", " + reg2)
         free_all_regs(quad)
         upd_reg_desc(reg1, quad.dest)
 
     def real_bin_operations(self,quad,op):
-
+        # asm for real binary operations
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True,is_float=True)
         save_reg_to_mem(reg1)
         if best_location != reg1:
-            # dprint(best_location + "register printed")
             print("\tmovss " + reg1 + ", " + best_location)
         reg2 = get_best_location(quad.src2)
-
         print("\t" + op + ' ' + reg1 + ", " + reg2)
         free_all_regs(quad)
         upd_reg_desc(reg1, quad.dest)
@@ -107,7 +105,7 @@ class CodeGen:
 
     def real_add(self,quad):
         self.real_bin_operations(quad,'addss')
-    
+
     def real_sub(self,quad):
         self.real_bin_operations(quad,'subss')
 
@@ -121,15 +119,17 @@ class CodeGen:
         self.real_bin_operations(quad, 'divss')
 
     def band(self, quad):
+        # bitwise and
         self.bin_operations(quad, 'and')
 
     def bor(self, quad):
         self.bin_operations(quad, 'or')
-    
+
     def bxor(self, quad):
         self.bin_operations(quad, 'xor')
-    
+
     def div(self, quad):
+        # div has a different process, remainder and quotient are placed in edx, eax
         best_location = get_best_location(quad.src1)
         save_reg_to_mem('eax')
         save_reg_to_mem('edx')
@@ -143,8 +143,8 @@ class CodeGen:
         print("\tcdq")
         print('\tidiv ' + reg)
         upd_reg_desc('eax', quad.dest)
-
         free_all_regs(quad)
+
 
     def mod(self, quad):
         best_location = get_best_location(quad.src1)
@@ -160,29 +160,32 @@ class CodeGen:
         print("\tcdq")
         print('\tidiv ' + reg)
         upd_reg_desc('edx', quad.dest)
-
-
         free_all_regs(quad)
-    
+
+
     def increment(self, quad):
+        # ++ operator
         best_location = get_best_location(quad.src1)
         if check_type_location(best_location) == "register":
             upd_reg_desc(best_location, quad.src1)
         print("\tinc " + best_location)
 
     def decrement(self, quad):
+        # -- operator
         best_location = get_best_location(quad.src1)
         if check_type_location(best_location) == "register":
             upd_reg_desc(best_location,quad.src1)
         print("\tdec " + best_location)
 
     def bitwisenot(self, quad):
+        # ~ operator
         best_location = get_best_location(quad.dest)
         if check_type_location(best_location) == "register":
             upd_reg_desc(best_location, quad.dest)
         print("\tnot " + best_location)
 
     def uminus(self, quad):
+        # unary minus
         best_location = get_best_location(quad.dest)
         if check_type_location(best_location) == "register":
             upd_reg_desc(best_location, quad.dest)
@@ -190,12 +193,12 @@ class CodeGen:
 
 
     def lshift(self, quad):
+        # << operator
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
         upd_reg_desc(reg1, quad.dest)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
-        
         best_location = get_best_location(quad.src2)
         if check_type_location(best_location) == "number":
             print("\tshl " + reg1 +  ', ' + best_location)
@@ -206,13 +209,14 @@ class CodeGen:
             print("\tshl " + reg1 + ", cl")
         free_all_regs(quad)
 
+
     def rshift(self, quad):
+        # >> operator
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
         upd_reg_desc(reg1, quad.dest)
         if best_location != reg1:
             print("\tmov " + reg1 + ", " + best_location)
-
         best_location = get_best_location(quad.src2)
         if check_type_location(best_location) == "number":
             print("\tshr " + reg1 + ', ' + best_location)
@@ -222,8 +226,10 @@ class CodeGen:
                 print("\tmov " + "ecx" + ", " + best_location)
             print("\tshr " + reg1 + ", cl")
         free_all_regs(quad)
-    
+
+
     def relational_op(self,quad):
+        # relational operators
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True)
         save_reg_to_mem(reg1)
@@ -254,7 +260,9 @@ class CodeGen:
         upd_reg_desc(reg1, quad.dest)
         free_all_regs(quad)
 
+
     def relational_float(self,quad):
+        # relational comparison for floats, happens differently than int
         best_location = get_best_location(quad.src1)
         reg1 = get_register(quad, compulsory=True,is_float=True)
         save_reg_to_mem(reg1)
@@ -288,15 +296,14 @@ class CodeGen:
 
 
     def real_assign(self,quad):
+        # assignment for real variables
         if(quad.src2 is not None):
             #*x = y
             best_location = get_best_location(quad.dest)
             if(best_location not in reg_desc.keys()):
                 reg = get_register(quad, compulsory = True)
                 print("\tmov " + reg + ", " + best_location)
-                #what if best_location is xmm?
                 best_location = reg
-                
             symbols[quad.dest].address_desc_reg.add(best_location)
             reg_desc[best_location].add(quad.dest)
 
@@ -307,31 +314,27 @@ class CodeGen:
                     upd_reg_desc(reg, quad.src1)
                     print("\tmovss " + reg + ", " + loc)
                     loc = reg
-                
                 symbols[quad.src1].address_desc_reg.add(loc)
                 reg_desc[loc].add(quad.src1)
-
                 print("\tmovss [" + best_location + "], " + loc)
             else:
                 print("\tmovss dword [" + best_location + "], " + quad.src1)
 
-            
         elif (is_number(quad.src1)): # case when src1 is an integral numeric
             best_location = get_best_location(quad.dest)
             if (check_type_location(best_location) == "register"):
                 upd_reg_desc(best_location, quad.dest)
             print("\tmovss " + best_location + ", " + quad.src1)
+
         else:
             symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
             if(symbols[quad.dest].size <= 4):
                 best_location = get_best_location(quad.src1)
-                # dprint(quad.src1 + " " + best_location + " " + quad.dest)
                 if (best_location not in reg_desc.keys()):
                     reg = get_register(quad, compulsory = True,is_float=True)
                     upd_reg_desc(reg, quad.src1)
                     print("\tmovss " + reg + ", " + best_location)
                     best_location = reg
-
                 symbols[quad.dest].address_desc_reg.add(best_location)
                 reg_desc[best_location].add(quad.dest)
                 del_symbol_reg_exclude(quad.dest, [best_location])
@@ -339,30 +342,26 @@ class CodeGen:
                 loc1 = get_location_in_memory(quad.dest, sqb = False)
                 loc2 = get_location_in_memory(quad.src1, sqb = False)
                 reg = get_register(quad, compulsory = True,is_float=True)
-
                 for i in range(0, symbols[quad.dest].size, 4):
                     print("\tmovss " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
                     print("\tmovss dword [" + loc1 + " + " + str(i) + "], " + reg )
 
+
     def assign(self, quad):
-        if(quad.src2 is not None):
+        # assignment operator for ints
+        if (quad.src2 is not None):
             #*x = y
-            
             if(quad.src1 in symbols.keys() and symbols[quad.src1].size > 4):
                 loc1 = get_best_location(quad.dest)
                 loc2 = get_location_in_memory(quad.src1, sqb = False)
-
                 if(loc1 not in reg_desc.keys()):
                     reg2 = get_register(quad)
                     print("\tmov " + reg2 + ", "+ loc1)
                     loc1 = reg2
-
                 reg = get_register(quad, exclude_reg = [loc1])
-
                 for i in range(0, symbols[quad.src1].size, 4):
                     print("\tmov " + reg +  ", dword [" + loc2 + " + " + str(i) + "] " )
                     print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg)
-
 
             else:
                 best_location = get_best_location(quad.dest)
@@ -370,7 +369,6 @@ class CodeGen:
                     reg = get_register(quad, compulsory = True)
                     print("\tmov " + reg + ", " + best_location)
                     best_location = reg
-                    
                 symbols[quad.dest].address_desc_reg.add(best_location)
                 reg_desc[best_location].add(quad.dest)
 
@@ -381,7 +379,6 @@ class CodeGen:
                         upd_reg_desc(reg, quad.src1)
                         print("\tmov " + reg + ", " + loc)
                         loc = reg
-                    
                     if(quad.src1 not in strings):
                         symbols[quad.src1].address_desc_reg.add(loc)
                         reg_desc[loc].add(quad.src1)
@@ -389,18 +386,18 @@ class CodeGen:
                     print("\tmov [" + best_location + "], " + loc)
                 else:
                     print("\tmov dword [" + best_location + "], " + quad.src1)
-            
+
         elif (is_number(quad.src1)): # case when src1 is an integral numeric
             best_location = get_best_location(quad.dest)
             if (check_type_location(best_location) == "register"):
                 upd_reg_desc(best_location, quad.dest)
             print("\tmov " + best_location + ", " + quad.src1)
+
         else:
             #a = b
             symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
             if(symbols[quad.dest].size <= 4):
                 best_location = get_best_location(quad.src1)
-                # dprint(quad.src1 + " " + best_location + " " + quad.dest)
                 if (best_location not in reg_desc.keys()):
                     reg = get_register(quad, compulsory = True)
                     upd_reg_desc(reg, quad.src1)
@@ -419,21 +416,17 @@ class CodeGen:
                     print("\tmov " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
                     print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg )
 
-            # if (quad.instr_info['nextuse'][quad.src1] == None):
-            #     del_symbol_reg_exclude(quad.src1)
 
     def char_assign(self, quad):
+        # assignment in case of chars
         if(quad.src2 is not None):
             #*x = y
-            # pts = symbols[quad.src1].pointsTo
-            # if(len(pts) > 0):
-
             best_location = get_best_location(quad.dest)
             if(best_location not in reg_desc.keys()):
                 reg = get_register(quad, compulsory = True)
                 print("\tmov " + reg + ", " + best_location)
                 best_location = reg
-                
+
             symbols[quad.dest].address_desc_reg.add(best_location)
             reg_desc[best_location].add(quad.dest)
 
@@ -446,25 +439,18 @@ class CodeGen:
                     print("\txor " + reg + ", " + reg)
                     print("\tmov " + byte_trans[reg] + ", " + loc)
                     loc = reg
-                
+
                 if(quad.src1 not in strings):
                     symbols[quad.src1].address_desc_reg.add(loc)
                     reg_desc[loc].add(quad.src1)
-
                 print("\tmov byte [" + best_location + "], " + byte_trans[loc])
             else:
                 print("\tmov byte [" + best_location + "], " + quad.src1)
-            
-        # elif (is_number(quad.src1)): # case when src1 is an integral numeric
-        #     best_location = get_best_location(quad.dest)
-        #     if (check_type_location(best_location) == "register"):
-        #         upd_reg_desc(best_location, quad.dest)
-        #     print("\tmov " + best_location + ", " + quad.src1)
+
         else:
             #a = b
             symbols[quad.dest].pointsTo = symbols[quad.src1].pointsTo
             best_location = get_best_location(quad.src1)
-            # dprint(quad.src1 + " " + best_location + " " + quad.dest)
             if (best_location not in reg_desc.keys()):
                 best_location = get_best_location(quad.src1, byte = True)
                 reg = get_register(quad, compulsory = True, exclude_reg = ["esi", "edi"])
@@ -476,6 +462,7 @@ class CodeGen:
             symbols[quad.dest].address_desc_reg.add(best_location)
             reg_desc[best_location].add(quad.dest)
             del_symbol_reg_exclude(quad.dest, [best_location])
+
 
     def int2float(self, quad):
         best_location = get_best_location(quad.src1)
@@ -489,15 +476,16 @@ class CodeGen:
         reg = get_register(quad)
         upd_reg_desc(reg, quad.dest)
         print("\tcvttss2si " + reg + ", " + best_location)
-        #cvtt or cvt? -> [X] Doubt
-    
+
+
     def char2int(self, quad):
         reg = get_register(quad, exclude_reg = ["esi", "edi"])
         loc = get_best_location(quad.src1, byte = True)
         print("\txor " + reg  + ", " + reg)
         print("\tmov " + byte_trans[reg] + ", " + loc)
         upd_reg_desc(reg, quad.dest)
-    
+
+
     def char2float(self, quad):
         reg = get_register(quad,  exclude_reg = ["esi", "edi"])
         loc = get_best_location(quad.src1, byte = True)
@@ -507,6 +495,7 @@ class CodeGen:
         upd_reg_desc(dest_reg, quad.dest)
         print("\tcvtsi2ss " + dest_reg + ", " + reg)
 
+
     def int2char(self, quad):
         reg1 = get_register(quad,  exclude_reg = ["esi", "edi"])
         reg2 = get_register(quad, exclude_reg = [reg1, "esi", "edi"])
@@ -514,6 +503,7 @@ class CodeGen:
         upd_reg_desc(reg2, quad.dest)
         print("\txor " + reg2 + ", " + reg2)
         print("\tmov " + byte_trans[reg2] + ", " + byte_trans[reg1])
+
 
     def float2char(self, quad):
         reg = get_register(quad, is_float=True)
@@ -524,21 +514,13 @@ class CodeGen:
         print("\txor " + reg2 + ", " + reg2)
         print("\tmov " + byte_trans[reg2] + ", " + byte_trans[reg1])
         upd_reg_desc(reg2, quad.dest)
-    
+
+
     def deref(self, quad):
         #x = *y assignment
         if(len(symbols[quad.src1].pointsTo)> 0):
             del_symbol_reg_exclude(symbols[quad.src1].pointsTo)
-            # sym = symbols[quad.src1].pointsTo
-            # to_save = []
-            # while len(sym) > 0:
-            #     to_save.append(sym)
-            #     sym = symbols[sym].pointsTo
-
-            # for i in range (len(to_save) -1, -1, -1):
-            #     del_symbol_reg_exclude(to_save[i])
-        
-        sym = symbols[quad.src1].pointsTo 
+        sym = symbols[quad.src1].pointsTo
         if(len(sym) > 0):
             symbols[quad.dest].pointsTo = symbols[sym].pointsTo
         else:
@@ -559,21 +541,18 @@ class CodeGen:
             for i in range(0, symbols[quad.dest].size, 4):
                 print("\tmov " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
                 print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg )
-
             return
 
         reg2 = get_register(quad, compulsory  = True, exclude_reg = [best_location])
         print("\tmov " + reg2 + ", [" + best_location + "] ")
-
         dest_loc = get_best_location(quad.dest)
-
         if(dest_loc in reg_desc.keys()):
             upd_reg_desc(dest_loc, quad.dest)
-
         print("\tmov " + dest_loc + ", " + reg2 )
 
 
     def param(self, quad):
+        # pushing the parameters in stack for function call
         global param_count
         global param_size
         if(param_count == 0):
@@ -605,10 +584,11 @@ class CodeGen:
             print("\tpush " + get_best_location(quad.src1))
 
     def function_call(self, quad):
+        # asm code for calling function
         global param_count, param_size
         save_caller_status()
         if(len(quad.src2) and symbols[quad.src2].size > 4):
-            #idhar koi haath mat lagana
+            # this 12 is mysterious, figure out the logic and mail the authors
             print("\tmov ecx, ebp")
             print("\tsub ecx, esp")
             print("\tadd ecx, " + str(symbols[quad.src2].address_desc_mem[-1]+ 12))
@@ -617,7 +597,6 @@ class CodeGen:
             param_size += 4
             param_count += 1
         print("\tcall " + quad.src1)
-
         if(quad.src1 in mathFuncs):
             del_symbol_reg_exclude(quad.src2)
             print("\tfstp dword " + get_location_in_memory(quad.src2))
@@ -627,7 +606,9 @@ class CodeGen:
         param_count = 0
         param_size = 0
 
+
     def funcEnd(self, quad):
+        # asm code for function end
         for var in local_vars[quad.dest]:
             symbols[var].address_desc_mem.pop()
         #do we need to do this?
@@ -635,9 +616,7 @@ class CodeGen:
             reg_desc[key].clear()
 
     def alloc_stack(self,quad):
-        '''
-        Allocate stack space for function local variables
-        '''
+        # Allocate stack space for function local variables
         if(quad.src1 == 'main_0'):
             print("_main:")
         else:
@@ -645,24 +624,18 @@ class CodeGen:
         offset = 0
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
-                # dprint(var + " " + str(-offset))
                 offset += max(get_data_type_size(global_symbol_table[var]['type']), 4)
-                symbols[var].address_desc_mem.append(-offset) #why is the first loc variable at ebp -4 and not at ebp`
-
+                symbols[var].address_desc_mem.append(-offset) 
         print("\tpush ebp")
         print("\tmov ebp, esp")
         print("\tsub esp, " + str(offset))
 
         for var in local_vars[quad.src1]:
             if var not in func_arguments[quad.src1]:
-                # symbols[var].address_desc_mem.append(-4*counter) #why is the first loc variable at ebp -4 and not at ebp
                 if(symbols[var].isArray):
                     reg = get_register(quad, compulsory = True)
                     print("\tmov " + reg + ", " + str(symbols[var].length))
-                    # if(symbols[var].isStruct):
                     print("\timul " + reg + ", " + str(max(4, get_data_type_size(global_symbol_table[var]['type']))))
-
-                    # print("\tshl " + reg + ", 2")
                     print("\tpush " + reg)
                     print("\tcall malloc")
                     print("\tadd esp, 4")
@@ -671,18 +644,12 @@ class CodeGen:
         counter = 0
         if(get_data_type_size(symbol_table[0][quad.src1]['type']) > 4):
             counter += 4
-        # dprint('here')
-        # dprint(func_arguments[quad.src1])
         for var in func_arguments[quad.src1]:
             symbols[var].address_desc_mem.append(counter + 8)
             if(symbols[var].isArray):
                 counter += 4
             else:
                 counter += symbols[var].size
-
-
-    # def handle_pointer(self,quad):
-    #     reg1 = get_best_location(quad.)
 
 
     def function_return(self, quad):
