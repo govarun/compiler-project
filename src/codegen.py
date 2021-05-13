@@ -780,7 +780,7 @@ class CodeGen:
         elif(quad.op == "char2float"):
             self.char2float(quad)
         elif(quad.op == "float2char"):
-            pass
+            self.float2char(quad)
         elif(quad.op == "float_="):
             self.real_assign(quad)
         elif(quad.op == "char_="):
