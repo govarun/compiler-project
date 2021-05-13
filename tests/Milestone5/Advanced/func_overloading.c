@@ -1,35 +1,64 @@
-int min(int a , int b)
+void get_type(int a)
 {
-    if(a < b)
-        return a ;
-    return b ;
+    printf("I am an int\n") ;
+    return ;
 }
-
-int min(int a , int b , int c)
+void get_type(float a)
 {
-    return min(a , min(b , c)) ;
-}
-
-void print(int a)
-{
-    printf("I am a int : %d\n", a) ;
+    printf("I am a float\n") ;
     return ;
 }
 
-void print(float b)
+void get_type(int a , int b)
 {
-    printf("I am a float : %f", b) ;
+    printf("I am int and int\n") ;
+    return ;
+}
+void get_type(int a , float b)
+{
+    printf("I am int and float\n") ;
     return ;
 }
 
+void get_type(float a , int b)
+{
+    printf("I am float and int\n") ;
+    return ;
+}
+
+void get_type(float a , float b)
+{
+    printf("I am float and float\n") ;
+    return ;
+}
+
+void get_type(int a , int b , int c)
+{
+    printf("I have 3 args\n") ;
+    return ;
+}
 int main()
 {
-    int a = 5 , b = 2 , c = 7 ;
-    float d = 5.5 ;
+    int a = 5 ;
+    float b = 2 ;
 
+    get_type(a) ;
+    get_type(b) ;
 
-    printf("%d\n", min(a , b , c)) ;
-    print(a) ;
-    print(d) ;
+    printf("\n") ;
+
+    get_type(a , a) ;
+    get_type(a , b) ;
+    get_type(b , a) ;
+    get_type(b , b) ;
+
+    printf("\n") ;
+
+    get_type(a , a , a) ;
+    get_type(a , b , a) ;
+    get_type(b , a , a) ;
+    get_type(a , a , b) ;
+    get_type(b , b , b) ;
+
     return 0 ;
 }

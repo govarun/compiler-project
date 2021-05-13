@@ -3,4 +3,4 @@ if [ $? -gt 0 ]
 then
     exit
 fi
-# ./run_test.sh out.asm
+./run_test.sh out.asm

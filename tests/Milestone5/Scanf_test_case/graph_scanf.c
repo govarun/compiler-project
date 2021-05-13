@@ -36,7 +36,8 @@ void print()
 int main()
 {
     int e, u, v, i;
-    printf("how many edges to add ?\n");
+    printf("Number of vertices = 5\n");
+    printf("How many edges to add ?\n");
     scanf("%d", &e);
     initialize();
     for (i = 0; i < e; i++)
@@ -44,6 +45,7 @@ int main()
         scanf("%d %d", &u, &v);
         add_edge(u, v);
     }
+    printf("Printing adjacency list\n");
     print();
     return 0;
 }
