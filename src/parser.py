@@ -6,6 +6,7 @@ import pydot
 import copy
 import json
 import re
+import codecs
 
 # Get the token map from the lexer.  This is required.
 import lexer
@@ -472,13 +473,16 @@ def p_primary_expression_1(p):
 def p_primary_expression_2(p):
   '''primary_expression : CHAR_CONST'''
   p[0] = Node(name = 'ConstantExpression',val = p[1],lno = p.lineno(1),type = 'char',children = [], place = p[1])
-  if(p[1] not in float_reverse_map.keys()):
+  tmpstr = p[1][1:-1]
+  tmpstr = codecs.decode(tmpstr, 'unicode_escape')
+  val = ord(tmpstr)
+  if(val not in float_reverse_map.keys()):
     tmp = get_new_tmp(dtype='char', scope=0)
-    float_constant_values.append([p[1], tmp])
+    float_constant_values.append([val, tmp])
     p[0].place = tmp
-    float_reverse_map[p[1]] = tmp
+    float_reverse_map[val] = tmp
   else:
-    p[0].place = float_reverse_map[p[1]]
+    p[0].place = float_reverse_map[val]
   p[0].is_unary = 1
   p[0].ast = build_AST(p)
 
@@ -1529,11 +1533,17 @@ def p_assignment_expression(p):
         else:
           emit(int_or_real(p[1].type) + '_=', p[3].place, '*', p[1].addr)
       return
-    
+
     if p[2].val == '=':
       operator = '='
       data_type = int_or_real(p[1].type)
-      if (int_or_real(p[3].type) != data_type):
+      if(p[1].level > 0):
+        data_type = 'int'
+      type2 = int_or_real(p[3].type)
+      if(p[3].level > 0):
+        type2 = 'int'
+      
+      if (type2 != data_type):
         tmp = get_new_tmp(data_type)
         change_data_type_emit(p[3].type, data_type, p[3].place, tmp)
         if(len(p[1].addr) == 0  ):
@@ -1679,7 +1689,10 @@ def p_temp_declaration(p):
       # print(child.children[1].val)
       operator = '='
       data_type = int_or_real(act_data_type)
-      if data_type == 'pointer' and int_or_real(child.children[1].type) != 'pointer':
+      type2 = int_or_real(child.children[1].type)
+      if(child.children[1].level > 0):
+        type2 = 'int'
+      if act_data_type.endswith('*') and not (child.children[1].type.endswith('*') or child.children[1].level > 0):
         print("COMPILATION ERROR at line " + str(p[1].lno) + ", variable " + child.children[1].val + " is not a pointer")
         give_error()
       elif(len(child.children[0].array) > 0):
@@ -1699,9 +1712,9 @@ def p_temp_declaration(p):
         else:
           base_addr = child.children[0].addr
         struct_init(base_addr, child.children[0].place, found_scope, p[1].type, child.children[1], p.lineno(1))
-      elif (int_or_real(child.children[1].type) != data_type):
+      elif (type2 != data_type):
         tmp = get_new_tmp(data_type)
-        change_data_type_emit(child.children[1].type, data_type, child.children[1].place, tmp)
+        change_data_type_emit(type2, data_type, child.children[1].place, tmp)
         emit(data_type + '_' + operator, tmp, '', child.children[0].place)
       else:
         emit(data_type + '_' + operator, child.children[1].place, '', child.children[0].place)

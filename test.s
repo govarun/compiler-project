@@ -3,10 +3,7 @@
 	.text
 	.section	.rodata
 .LC0:
-	.string	"Hello World Its not working"
-	.string	""
-.LC1:
-	.string	"%s"
+	.string	"Greeting message: %s\n"
 	.text
 	.globl	main
 	.type	main, @function
@@ -28,17 +25,25 @@ main:
 	sub	esp, 16
 	call	__x86.get_pc_thunk.ax
 	add	eax, OFFSET FLAT:_GLOBAL_OFFSET_TABLE_
-	mov	BYTE PTR -13[ebp], 97
-	lea	edx, .LC0@GOTOFF[eax]
-	mov	DWORD PTR -12[ebp], edx
+	mov	ecx, DWORD PTR gs:20
+	mov	DWORD PTR -12[ebp], ecx
+	xor	ecx, ecx
+	mov	DWORD PTR -18[ebp], 1819043144
+	mov	WORD PTR -14[ebp], 111
 	sub	esp, 8
-	push	DWORD PTR -12[ebp]
-	lea	edx, .LC1@GOTOFF[eax]
+	lea	edx, -18[ebp]
+	push	edx
+	lea	edx, .LC0@GOTOFF[eax]
 	push	edx
 	mov	ebx, eax
 	call	printf@PLT
 	add	esp, 16
 	mov	eax, 0
+	mov	ecx, DWORD PTR -12[ebp]
+	xor	ecx, DWORD PTR gs:20
+	je	.L3
+	call	__stack_chk_fail_local
+.L3:
 	lea	esp, -8[ebp]
 	pop	ecx
 	.cfi_restore 1
@@ -64,6 +69,7 @@ __x86.get_pc_thunk.ax:
 	ret
 	.cfi_endproc
 .LFE1:
+	.hidden	__stack_chk_fail_local
 	.ident	"GCC: (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0"
 	.section	.note.GNU-stack,"",@progbits
 	.section	.note.gnu.property,"a"

@@ -69,7 +69,7 @@ class CodeGen:
             temp_string = (strings[name])[1:-1]
             print("\t" + name + ":\tdb\t`" + temp_string + "`, 0")
         for name in float_constant_values:
-            print("\t" + name[1] + "\tdd\t" + name[0])
+            print("\t" + name[1] + "\tdd\t" + str(name[0]))
 
     def bin_operations(self, quad, op):
         #check where moved back into memory

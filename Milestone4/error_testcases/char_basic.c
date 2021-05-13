@@ -51,5 +51,5 @@ int main() {
     printf("%f %f %f\n", i, h, b);
     i = h * b;
     printf("%f %f %f\n", i, h, b);
-
+    return 0;
 }
