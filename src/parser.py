@@ -2341,6 +2341,7 @@ def p_abstract_declarator(p):
       p[0] = Node(name = 'AbstractDeclarator',val = p[2].val,type = p[1].type + ' *', lno = p[1].lno, children = [])
       p[0].ast = build_AST(p)
 
+
 def p_direct_abstract_declarator_1(p):
     '''direct_abstract_declarator : LPAREN abstract_declarator RPAREN
                                   | LSQUAREBRACKET RSQUAREBRACKET
@@ -2360,10 +2361,12 @@ def p_direct_abstract_declarator_1(p):
       p[0] = Node(name = 'DirectAbstractDeclarator1',val = p[1].val,type = p[1].val, lno = p[1].lno, children = [p[3]])
       p[0].ast = build_AST(p)
 
+
 def p_direct_abstract_declarator_2(p):
   '''direct_abstract_declarator : direct_abstract_declarator LPAREN RPAREN'''
   p[0] = Node(name = 'DirectAbstractDEclarator2', val = p[1].val, type = p[1].type, lno = p[1].lno, children = [])
   p[0].ast = build_AST(p)
+
 
 def p_initializer(p):
     '''initializer : assignment_expression
@@ -2387,12 +2390,12 @@ def p_initializer(p):
     elif(len(p) == 5):
       p[0].ast = build_AST(p)
 
+
 def p_initializer_list(p):
   '''initializer_list : initializer
   | initializer_list COMMA initializer
   '''
   if(len(p) == 2):
-    # p[0] = Node(name = 'InitializerList', val = '', type = '', children = [p[1]], lno = p.lineno(1), maxDepth = p[1].maxDepth, sqb = p[1].sqb)
     p[0] = p[1]
     p[0].ast = build_AST(p)
   else:
@@ -2405,6 +2408,7 @@ def p_initializer_list(p):
     p[0].children.append(p[3])
     p[0].maxDepth = max(p[1].maxDepth, p[3].maxDepth)
 
+
 def p_statement(p):
     '''statement : labeled_statement
                  | compound_statement
@@ -2414,16 +2418,17 @@ def p_statement(p):
                  | jump_statement
     '''
     p[0] = Node(name = 'Statement', val = '', type ='', children = [], lno = p.lineno(1))
-    # print(p[1])
     if isinstance(p[1], Node):
       p[0].label = p[1].label
       p[0].expr = p[1].expr
     p[0].ast = build_AST(p)
 
+
 def p_labeled_statement_1(p):
     '''labeled_statement : ID COLON statement '''
     p[0] = Node(name = 'LabeledStatement', val = '', type ='', children = [], lno = p.lineno(1) )
     p[0].ast = build_AST(p)
+
 
 def p_labeled_statement_2(p):
     '''labeled_statement : SwMark1 CASE constant_expression COLON statement'''
@@ -2431,7 +2436,7 @@ def p_labeled_statement_2(p):
     p[0].ast = build_AST(p,[1])
     p[0].expr.append(p[3].place)
     p[0].label.append(p[1])
-    # print(p[0].label)
+
 
 def p_labeled_statement_3(p):
     '''labeled_statement : SwMark1 DEFAULT COLON statement'''
@@ -2440,11 +2445,13 @@ def p_labeled_statement_3(p):
     p[0].label.append(p[1])
     p[0].expr.append('')
 
+
 def p_SwMark1(p):
   ''' SwMark1 : '''
   l = get_label()
   emit('label', '', '', l)
   p[0] = l
+
 
 def p_compound_statement(p):
     '''compound_statement : openbrace closebrace
@@ -2452,7 +2459,6 @@ def p_compound_statement(p):
                           | openbrace declaration_list closebrace
                           | openbrace declaration_list statement_list closebrace
     '''  
-    #TODO : see what to do in in first case
     if(len(p) == 3):
       p[0] = Node(name = 'CompoundStatement',val = '',type = '', lno = p.lineno(1), children = [])
     elif(len(p) == 4):
@@ -2465,6 +2471,7 @@ def p_compound_statement(p):
     else:
       p[0] = Node(name = 'CompoundStatement', val = '', type = '', children = [], lno = p.lineno(1))
       p[0].ast = build_AST(p)
+
 
 def p_function_compound_statement(p):
     '''function_compound_statement : LCURLYBRACKET closebrace
@@ -2502,6 +2509,7 @@ def p_declaration_list(p):
         p[0].children = p[1].children
       p[0].children.append(p[2])
 
+
 def p_statement_list(p):
     '''statement_list : statement
                       | statement_list statement
@@ -2521,6 +2529,7 @@ def p_statement_list(p):
       p[0].expr = p[1].expr
       p[0].children.append(p[2])
 
+
 def p_expression_statement(p):
     '''expression_statement : SEMICOLON
                             | expression SEMICOLON
@@ -2534,19 +2543,21 @@ def p_expression_statement(p):
       p[0].place = p[1].place
 
     p[0].name = 'ExpressionStatement'
-    # TODO : see what to do in case of only semicolon in rhs
+
 
 def p_selection_statement_1(p):
     '''selection_statement : if LPAREN expression RPAREN IfMark1 statement %prec IFX'''
     p[0] = Node(name = 'IfStatment', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p, [5, 7])
     emit('label', '', '', p[5][0])
-  
+
+
 def p_selection_statement_2(p):
     '''selection_statement : if LPAREN expression RPAREN IfMark1 statement ELSE IfMark2 statement'''
     p[0] = Node(name = 'IfElseStatement', val = '', type = '', children = [], lno = p.lineno(1))
     p[0].ast = build_AST(p, [5, 8, 10])
     emit('label', '', '', p[5][1])
+
 
 def p_IfMark1(p):
   '''IfMark1 : '''
@@ -2555,15 +2566,18 @@ def p_IfMark1(p):
   emit('ifgoto', p[-2].place, 'eq 0', l1)
   p[0] = [l1, l2]
 
+
 def p_IfMark2(p):
   '''IfMark2 : '''
   emit('goto', '', '', p[-3][1])
   emit('label', '', '', p[-3][0])
 
+
 def p_if(p):
   '''if : IF'''
   p[0] = p[1]
   p[0] = build_AST(p)
+
 
 def p_selection_statement_3(p):
     '''selection_statement : switch LPAREN expression RPAREN SwMark2 statement SwMark3'''
@@ -2612,20 +2626,21 @@ def p_switch(p):
   switchDepth += 1
   p[0] = build_AST(p)
 
-# remember : here statement added in grammar
 def p_iteration_statement_1(p):
     '''iteration_statement : while WhMark1 LPAREN expression RPAREN WhMark2 statement WhMark3 '''
     p[0] = Node(name = 'WhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
     global loopingDepth
     loopingDepth -= 1
     p[0] = build_AST(p,[2,6,8])
-  
+
+
 def p_while(p):
   '''while : WHILE'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
   p[0] = build_AST(p)
+
 
 def p_WhMark1(p):
   '''WhMark1 : '''
@@ -2636,9 +2651,11 @@ def p_WhMark1(p):
   emit('label', '', '', l1)
   p[0] = [l1 , l2]
 
+
 def p_WhMark2(p):
   '''WhMark2 : '''
   emit('ifgoto', p[-2].place , 'eq 0', p[-4][1])
+
 
 def p_WhMark3(p):
   '''WhMark3 : '''
@@ -2647,6 +2664,7 @@ def p_WhMark3(p):
   continueStack.pop()
   breakStack.pop()
 
+
 def p_iteration_statement_2(p):
     '''iteration_statement : do DoM1 statement WHILE DoM2 LPAREN expression RPAREN DoM3 SEMICOLON'''
     p[0] = Node(name = 'DoWhileStatement', val = '', type = '', children = [], lno = p.lineno(1))
@@ -2654,12 +2672,14 @@ def p_iteration_statement_2(p):
     loopingDepth -= 1
     p[0].ast = build_AST(p,[2,5,9])
 
+
 def p_do(p):
   '''do : DO'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
   p[0] = build_AST(p)
+
 
 def p_DoM1(p):
   '''DoM1 : '''
@@ -2670,11 +2690,13 @@ def p_DoM1(p):
   emit('label', '', '', l1)
   p[0] = [l1 , l3]
 
+
 def p_DoM3(p):
   '''DoM3 : '''
   emit('ifgoto', p[-2].place, 'eq 0', p[-7][1])
   emit('goto', '', '', p[-7][0])
   emit('label','','',p[-7][1])
+
 
 def p_DoM2(p): 
   '''DoM2 : '''
