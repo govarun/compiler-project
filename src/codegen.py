@@ -1,3 +1,7 @@
+
+# This code file is responsible for generating the assembly code from the 3ac code
+# The functions here have been called from helper_functions.py
+
 from reg_funcs import *
 from helper_functions import *
 from parser import symbol_table, local_vars, strings, get_label, label_cnt, global_symbol_table, pre_append_in_symbol_table_list,float_constant_values,float_reverse_map, mathFuncs, ignore_function_ahead
@@ -7,8 +11,6 @@ param_count = 0
 param_size = 0
 relational_op_list = ["<",">","<=",">=","==","!="]
 
-# This code file is responsible for generating the assembly code from the 3ac code
-# The functions here have been called from helper_functions.py
 
 def dprint(str):
     # Function for debugging
