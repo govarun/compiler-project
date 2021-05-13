@@ -293,7 +293,10 @@ def struct_init(base_addr, name, scope, struct_name, p, lno):
   lst = symbol_table[scope][struct_name]['field_list']
   if(struct_name == p.type):
     if(len(name) > 0):
-      emit('int_=', p.place, '', name)
+      if(len(p.addr) > 0):
+        emit('*', p.addr, '', name)
+      else:
+        emit('int_=', p.place, '', name)
     else:
       emit('int_=', p.place, '*', base_addr)
     return
@@ -343,7 +346,9 @@ def get_data_type_size(type_1):
       if(type_1 not in symbol_table[curscp].keys()):
         return -1 # If id is not found in symbol table
     # print('I am here',type_1,curscp)
-    return symbol_table[curscp][type_1]['size']    
+    val = symbol_table[curscp][type_1]['size']    
+    val = ((val + 3)//4)*4
+    return val
   type_1 = type_1.split()[-1]
   if type_1 not in type_size.keys():
     return -1
@@ -1998,7 +2003,7 @@ def p_struct_or_union_specifier(p):
     if p[1].type.startswith('union'):
       curr_offset = max_size
     symbol_table[currentScope][val_name]['field_list'] = temp_list
-    symbol_table[currentScope][val_name]['size'] = curr_offset
+    symbol_table[currentScope][val_name]['size'] = ((curr_offset+3)//4)*4
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
     symbol_table[currentScope][valptr_name]['size'] = 4
   elif len(p) == 2:
