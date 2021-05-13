@@ -551,6 +551,17 @@ class CodeGen:
             print("\tmov " + reg + ", " + best_location)
             best_location = reg
 
+        if(symbols[quad.dest].size > 4):
+            loc1 = get_location_in_memory(quad.dest, sqb = False)
+            loc2 = best_location
+            reg = get_register(quad, compulsory = True, exclude_reg = [loc2])
+
+            for i in range(0, symbols[quad.dest].size, 4):
+                print("\tmov " + reg + ", dword [" + loc2 + " + " + str(i) + "]" )
+                print("\tmov dword [" + loc1 + " + " + str(i) + "], " + reg )
+
+            return
+
         reg2 = get_register(quad, compulsory  = True, exclude_reg = [best_location])
         print("\tmov " + reg2 + ", [" + best_location + "] ")
 
@@ -560,6 +571,7 @@ class CodeGen:
             upd_reg_desc(dest_loc, quad.dest)
 
         print("\tmov " + dest_loc + ", " + reg2 )
+
 
     def param(self, quad):
         global param_count
