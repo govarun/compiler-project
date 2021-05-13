@@ -58,8 +58,9 @@ class CodeGen:
         float_tmp_vars = [lis[1] for lis in float_constant_values]
         for vars in local_vars['global']:
             if vars not in strings.keys() and vars not in float_tmp_vars and vars not in ignore_function_ahead:
-                if('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
-
+                if(symbols[vars].isStruct):
+                    print("\t" + vars + "\ttimes\t" + str(symbols[vars].size) + "\tdb\t0")
+                elif('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
                     print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
                 else:
                     print("\t" + vars + "\tdd\t0")
@@ -381,8 +382,9 @@ class CodeGen:
                         print("\tmov " + reg + ", " + loc)
                         loc = reg
                     
-                    symbols[quad.src1].address_desc_reg.add(loc)
-                    reg_desc[loc].add(quad.src1)
+                    if(quad.src1 not in strings):
+                        symbols[quad.src1].address_desc_reg.add(loc)
+                        reg_desc[loc].add(quad.src1)
 
                     print("\tmov [" + best_location + "], " + loc)
                 else:
@@ -445,8 +447,9 @@ class CodeGen:
                     print("\tmov " + byte_trans[reg] + ", " + loc)
                     loc = reg
                 
-                symbols[quad.src1].address_desc_reg.add(loc)
-                reg_desc[loc].add(quad.src1)
+                if(quad.src1 not in strings):
+                    symbols[quad.src1].address_desc_reg.add(loc)
+                    reg_desc[loc].add(quad.src1)
 
                 print("\tmov byte [" + best_location + "], " + byte_trans[loc])
             else:
@@ -525,14 +528,21 @@ class CodeGen:
     def deref(self, quad):
         #x = *y assignment
         if(len(symbols[quad.src1].pointsTo)> 0):
-            sym = symbols[quad.src1].pointsTo
-            to_save = []
-            while len(sym) > 0:
-                to_save.append(sym)
-                sym = symbols[sym].pointsTo
+            del_symbol_reg_exclude(symbols[quad.src1].pointsTo)
+            # sym = symbols[quad.src1].pointsTo
+            # to_save = []
+            # while len(sym) > 0:
+            #     to_save.append(sym)
+            #     sym = symbols[sym].pointsTo
 
-            for i in range (len(to_save) -1, -1, -1):
-                del_symbol_reg_exclude(to_save[i])
+            # for i in range (len(to_save) -1, -1, -1):
+            #     del_symbol_reg_exclude(to_save[i])
+        
+        sym = symbols[quad.src1].pointsTo 
+        if(len(sym) > 0):
+            symbols[quad.dest].pointsTo = symbols[sym].pointsTo
+        else:
+            symbols[quad.dest].pointsTo = ''
 
         best_location = get_best_location(quad.src1)
         if (check_type_location(best_location) in ["memory", "data", "number"]):

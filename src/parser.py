@@ -49,7 +49,7 @@ global_emit_array = []
 label_cnt = 0
 var_cnt = 0
 CONST_SCOPE = -10
-pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'fabs', 'sin', 'cos', 'sqrt']
+pre_append_in_symbol_table_list = ['printf', 'scanf','malloc','free', 'pow', 'fabs', 'sin', 'cos', 'sqrt', 'strlen', 'strcpy']
 mathFuncs = ['pow', 'fabs', 'sin', 'cos', 'sqrt']
 local_vars = {}
 func_arguments = {}
@@ -532,7 +532,7 @@ def p_postfix_expression_2(p):
     tmp = p[1].place
     tmp1 = get_new_tmp('int')
     tmp2 = get_new_tmp('int')
-    emit('int_*', p[3].place, get_data_type_size(p[1].type), tmp2)
+    emit('int_*', p[3].place, get_data_type_size(p[0].type), tmp2)
     emit('int_+', tmp, tmp2, tmp1)
     tmp3 = get_new_tmp(p[0].type)
     emit('*', tmp1, '', tmp3)
