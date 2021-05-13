@@ -1,5 +1,6 @@
 import pprint
 from parser import *
+import sys
 instruction_array = []
 global_instruction_array = []
 leaders = [0]
@@ -38,6 +39,7 @@ class Instruction:
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2] # should change?
+            print("ifgoto : ", self.src1 , self.src2 , self.dest) #check this
 
         # elif(self.op.split("_")[-1] in relational_op_list):
         #     self.dest = quad[3]
@@ -46,6 +48,7 @@ class Instruction:
 
         elif(self.op == "goto"):
             self.dest = quad[3]
+            print("goto : ", self.dest) 
 
         elif(self.op == "inc" or self.op == "dec"):
             if(global_symbol_table[quad[3]]['type'] == 'float'):
@@ -56,93 +59,122 @@ class Instruction:
                 self.src1 = quad[3]
                 self.src2 = float_reverse_map["1.0"]
                 self.dest = quad[3]
+                if(self.op == 'inc'):
+                    print(self.dest, "=", self.src1, "float_+ 1.0") 
+                else:
+                    print(self.dest, "=", self.src1, "float_- 1.0") 
             else:    
-               self.src1 = quad[3]
+                self.src1 = quad[3]
+                print(self.op, self.dest)
+                    
+                    
+
 
         elif(self.op.endswith('bitwisenot')):
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "= ~", self.src1) 
 
         elif(self.op == "param"):
             self.src1 = quad[3]
             self.dest = quad[2]
+            print(self.op, self.src1)
 
         elif(self.op == "ret"):
             if(quad[3] != ""):
                 self.src1 = quad[3]
+            print(self.op, quad[3])
 
         elif(self.op == "func"):
             self.src1 = quad[3]
+            print(self.op , self.src1)
 
         elif(self.op == "call"):
             self.src1 = quad[3]
             self.src2 = quad[2]
+            print(self.op, quad[1], quad[2], quad[3])
         
         elif(self.op == "int_float_="):
             self.op = "int2float"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
         
         elif(self.op == "float_int_="):
             self.op = "float2int"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
         
         elif(self.op == "char_int_="):
             self.op = "char2int"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "char_float_="):
             self.op = "char2float"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
         
         elif(self.op == "int_char_="):
             self.op = "int2char"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "float_char_="):
             self.op = "float2char"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_=" or self.op == "char_=" or self.op == "char_char_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):
                 self.src2 = quad[2]
+                print(self.dest, self.op, self.src2, self.src1)
+            else:
+                print(self.dest, self.op , self.src1)
 
         elif(self.op == "label"):
             self.src1 = quad[3]
+            print(self.op, self.src1)
 
         elif(self.op == "int_uminus"):
             self.dest = quad[3]
             self.src1 = quad[1]
+            print(self.dest, "int_= -", self.src1)
 
         elif(self.op == "float_uminus"):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = float_reverse_map["-1.0"]
             self.op = "float_*"
+            print(self.dest, "float_= -", self.src1)
 
         elif(self.op.startswith("int_") or self.op.startswith("float_") or self.op.startswith("char_")):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2]
+            print(self.dest, "=", self.src1 , self.op , self.src2)
 
         elif(self.op == "addr"):
             self.dest = quad[3]
             self.src1 = quad[1]
+            print(self.dest, "= addr", self.src1)
 
         elif(self.op == "*"):
             self.op = "deref"
             self.dest = quad[3]
             self.src1 = quad[1]
+            print(self.dest, "= deref", self.src1)
         
         elif(self.op == "funcEnd"):
             self.dest = quad[3]
+            print(self.op) 
 
 def find_basic_blocks():
     i = 1
@@ -256,6 +288,7 @@ def print_basic_blocks(debug = False):
     # print(instruction_array)
         
 def runmain():
+    sys.stdout = open('3ac_output.txt', 'w')
     find_basic_blocks()
     gen_next_use_and_live()
     for key in global_symbol_table.keys():
@@ -267,6 +300,7 @@ def runmain():
                 symbols[key] = symbol_info(isStruct = True, size = get_data_type_size(global_symbol_table[key]['type']))
             else:
                 symbols[key] = symbol_info(size = get_data_type_size(global_symbol_table[key]['type']))
+    sys.stdout.close()
     # print_basic_blocks(debug = True)
 
 
