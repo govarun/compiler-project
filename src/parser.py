@@ -1697,7 +1697,9 @@ def p_temp_declaration(p):
         give_error()
       elif(len(child.children[0].array) > 0):
         base_addr = ''
-        if(len(child.children[0].addr) == 0):
+        if(child.children[1].type.endswith('*')):
+          emit('int_=', child.children[1].place, '', child.children[0].place)
+        elif(len(child.children[0].addr) == 0):
           base_addr = get_new_tmp(p[1].type)
           emit('addr', child.children[0].place, '', base_addr)
         else:

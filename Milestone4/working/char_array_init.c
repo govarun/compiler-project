@@ -1,6 +1,6 @@
 int main () {
 
-   char greeting[] = "Hello";
+   char greeting[6] = "Hello";
    printf("Greeting message: %s\n", greeting );
    return 0;
 }
