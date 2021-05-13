@@ -103,6 +103,11 @@ class Instruction:
             self.src1 = quad[1]
             self.dest = quad[3]
 
+        elif(self.op == "float_char_="):
+            self.op = "float2char"
+            self.src1 = quad[1]
+            self.dest = quad[3]
+
         elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_=" or self.op == "char_=" or self.op == "char_char_="):
             self.dest = quad[3]
             self.src1 = quad[1]

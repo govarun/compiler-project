@@ -486,7 +486,7 @@ class CodeGen:
 
     def float2int(self, quad):
         best_location = get_best_location(quad.src1)
-        reg = get_register(quad, is_float=False)
+        reg = get_register(quad)
         upd_reg_desc(reg, quad.dest)
         print("\tcvttss2si " + reg + ", " + best_location)
         #cvtt or cvt? -> [X] Doubt
@@ -503,7 +503,7 @@ class CodeGen:
         loc = get_best_location(quad.src1, byte = True)
         print("\txor " + reg + ", " + reg)
         print("\tmov " + byte_trans[reg] +", " + loc)
-        dest_reg = get_register(quad, float = True)
+        dest_reg = get_register(quad, is_float = True)
         upd_reg_desc(dest_reg, quad.dest)
         print("\tcvtsi2ss " + dest_reg + ", " + reg)
 
@@ -516,8 +516,8 @@ class CodeGen:
         print("\tmov " + byte_trans[reg2] + ", " + byte_trans[reg1])
 
     def float2char(self, quad):
-        reg = get_register(quad, float = True)
-        print("\tmov " + reg + ", " + get_best_location(quad.src1))
+        reg = get_register(quad, is_float=True)
+        print("\tmovss " + reg + ", " + get_best_location(quad.src1))
         reg1 = get_register(quad)
         print("\tcvttss2si " + reg1  + ", " + reg)
         reg2 = get_register(quad, exclude_reg = [reg1, "esi", "edi"])
