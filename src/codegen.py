@@ -58,8 +58,9 @@ class CodeGen:
         float_tmp_vars = [lis[1] for lis in float_constant_values]
         for vars in local_vars['global']:
             if vars not in strings.keys() and vars not in float_tmp_vars and vars not in ignore_function_ahead:
-                if('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
-
+                if(symbols[vars].isStruct):
+                    print("\t" + vars + "\ttimes\t" + str(symbols[vars].size) + "\tdb\t0")
+                elif('value' in global_symbol_table[vars].keys() and not symbols[vars].isArray):
                     print("\t" + vars + "\tdd\t" + str(global_symbol_table[vars]['value']))
                 else:
                     print("\t" + vars + "\tdd\t0")
