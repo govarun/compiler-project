@@ -836,9 +836,8 @@ def p_postfix_expression_6(p):
   if (found_scope != -1) and ((p[1].isFunc >= 1) or ('struct' in p[1].type.split())):
     print("Compilation Error at line", str(p[1].lno), ":Invalid operation on", p[1].val)
     give_error()
-  # emit(p[1].val + p[2])
+
   emit(int_or_real(p[1].type) + '_=', p[1].place, '', tmp)
-  # emit(int_or_real(p[1].type) + '_' + p[2][0][:-1], '1' ,p[1].place, p[1].place)
   if (extract_if_tuple(p[2]) == '++'):
     if(len(p[1].addr) == 0):
       emit('inc', '', '', p[1].place)
@@ -947,13 +946,27 @@ def p_unary_expression_2(p):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
-    emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
+    if p[2].type == 'char':
+      tmp = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p[2].place, tmp)
+      tmp2 = get_new_tmp('int')
+      emit('int_' + 'uminus', tmp, '', tmp2)
+      change_data_type_emit('int', 'char', tmp2, p[0].place)
+    else:
+      emit(int_or_real(p[2].type) + '_' + 'uminus', p[2].place, '', p[0].place)
     p[0].is_unary = 1
   elif(p[1].val == '~'):
     tmp = get_new_tmp(p[2].type)
     p[0] = Node(name = 'UnaryOperationMinus',val = p[2].val,lno = p[2].lno,type = p[2].type,children = [p[2]], place = tmp)
     p[0].ast = build_AST(p)
-    emit(int_or_real(p[2].type) + '_' + 'bitwisenot', p[2].place, '', p[0].place)
+    if p[2].type == 'char':
+      tmp = get_new_tmp('int')
+      change_data_type_emit('char', 'int', p[2].place, tmp)
+      tmp2 = get_new_tmp('int')
+      emit('int_' + 'bitwisenot', tmp, '', tmp2)
+      change_data_type_emit('int', 'char', tmp2, p[0].place)
+    else:
+      emit(int_or_real(p[2].type) + '_' + 'bitwisenot', p[2].place,'', p[0].place)
     p[0].is_unary = 1
   elif(p[1].val == '!'):
     tmp = get_new_tmp(p[2].type)
