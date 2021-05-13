@@ -49,7 +49,7 @@ int main()
     {
         for(j = 0 ; j < 4 ; j++)
         {
-            printf("i = %d, j = %d, ans2[i][j] = %d\n", i , j , ans2[i][j]) ;
+            printf("i = %d, j = %d, ans2[i][j] = %f\n", i , j , ans2[i][j]) ;
         }
         printf("\n") ;
     }

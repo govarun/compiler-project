@@ -6,7 +6,7 @@ point upper_right = {2 , 2} ;
 
 point get_vector(point p1 , point p2) // returns vector from p1 to p2
 {
-    struct point p ;
+    point p ;
     p.x = p2.x - p1.x ;
     p.y = p2.y - p1.y ;
     return p;
@@ -26,7 +26,7 @@ float cross(point p1 , point p2) // return cross product of two vectors
 
 int main()
 {
-    struct point x = {2 , 1} ;
+    point x = {2 , 1} ;
     point y = {1 , 2} ;
 
     point v = get_vector(x , y) ;
