@@ -1,4 +1,4 @@
-python3 src/main.py "$1"
+python3 src/main.py "$1" 2> /dev/null
 if [ $? -gt 0 ]
 then
     exit

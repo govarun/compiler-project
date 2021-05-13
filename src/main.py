@@ -3,7 +3,7 @@ import sys
 import lexer
 import codegen
 import helper_functions
-# from lexer import syn_error_count
+
 s = str(sys.argv)
 if(len(sys.argv) <= 1):
 	print("Incorrect Usage")
@@ -28,13 +28,6 @@ if(len(sys.argv) >= 3 and sys.argv[2] == "--lexer"):
 	if __name__ == '__main__':
 		lexer.runmain(code)
 	exit()
-	# for i in range(len(sys.argv)-1):
-	# file = open(sys.argv[i+1])
-	# code = file.read()
-	# # print(code)
-	# print(sys.argv[i+1])
-	# if __name__ == '__main__':
-	# 	lexer.runmain(code)	
 
 
 file = open(sys.argv[1])

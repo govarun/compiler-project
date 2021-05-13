@@ -299,6 +299,7 @@ def runmain():
             else:
                 symbols[key] = symbol_info(size = get_data_type_size(global_symbol_table[key]['type']))
     sys.stdout.close()
+    sys.stdout = sys.__stdout__
 
 
 

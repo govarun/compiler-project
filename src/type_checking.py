@@ -133,7 +133,7 @@ def check_func_call_op_without_error(func_argument,call_argument,i,lno):
     return 1
 
 def check_func_return_type(expression_type,func_return_type,lno):
-  print(expression_type,func_return_type,lno)
+  # print(expression_type,func_return_type,lno)
   if(expression_type in ['int','char','float'] and func_return_type in ['int','char','float']):
     return
   if(expression_type == func_return_type):

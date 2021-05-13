@@ -2964,7 +2964,7 @@ def runmain(code):
   for v in emit_array:
     if v[0] == 'goto' or v[0] == 'ifgoto':
       v[3] = top_label[v[3]]
-  print_emit_array(debug=True)
+  print_emit_array(debug=False)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
 
