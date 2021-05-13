@@ -7,6 +7,7 @@ src/parsetab.py
 src/pydot_graph.png
 src/test.c
 src/test.py
+src/out.o
 src/a
 src/a.out
 **/*.dot
