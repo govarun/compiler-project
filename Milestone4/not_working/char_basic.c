@@ -3,7 +3,7 @@ int main() {
     char a = 'a';
     char b = 'b';
     int c = a, g;
-    char d, e, f;
+    char d = d, e, f;
     float h = 1.3434, i;
     
     d = a + b;
@@ -51,5 +51,6 @@ int main() {
     printf("%f %f %f\n", i, h, b);
     i = h * b;
     printf("%f %f %f\n", i, h, b);
+    return 0 ;
 
 }
