@@ -2,31 +2,31 @@
 int main() {
     char a = 'a';
     char b = 'b';
-    int c = a, g;
-    char d = d, e, f;
+    int g;
+    char d;
     float h = 1.3434, i;
     
     d = a + b;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
     d = a - b;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
     d = b - a;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
     d = a / b;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
     d = b / a;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
     d = a * b;
-    printf("%c %c %c\n", d, a, b);
+    printf("%f %c %c\n", d, a, b);
 
     g = a + b;
-    printf("%d %c %c\n", g, a, b);
+    printf("%f %c %c\n", g, a, b);
     g = a - b;
-    printf("%d %c %d\n", g, a, b);
+    printf("%f %c %d\n", g, a, b);
     g = a / b;
-    printf("%d %d %c\n", g, a, b);
+    printf("%f %d %c\n", g, a, b);
     g = b / a;
-    printf("%d %c %c\n", g, a, b);
+    printf("%f %c %c\n", g, a, b);
     g = a * b;
     printf("%f %f %f\n", g, a, b);
 
