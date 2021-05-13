@@ -247,6 +247,7 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
       if(p1.type.endswith('*') or p1.level > 0):
         if(p3.type.startswith('float')):
           print("COMPILATION ERROR at line " + str(p1.lno) + ", cannot add float to pointer variable")
+          give_error()
         data_type = p1.type
         if data_type.endswith('*'):
           data_type = data_type[:-2]
@@ -255,6 +256,7 @@ def handle_binary_emit_sub_add(p0, p1, p2, p3):
       else:
         if(p1.type.startswith('float')):
           print("COMPILATION ERROR at line " + str(p1.lno) + ", cannot add float to pointer variable")
+          give_error()
         data_type = p3.type
         if data_type.endswith('*'):
           data_type = data_type[:-2]
@@ -374,7 +376,7 @@ def get_data_type_size(type_1):
     if (curscp == 0):
       if(type_1 not in symbol_table[curscp].keys()):
         return -1 # If id is not found in symbol table
-    # print('I am here',type_1,curscp)
+
     val = symbol_table[curscp][type_1]['size']    
     val = ((val + 3)//4)*4
     return val
@@ -655,7 +657,7 @@ def p_postfix_expression_3(p):
   elif(p[1].val not in pre_append_in_symbol_table_list):
     for i in range(function_overloaded_map[p[1].val] + 1):  
       cur_func_name = p[1].val + '_' + str(i)
-      # print(cur_func_name)
+
       if(len(symbol_table[0][cur_func_name]['argumentList']) == 0):
         func_to_be_called = cur_func_name
         break
@@ -1641,7 +1643,6 @@ def p_temp_declaration(p):
   global currentScope
   if(p[2].isFunc > 0):
     currentScope = parent[currentScope]
-    print(currentScope)
 
   p[0] = Node(name = 'Declaration',val = p[1],type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
@@ -2791,13 +2792,13 @@ def p_forMark6(p):
     breakStack.pop()
     continueStack.pop()
 
-
 def p_for(p):
   '''for : FOR'''
   global loopingDepth
   loopingDepth += 1
   p[0] = p[1]
   p[0] = build_AST(p)
+
 
 def p_jump_statement(p):
     '''jump_statement : RETURN SEMICOLON
@@ -2822,6 +2823,7 @@ def p_jump_statement(p):
     global jump_mark
     jump_mark = 1
 
+
 def p_jump_statement_1(p):
   '''jump_statement : BREAK SEMICOLON'''
   global loopingDepth
@@ -2830,9 +2832,11 @@ def p_jump_statement_1(p):
   p[0].ast = build_AST(p)
   if(loopingDepth == 0 and switchDepth == 0):
     print(p[0].lno, 'break not inside loop')
+    give_error()
   emit('goto','','',breakStack[-1])
   global jump_mark
   jump_mark = 1
+
 
 def p_jump_statement_2(p):
   '''jump_statement : CONTINUE SEMICOLON'''
@@ -2842,10 +2846,11 @@ def p_jump_statement_2(p):
 
   if(loopingDepth == 0):
     print(p[0].lno, 'continue not inside loop')
-
+    give_error()
   emit('goto','','',continueStack[-1])
   global jump_mark
   jump_mark = 1
+
 
 def p_jump_statement_3(p):
   '''jump_statement : GOTO ID SEMICOLON'''
@@ -2854,6 +2859,7 @@ def p_jump_statement_3(p):
   emit('goto', '', '', p[2])
   global jump_mark
   jump_mark = 1
+
 
 def p_translation_unit(p):
     '''translation_unit : external_declaration
@@ -2865,7 +2871,6 @@ def p_translation_unit(p):
     else:
       p[0].children.append(p[2])
     p[0].ast = build_AST(p)
-    
     
 
 def p_external_declaration(p):
@@ -2882,8 +2887,7 @@ def p_function_definition_1(p):
     # removed from grammar
     # | declarator declaration_list function_compound_statement
     #                        | declarator function_compound_statement   
-    #p[0] = Node()
-    # p[0] = build_AST(p)  
+    
     p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p[1].lno, children = [])
     
     cur_func_name = p[2].val + '_' + str(function_overloaded_map[p[2].val])
@@ -2902,10 +2906,9 @@ def p_function_definition_2(p):
   '''function_definition : declaration_specifiers declarator FuncMark1 function_compound_statement'''
   p[0] = Node(name = 'FuncDecl',val = p[2].val,type = p[1].type, lno = p.lineno(1), children = [])
   p[0].ast = build_AST(p)
-  # print(p[2].val)
   
   cur_func_name = p[2].val + '_' + str(function_overloaded_map[p[2].val])
-  # print(cur_func_name)
+
   symbol_table[0][cur_func_name]['isFunc'] = 1
   if p[1].type == 'void' and emit_array[-1][0] != 'ret':
       emit('ret','','','')
@@ -2947,11 +2950,11 @@ def p_closebrace(p):
   currentScope = parent[currentScope]
   p[0] = p[1]
 
-# Error rule for syntax errors
-def p_error(p):
+def p_error(p): # Error rule for syntax errors 
     if(p):
       print("Syntax error in input at line " + str(p.lineno))
       give_error()
+
 
 def runmain(code):
   open('graph1.dot','w').write("digraph G {")
@@ -2966,9 +2969,10 @@ def runmain(code):
   visualize_symbol_table()
 
   graphs = pydot.graph_from_dot_file('graph1.dot')
-  # print(len(graphs))
+
   graph = graphs[0]
   graph.write_png('pydot_graph.png')
+
 
 def print_emit_array(debug = False):
   global emit_array
@@ -2979,7 +2983,8 @@ def print_emit_array(debug = False):
     print(i)
   for i in emit_array:
     print(i)
-  # print(function_overloaded_map)
+
+
 def visualize_symbol_table():
   global syn_error_count
   global scopeName
@@ -2987,17 +2992,15 @@ def visualize_symbol_table():
     outfile.write('')
   for i in range (nextScope):
     if(len(symbol_table[i]) > 0 and i in scope_to_function.keys()):
-      # print('\nIn Scope ' + str(i))
+
       temp_list = {}
       for key in symbol_table[i].keys():
-        # print(key, symbol_table[i][key])
+
         if(not (key.startswith('struct') or key.startswith('union'))):
           temp_list[key] = symbol_table[i][key]
         if(not ((key.startswith('struct') or key.startswith('union')) or key.startswith('typedef') or ('isFunc' in symbol_table[i][key].keys()) or key.startswith('__'))):
           newkey = key + "_" + str(i)
-          # if(key not in ignore_function_ahead):
           global_symbol_table[key + "_" + str(i)] = symbol_table[i][key]
-          # print(newkey, global_symbol_table[newkey])
           if(newkey not in local_vars[scope_to_function[i]]):
             local_vars[scope_to_function[i]].append(newkey)
           if i > 0:
@@ -3008,11 +3011,10 @@ def visualize_symbol_table():
           if(key not in strings.keys()):
             local_vars[scope_to_function[i]].append(key)
           global_symbol_table[key] = symbol_table[i][key]
-          # print(key, global_symbol_table[key])
+
       json_object = json.dumps(temp_list, indent = 4)
-      # print(json_object)
+
       with open("symbol_table_output.json", "a") as outfile:
         outfile.write('In \"' + scope_to_function[i] + "\"")
         outfile.write(json_object+"\n")
-      # print(local_vars)
 
