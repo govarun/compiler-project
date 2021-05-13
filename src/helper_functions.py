@@ -1,5 +1,8 @@
-import pprint
+# Parses the instructions to create instruction objects
+# Generate next use and live from basic for register optimization
+
 from parser import *
+import sys
 instruction_array = []
 global_instruction_array = []
 leaders = [0]
@@ -19,33 +22,34 @@ class symbol_info:
         self.address_desc_reg = set()
 
 class Instruction:
+    # created to store all the relevant details an instruction might have
     def __init__(self,lno,quad):
         self.lno = lno
         self.src1 = None
         self.src2 = None
         self.dest = None
         self.jump_label = None
-        self.op = None # instr_type
         self.instr_info = {}
+        self.op = None # instr_type,i.e. the operator
         self.instr_info['nextuse'] = {}
         self.instr_info['live'] = {}
         self.argument_list = []
         self.fill_info(quad)
+
+    # assigning src1, src2, op, dest accordingly from the quad that we received from the emit array
+    # also printing the emit array to 3ac_output.txt, in slightly beautified format
 
     def fill_info(self,quad):
         self.op = quad[0]
         if(self.op == "ifgoto"):
             self.dest = quad[3]
             self.src1 = quad[1]
-            self.src2 = quad[2] # should change?
-
-        # elif(self.op.split("_")[-1] in relational_op_list):
-        #     self.dest = quad[3]
-        #     self.src1 = quad[1]
-        #     self.src2 = quad[2]
+            self.src2 = quad[2]
+            print("ifgoto : ", self.src1 , self.src2 , self.dest)
 
         elif(self.op == "goto"):
             self.dest = quad[3]
+            print("goto : ", self.dest)
 
         elif(self.op == "inc" or self.op == "dec"):
             if(global_symbol_table[quad[3]]['type'] == 'float'):
@@ -56,95 +60,124 @@ class Instruction:
                 self.src1 = quad[3]
                 self.src2 = float_reverse_map["1.0"]
                 self.dest = quad[3]
+                if(self.op == 'inc'):
+                    print(self.dest, "=", self.src1, "float_+ 1.0") 
+                else:
+                    print(self.dest, "=", self.src1, "float_- 1.0") 
             else:    
-               self.src1 = quad[3]
+                self.src1 = quad[3]
+                print(self.op, self.dest)
+
 
         elif(self.op.endswith('bitwisenot')):
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "= ~", self.src1) 
 
         elif(self.op == "param"):
             self.src1 = quad[3]
             self.dest = quad[2]
+            print(self.op, self.src1)
 
         elif(self.op == "ret"):
             if(quad[3] != ""):
                 self.src1 = quad[3]
+            print(self.op, quad[3])
 
         elif(self.op == "func"):
             self.src1 = quad[3]
+            print(self.op , self.src1)
 
         elif(self.op == "call"):
             self.src1 = quad[3]
             self.src2 = quad[2]
-        
+            print(self.op, quad[1], quad[2], quad[3])
+
         elif(self.op == "int_float_="):
             self.op = "int2float"
             self.src1 = quad[1]
             self.dest = quad[3]
-        
+            print(self.dest, "=" , self.op , self.src1)
+
         elif(self.op == "float_int_="):
             self.op = "float2int"
             self.src1 = quad[1]
             self.dest = quad[3]
-        
+            print(self.dest, "=" , self.op , self.src1)
+
         elif(self.op == "char_int_="):
             self.op = "char2int"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "char_float_="):
             self.op = "char2float"
             self.src1 = quad[1]
             self.dest = quad[3]
-        
+            print(self.dest, "=" , self.op , self.src1)
+
         elif(self.op == "int_char_="):
             self.op = "int2char"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "float_char_="):
             self.op = "float2char"
             self.src1 = quad[1]
             self.dest = quad[3]
+            print(self.dest, "=" , self.op , self.src1)
 
         elif(self.op == "int_=" or self.op == "int_int_=" or self.op == "float_=" or self.op == "char_=" or self.op == "char_char_="):
             self.dest = quad[3]
             self.src1 = quad[1]
             if (quad[2] != ''):
                 self.src2 = quad[2]
+                print(self.dest, self.op, self.src2, self.src1)
+            else:
+                print(self.dest, self.op , self.src1)
 
         elif(self.op == "label"):
             self.src1 = quad[3]
+            print(self.op, self.src1)
 
         elif(self.op == "int_uminus"):
             self.dest = quad[3]
             self.src1 = quad[1]
+            print(self.dest, "int_= -", self.src1)
 
         elif(self.op == "float_uminus"):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = float_reverse_map["-1.0"]
             self.op = "float_*"
+            print(self.dest, "float_= -", self.src1)
 
         elif(self.op.startswith("int_") or self.op.startswith("float_") or self.op.startswith("char_")):
             self.dest = quad[3]
             self.src1 = quad[1]
             self.src2 = quad[2]
+            print(self.dest, "=", self.src1 , self.op , self.src2)
 
         elif(self.op == "addr"):
             self.dest = quad[3]
             self.src1 = quad[1]
+            print(self.dest, "= addr", self.src1)
 
         elif(self.op == "*"):
             self.op = "deref"
             self.dest = quad[3]
             self.src1 = quad[1]
-        
+            print(self.dest, "= deref", self.src1)
+
         elif(self.op == "funcEnd"):
             self.dest = quad[3]
+            print(self.op) 
+
 
 def find_basic_blocks():
+    # finding different basic blocks, and creating a list of leaders
     i = 1
     for quads in global_emit_array:
         instruction = Instruction(i,quads)
@@ -161,16 +194,18 @@ def find_basic_blocks():
             leaders.append(i - 1 + extra)
         i += 1
     leaders.append(len(emit_array))
-    # print(leaders)
-    # print(instruction_array)
+
 
 def is_symbol(var):
+    # check if it is a valid symbol
     if(var in global_symbol_table.keys()):
         return True
     else:
         return False
 
+
 def is_number(number):
+    # check if it is a valid number
     number = str(number)
     if (number.startswith('-')):
         return True
@@ -178,8 +213,9 @@ def is_number(number):
         return True
     return False
 
-def gen_next_use_and_live():
 
+def gen_next_use_and_live():
+    # generating next use and live for register opeimization
     sz = len(global_instruction_array)
     for j in range(0, sz): # doing forwards pass and filling default values
         cur_instr = global_instruction_array[j]
@@ -190,10 +226,9 @@ def gen_next_use_and_live():
                 nextuse[operand] = None
 
     for j in range(sz-1, -1, -1): # backward pass to set next use and live
-        # print(block_end, block_start, j)
         cur_instr = global_instruction_array[j]
         src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
-        
+
         if (dest != None and not dest.isnumeric() and is_symbol(dest)):
             cur_instr.instr_info['live'][dest] = live[dest]
             cur_instr.instr_info['nextuse'][dest] = nextuse[dest]
@@ -214,8 +249,6 @@ def gen_next_use_and_live():
         ignore_instr_list = ['param']
         block_start = leaders[i] # just the instruction next to the leader
         block_end = leaders[i + 1] - 1 # instruction previous to the next leader
-
-
         for j in range(block_start, block_end + 1): # doing forwards pass and filling default values
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
@@ -225,7 +258,6 @@ def gen_next_use_and_live():
                     nextuse[operand] = None
 
         for j in range(block_end, block_start - 1, -1): # backward pass to set next use and live
-            # print(block_end, block_start, j)
             cur_instr = instruction_array[j]
             src1, src2, dest = cur_instr.src1, cur_instr.src2, cur_instr.dest
             if cur_instr.op in ignore_instr_list:
@@ -245,17 +277,16 @@ def gen_next_use_and_live():
                 cur_instr.instr_info['nextuse'][src1] = nextuse[src1]
                 live[src1] = True
                 nextuse[src1] = j
-            # print("Instruction: " + str(emit_array[j]))
-            # pprint.pprint(cur_instr.instr_info)
-
 
 
 def print_basic_blocks(debug = False):
+    # debugging to print basic blocks
     print("\n###### LEADERS ######")
     print(leaders)
-    # print(instruction_array)
-        
+
+
 def runmain():
+    sys.stdout = open('3ac_output.txt', 'w')
     find_basic_blocks()
     gen_next_use_and_live()
     for key in global_symbol_table.keys():
@@ -267,7 +298,7 @@ def runmain():
                 symbols[key] = symbol_info(isStruct = True, size = get_data_type_size(global_symbol_table[key]['type']))
             else:
                 symbols[key] = symbol_info(size = get_data_type_size(global_symbol_table[key]['type']))
-    # print_basic_blocks(debug = True)
+    sys.stdout.close()
 
 
 

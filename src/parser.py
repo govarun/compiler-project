@@ -43,6 +43,7 @@ continueStack = []
 breakStack = []
 scope_to_function = {}
 scope_to_function[0] = 'global'
+top_label = {}
 nextstat = 0 # next instruction pointer
 emit_array = [] #address code array, each element is a quad, which has [operator, source1, source2, destination]
 global_emit_array = []
@@ -108,6 +109,13 @@ def emit(op, s1, s2, dest):
     return
   else:
     jump_mark = 0
+    
+  if(op.startswith('label')):
+    if len(emit_array) > 0 and emit_array[-1][0].startswith('label'):
+      top_label[dest] = emit_array[-1][3]
+      return
+    else:
+      top_label[dest] = dest
   if(currentScope == 0 and not op.startswith('func') and not op.startswith('ret')):
     global_emit_array.append([str(op), str(s1), str(s2), str(dest)])
   else:
@@ -312,7 +320,10 @@ def struct_init(base_addr, name, scope, struct_name, p, lno):
   lst = symbol_table[scope][struct_name]['field_list']
   if(struct_name == p.type):
     if(len(name) > 0):
-      emit('int_=', p.place, '', name)
+      if(len(p.addr) > 0):
+        emit('*', p.addr, '', name)
+      else:
+        emit('int_=', p.place, '', name)
     else:
       emit('int_=', p.place, '*', base_addr)
     return
@@ -364,7 +375,9 @@ def get_data_type_size(type_1):
       if(type_1 not in symbol_table[curscp].keys()):
         return -1 # If id is not found in symbol table
     # print('I am here',type_1,curscp)
-    return symbol_table[curscp][type_1]['size']    
+    val = symbol_table[curscp][type_1]['size']    
+    val = ((val + 3)//4)*4
+    return val
   type_1 = type_1.split()[-1]
   if type_1 not in type_size.keys():
     return -1
@@ -1739,7 +1752,6 @@ def p_declaration(p):
     p[0] = p[1]
     p[0].ast = build_AST(p)
 
-
 def p_declaration_specifiers(p):
   '''declaration_specifiers : storage_class_specifier
 	| storage_class_specifier declaration_specifiers
@@ -1887,7 +1899,7 @@ def p_struct_or_union_specifier(p):
     if p[1].type.startswith('union'):
       curr_offset = max_size
     symbol_table[currentScope][val_name]['field_list'] = temp_list
-    symbol_table[currentScope][val_name]['size'] = curr_offset
+    symbol_table[currentScope][val_name]['size'] = ((curr_offset+3)//4)*4
     symbol_table[currentScope][valptr_name]['field_list'] = temp_list
     symbol_table[currentScope][valptr_name]['size'] = 4
   elif len(p) == 2:
@@ -2946,6 +2958,9 @@ def runmain(code):
   parser = yacc.yacc(start = 'translation_unit')
   pre_append_in_symbol_table()
   result = parser.parse(code,debug=False)
+  for v in emit_array:
+    if v[0] == 'goto' or v[0] == 'ifgoto':
+      v[3] = top_label[v[3]]
   print_emit_array(debug=True)
   open('graph1.dot','a').write("\n}")
   visualize_symbol_table()
