@@ -653,6 +653,7 @@ class CodeGen:
 
 
     def function_return(self, quad):
+        # handling all the things before returning from a function and asm generation
         save_caller_status()
         if(quad.src1):
             if(is_symbol(quad.src1) and symbols[quad.src1].size > 4):
@@ -669,13 +670,13 @@ class CodeGen:
                 save_reg_to_mem("eax")
                 if(location != "eax"):
                     print("\tmov eax, " + str(location))
-        
         print("\tmov esp, ebp")
         print("\tpop ebp")
         print("\tret")
 
     def ifgoto(self,quad):
-        if global_symbol_table[quad.src1]['type'] == 'int':
+        # handling ifgoto equality conditions in assembly
+        if global_symbol_table[quad.src1]['type'] == 'int': # if the parameter to check is int
             best_location = get_best_location(quad.src1)
             reg1 = get_register(quad, compulsory=True)
             save_reg_to_mem(reg1)
@@ -687,7 +688,7 @@ class CodeGen:
                 print("\tjne " + quad.dest)
             else:
                 print("\tje " + quad.dest)
-        elif global_symbol_table[quad.src1]['type'] == 'char':
+        elif global_symbol_table[quad.src1]['type'] == 'char': # if the parameter to check is char
             best_location = get_best_location(quad.src1, byte=True)
             reg1 = byte_trans[get_register(quad, compulsory=True)]
             if best_location != reg1:
@@ -698,7 +699,7 @@ class CodeGen:
                 print("\tjne " + quad.dest)
             else:
                 print("\tje " + quad.dest)
-        else:
+        else: # if the parameter to check is float
             best_location = get_best_location(quad.src1)
             reg1 = get_register(quad, compulsory=True, is_float=True)
             if best_location != reg1:
@@ -709,23 +710,20 @@ class CodeGen:
                 print("\tjne " + quad.dest)
             else:
                 print("\tje " + quad.dest)
-        # reg2 = get_best_location(quad.src2)
-        # print("\t" + op + ' ' + reg1 + ", " + reg2)
-        # upd_reg_desc(reg1, quad.dest)
-        # for sym in reg_desc[reg1]:
-        #     dprint(reg1 + ", " + sym)
-        # free_all_regs(quad)
-        # print("\t")
+
 
     def goto(self,quad):
+        # jumping to a label
         save_caller_status()
         print("\tjmp " + quad.dest)
 
     def label(self,quad):
+        # printing the labels
         save_caller_status()
         print(quad.src1 + ":")
 
     def addr(self, quad):
+        # a = &b
         reg = get_register(quad)
         if(symbols[quad.src1].isArray):
             if(reg != get_best_location(quad.src1)):
@@ -739,9 +737,7 @@ class CodeGen:
         symbols[quad.dest].address_desc_reg.add(reg)
 
     def generate_asm(self, quad):
-        '''
-        Function to generate final asm code
-        '''
+        # Calling the suitable functions based on the operator
         if(quad.op == "func"):
             self.alloc_stack(quad)
         elif(quad.op == "param"):
@@ -825,7 +821,6 @@ class CodeGen:
             self.bor(quad)
         elif(quad.op.endswith("^")):
             self.bxor(quad)
-
 
 
 def runmain():
