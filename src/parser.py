@@ -547,10 +547,14 @@ def p_postfix_expression_2(p):
   if(p[0].level == -1):
     print("COMPILATION ERROR at line ", str(p[1].lno), ", incorrect number of dimensions specified for " + p[1].val)
     give_error()
+    return
+
+  if(p[3].type not in ['char', 'short', 'int', 'long']):
+    print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
+    give_error()
+    return
 
   temp_ind = get_new_tmp('int')
-
-
   if(len(p[0].parentStruct)):
     found_scope = find_scope(p[0].parentStruct)
     for curr_list in symbol_table[found_scope][p[0].parentStruct]['field_list']:
@@ -589,11 +593,6 @@ def p_postfix_expression_2(p):
   elif(len(p[0].array) > 0):
     p[0].tind = temp_ind
 
-
-  curscp = currentScope
-  if(p[3].type not in ['char', 'short', 'int', 'long']):
-    print("Compilation Error: Array index at line ", p[3].lno, " is not of compatible type")
-    give_error()
 
 def p_postfix_expression_3(p):
   '''postfix_expression : postfix_expression LPAREN RPAREN'''
